@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260822] 티스토리를 떠나 GitHub Pages + Dev.to로 - 발행 자동화 개편 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-22_devlog/index.html">Read in English</a></p>
+<article>
+<h1>[260822] 티스토리를 떠나 GitHub Pages + Dev.to로 - 발행 자동화 개편</h1>
+<p class="subtitle">개발일지가 몇 주째 뜸했던 진짜 이유를 찾아 고치고, 발행 플랫폼 자체를 바꿨습니다</p><p>지난 개발일지 이후로 열흘 넘게 조용했습니다. 오늘 그 이유를 찾았고, 겸사겸사 이 블로그의 발행 방식 자체를 크게 바꿨습니다.</p>
+<h2>왜 조용했나</h2>
+<p>개발일지는 매일 밤 자동으로 마무리되게 만들어 놨는데, 실제로는 7월 24일 이후로 결과물이 하나도 안 남고 있었습니다.</p>
+<p>원인을 찾아보니 실행 자체는 매일 밤 정상적으로 돌고 있었습니다. 다만 마지막 저장 단계가 권한 승인 대기에 막혀서, 아무도 지켜보지 않는 새벽 시간대에 조용히 아무것도 안 남기고 끝나는 일이 한 달 가까이 반복됐습니다.</p>
+<p>스킵한 날엔 최소한 "스킵했다"는 로그 한 줄이라도 남게 설계해 둔 덕분에 뒤늦게라도 이 공백을 알아챌 수 있었습니다. 자세한 경위는 <a href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_silent-automation-failure/" target="_blank" rel="noopener noreferrer">별도 글</a>(새 창)로 따로 정리했습니다.</p>
+<p>오늘 원인을 고쳤고, 대화로 미리 초안을 안 써둔 날에도 실제 작업 기록을 직접 조사해서 글을 쓰도록 자동화 자체를 더 튼튼하게 다시 짰습니다.</p>
+<h2>티스토리를 떠나기로 했다</h2>
+<p>이 블로그는 애초에 티스토리 글쓰기 API가 오래전에 종료돼서 발행만은 늘 수동이었습니다. 초안 작성과 변환까지만 자동화하고, 실제 등록은 화면에서 직접 붙여넣는 방식이었습니다.</p>
+<p>오늘 이 구조를 아예 바꾸기로 했습니다. 신규 발행은 GitHub Pages(정적 사이트)와 Dev.to(개발자 커뮤니티) 두 곳으로 옮기고, 티스토리는 과거 글 아카이브로만 남겨두기로 했습니다.</p>
+<p>원래는 다른 블로깅 플랫폼도 후보였는데, 발행 API가 최근 유료 전환된 걸 확인하고 제외했습니다. 대신 무료로 쓸 수 있는 조합으로 정리했습니다.</p>
+<p>기존에 쌓아둔 글 전체를 오늘 하루 동안 영어로 번역해서 새 플랫폼으로 옮겼습니다. 앞으로는 매일 작업일지·매주 요약·이벤트성 사후분석까지 전부 같은 파이프라인이 한국어로 먼저 쓰고, 사이트 재빌드부터 Dev.to 발행까지 한 번에 처리하도록 배선을 마쳤습니다.</p>
+<h2>사후분석 시리즈도 새로 만들었다</h2>
+<p>지금까지는 사고나 오판을 개발일지 안에서 한 항목으로 짧게만 다뤘습니다. 오늘부터는 원인 분석이 필요할 만큼 무게 있는 사건은 별도의 사후분석 글로 따로 떼어 쓰기로 했습니다.</p>
+<p>오늘 그 시리즈의 첫 편들을 여러 개 함께 올렸습니다. 위에서 언급한 자동화 공백 건 외에도, 하드웨어 판정이 며칠 새 뒤집혔던 일이나 검증 도구 자체의 사각지대를 다룬 글들입니다.</p>
+<h2>trading 쪽 — GPU 벤치마크 재개를 완전자동화</h2>
+<p>로컬 대형 모델을 여러 번 반복 실행해 성능을 비교하는 벤치마크가 하나 진행 중인데, 어제 GPU 자원을 다른 작업과 나눠 쓰다가 중간에 멈춰 있었습니다.</p>
+<p>오늘은 이 벤치마크를 사람이 계속 지켜보지 않아도 GPU가 비는 즉시 명령 한 줄로 이어서 돌릴 수 있도록 재개 절차를 문서 하나로 정리했습니다. 시작할 때 입력 데이터의 지문을 검증해서, 재개 시점에 다른 입력을 잘못 물고 도는 일이 없도록 안전장치도 함께 넣었습니다.</p>
+<p>같은 날, GPU를 쓰는 모듈 전체를 훑어서 어디를 더 줄일 수 있는지 검토하는 자료도 준비해 뒀습니다. 이건 다음 주에 다른 AI 자문을 받아 우선순위를 정할 예정입니다.</p>
+<hr />
+<p>돌아보면 오늘은 새 기능 하나보다, "왜 조용했는지" 그 자체를 파고든 하루였습니다. 원인을 찾고 나니 고치는 건 오래 걸리지 않았고, 그 김에 이 블로그를 앞으로 더 오래 무인으로 돌릴 수 있는 형태로 다시 짰습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

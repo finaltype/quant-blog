@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260822] Leaving Tistory for GitHub Pages + Dev.to - Overhauling the Publishing Pipeline&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-22_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260822] Leaving Tistory for GitHub Pages + Dev.to - Overhauling the Publishing Pipeline&quot;</h1>
+<p class="subtitle">I tracked down the real reason the devlog had gone quiet for weeks, and ended up rebuilding the whole publishing pipeline</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>It had been quiet here for well over a week since the last devlog. Today I finally tracked down why, and ended up overhauling how this blog gets published in the process.</p>
+<h2>Why it had gone quiet</h2>
+<p>The devlog is supposed to wrap itself up automatically every night. In practice, nothing had actually been produced since July 24th.</p>
+<p>Digging in, the automation itself had been running fine every night. The very last save step, though, kept getting stuck waiting on a permission approval that nobody was around to grant at that hour, so it quietly finished without leaving anything behind — for almost a month straight.</p>
+<p>The one thing that saved this from going unnoticed forever was that even a skipped day was supposed to leave a one-line log entry. I wrote up the full story separately in <a href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_silent-automation-failure/" target="_blank" rel="noopener noreferrer">a postmortem</a>(new tab).</p>
+<p>I fixed the root cause today, and while I was at it, made the automation sturdier — now, even on days with no pre-written draft, it investigates the actual work log directly and writes the post itself.</p>
+<h2>Leaving Tistory</h2>
+<p>This blog's publishing step had always been manual, since Tistory's write API was shut down a long time ago. Only drafting and format conversion were automated — actually posting meant pasting into the editor by hand.</p>
+<p>Today I decided to change that entirely. New posts now go out through GitHub Pages (a static site) and Dev.to (a developer community), while Tistory stays around only as an archive of past posts.</p>
+<p>I'd also considered another blogging platform along the way, but ruled it out once I confirmed its publishing API had recently moved behind a paywall. I settled on a combination that stays free.</p>
+<p>I spent today translating the entire existing backlog into English and moving it over to the new platforms. Going forward, daily devlogs, weekly summaries, and event-driven postmortems all run through the same pipeline — write in Korean first, then rebuild the site and publish to Dev.to in one pass.</p>
+<h2>A new postmortem series</h2>
+<p>Until now, incidents and bad calls only got a short paragraph inside a devlog. Starting today, anything serious enough to need real root-cause analysis gets pulled out into its own postmortem post.</p>
+<p>I published the first batch of that series today. Besides the automation gap above, they cover a hardware verdict that flipped within days and blind spots found in the verification tools themselves.</p>
+<h2>On the trading side — fully automating a GPU benchmark resume</h2>
+<p>A benchmark that runs a local large model repeatedly to compare performance has been in progress, and it got interrupted yesterday while sharing GPU resources with another job.</p>
+<p>Today I wrote up a resume procedure so the benchmark can pick back up with a single command the moment the GPU frees up, without anyone watching it. I also added a safeguard that verifies the input data's fingerprint at startup, so a resume can't accidentally pick up different input.</p>
+<p>The same day, I also put together a survey of every module that uses the GPU, looking for places to cut back further. That's going to a separate AI advisor next week to help prioritize.</p>
+<hr />
+<p>Looking back, today was less about a single new feature and more about chasing down why things had gone quiet. Once I found the root cause, fixing it was quick — and along the way, I rebuilt this blog to run unattended for much longer stretches.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
