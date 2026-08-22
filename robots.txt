@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://finaltype.github.io/quant-blog/sitemap.xml
