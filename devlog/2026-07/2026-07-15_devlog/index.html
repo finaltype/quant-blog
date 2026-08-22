@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260715] 같은 유형의 버그를 또 잡았다, 이번엔 재발 자체를 막기로 했다 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>[260715] 같은 유형의 버그를 또 잡았다, 이번엔 재발 자체를 막기로 했다</h1>
+<p class="subtitle">큰 종목 이름을 못 알아보던 버그를 또 발견했고, 이번엔 고치는 대신 다시는 이런 일이 안 생기게 구조를 바꿨다</p><p>어제 devlog에 썼던 "가장 중요한 종목이 이름 인식 버그로 빠지고 있었다"는 이야기, 사실 오늘도 비슷한 일이 하나 더 있었습니다. 다만 이번엔 대응 방식이 조금 달랐습니다.</p>
+<h2>이번엔 고치는 대신, 다시 안 생기게 만들었다</h2>
+<p>한 대형 종목의 뉴스가 계속 거의 안 잡히고 있다는 걸 발견했습니다. 원인은 그 종목을 부르는 흔한 줄임말이 인식 목록에 등록이 안 돼 있었던 것이었습니다. 어제 발견한 버그와 종류만 다를 뿐 패턴은 똑같았습니다.</p>
+<p>그런데 같은 유형의 버그가 벌써 몇 번째 반복되는 걸 보고, 이번엔 그냥 고치고 넘어가지 않기로 했습니다. 종목 이름/줄임말을 인식하는 로직이 프로젝트 여러 곳에 흩어져서 각자 따로 구현돼 있었는데, 이러면 한 곳을 고쳐도 다른 곳은 여전히 낡은 채로 남습니다. 실제로 이번 버그도 그런 식으로 새어나갔습니다.</p>
+<p>그래서 이 로직을 아예 공용 모듈 하나로 뽑아내서, 관련된 모든 프로젝트가 그 모듈 하나만 가져다 쓰게 바꿨습니다. 이제 이름 인식 목록을 고칠 곳은 딱 한 군데뿐입니다. 바꾸고 나서 기존 출력이 전부 그대로 나오는지 결과를 하나하나 대조해서 확인했고, 다행히 완전히 똑같았습니다.</p>
+<p>같은 이름이 다른 회사 이름을 잘못 삼켜버리는 것도 함께 손봤습니다. 어떤 대기업 지주회사의 줄임말이, 계열사 이름에도 우연히 포함돼 있어서 서로 다른 회사 뉴스가 뒤섞이는 경우가 있었는데, 예외 목록을 추가해서 이것도 갈라냈습니다.</p>
+<h2>새로운 사이드 프로젝트 하나를 더 시작했다</h2>
+<p>지금까지는 뉴스만 심리 신호로 참고하고 있었는데, 종목 토론 게시판 데이터도 리테일 투자자들의 심리를 보여주는 신호가 될 수 있겠다 싶어서 이것도 따로 모으는 작업을 시작했습니다.</p>
+<p>뉴스 아카이브를 만들 때와 같은 원칙을 그대로 적용했습니다. 게시판 글도 시간이 지나면 성격이 계속 바뀌는(조회수·공감 수가 계속 늘어나는) 소멸성 데이터라서, 작성 시점과 수집 시점을 따로 기록해서 나중에 특정 시점 기준으로 정확히 잘라볼 수 있게 설계했습니다.</p>
+<p>다만 이 신호를 실제 분석에 반영하는 건 당장 하지 않기로 했습니다. 지금 진행 중인 다른 중요한 비교 실험이 있는데, 여기에 새 신호를 얼떨결에 섞으면 그 실험 자체가 오염될 수 있어서, 일단 수집만 먼저 시작하고 반영은 나중으로 미뤘습니다. 데이터는 소멸되니까 지금 모아두고, 판단은 급할 게 없으니 나중에 하자는 순서입니다.</p>
+<h2>그 밖에</h2>
+<ul>
+<li>실거래 안전장치 전반을 다시 한번 점검했습니다. 어떤 요청이 응답 자체를 못 받고 애매하게 끝나버렸을 때 이걸 어떻게 처리할지가 특히 허술했던 걸 발견해서, 관련 부분들을 순서대로 보강하기로 계획을 세웠습니다.</li>
+<li>예전부터 실험적으로 돌리던 장중 대응 기능 하나는, 방향 자체가 나빴다기보다 "제대로 측정할 방법을 못 찾았다"는 결론이 나서 정리하기로 했습니다. 아이디어가 틀렸다는 게 아니라, 지금 가진 도구로는 이게 통하는지 안 통하는지 판단 자체가 안 된다는 걸 인정한 셈입니다.</li>
+</ul>
+<hr />
+<p>오늘 밤엔 야간 자동 분석이 꽤 큰 문제를 겪었는데, 원인을 파헤치는 데 하루가 더 걸렸습니다. 자세한 이야기는 다음 devlog에서 이어가겠습니다.</p>
+</article>
+</body>
+</html>

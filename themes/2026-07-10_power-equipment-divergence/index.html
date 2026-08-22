@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오느 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>오느</h1>
+<p class="subtitle">같은 AI 전력 슈퍼사이클인데 한·미 전력기기주가 왜 이렇게 벌어졌나, 그리고 투자자가 확인해야 할 것</p><p>AI 데이터센터가 폭발적으로 늘면서 "전기를 어디서 끌어오느냐"가 올해 시장의 핵심 화두가 됐다. GPU만큼이나 <strong>변압기·개폐기·전력망 설비</strong>가 병목이라는 인식이 퍼졌고, 관련 기업들이 상반기 내내 시장을 이끌었다. 그런데 지금 한국과 미국 전력기기주는 정반대 그림을 그리고 있다.</p>
+<h2>한국 전력기기 대장주 4종목의 현재 위치</h2>
+<p>국내 전력 밸류체인의 대표 종목을 놓고 보면, <strong>올해 최고가 대비 현재가가 일제히 절반 수준</strong>이다.</p>
+<table>
+<thead>
+<tr>
+<th>종목</th>
+<th>현재가</th>
+<th>올해 최고가</th>
+<th>최고 대비</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HD현대일렉트릭</td>
+<td>815,000</td>
+<td>1,430,000</td>
+<td>57%</td>
+</tr>
+<tr>
+<td>LS ELECTRIC</td>
+<td>189,400</td>
+<td>335,000</td>
+<td>57%</td>
+</tr>
+<tr>
+<td>효성중공업</td>
+<td>2,770,000</td>
+<td>4,742,000</td>
+<td>58%</td>
+</tr>
+<tr>
+<td>두산에너빌리티</td>
+<td>73,200</td>
+<td>139,200</td>
+<td>53%</td>
+</tr>
+</tbody>
+</table>
+<p>주목할 점이 하나 더 있다. <strong>네 종목의 연중 고점이 전부 같은 날(5월 7일)에 찍혔다.</strong> 종목별 개별 악재가 아니라 <strong>전력기기 테마 전체가 그날을 정점으로 함께 식었다</strong>는 뜻이다. 상반기 열기 속에 극단적인 밸류에이션까지 올랐던 프리미엄이 되감기는, 섹터 단위의 조정이다.</p>
+<h2>반대편의 미국 — 신고가 행진</h2>
+<p>같은 기간 미국 대장주는 정반대다. 그리드·발전 설비 대표주 GE Vernova(GEV)는 <strong>7월 6일 사상 최고가($1,195.94)</strong>를 새로 썼고 연초 대비 약 76% 올랐다. 이유는 명확하다.</p>
+<ul>
+<li>GE Vernova의 전기화 부문은 <strong>1분기에만 데이터센터 장비 수주 24억 달러</strong>를 기록했는데, 이는 지난 한 해 전체를 넘어서는 규모다.</li>
+<li>하이퍼스케일러들의 AI 설비 투자는 2026년 7,500억 달러, 2027년 1조 달러 돌파가 전망된다.</li>
+<li>GE Vernova·지멘스에너지·이튼 경영진이 나란히 지금 국면을 <strong>"수십 년짜리 투자 슈퍼사이클"</strong>이라 부른다.</li>
+</ul>
+<p>즉 테마의 구조적 논리(전력망 투자 + 데이터센터 전력 수요)는 여전히 살아 있고, 그 논리를 가장 직접적으로 받는 미국 대표주는 신고가를 달리는 중이다.</p>
+<h2>그래서 이건 "따라가기"가 아니라 "괴리 수렴" 베팅이다</h2>
+<p>"미국이 오르니 한국도 따라오르지 않을까"라는 생각은 자연스럽다. 하지만 지금 구도는 단순 동행이 아니다. <strong>미국은 신고가, 한국은 반토막 — 이미 크게 벌어진 갭이 좁혀질 것인가</strong>라는, 훨씬 조건부의 질문이다. 이 둘은 완전히 다른 트레이드다.</p>
+<p>수렴 베팅을 하려면 <strong>왜 벌어졌는지</strong>부터 답해야 한다. 크게 세 갈래다.</p>
+<ol>
+<li><strong>거품 되감기</strong> — 한국이 상반기에 너무 빨리 올라 프리미엄이 빠지는 중이라면, 아직 더 내려갈 수 있다.</li>
+<li><strong>구조적 차이</strong> — 국내 기업의 데이터센터 직접 수주 노출이 미국 대표주보다 약하다면, 애초에 덜 오를 이유가 있다.</li>
+<li><strong>일시적 수급</strong> — 단순 심리·자금 이동 때문이라면, 진짜 캐치업 기회일 수 있다.</li>
+</ol>
+<p>이 셋을 가르는 건 <strong>수주잔고와 데이터센터 매출 비중</strong> 같은 실적 데이터다. 차트만 보고 "반토막이니 싸다"고 결론 내릴 수 없는 이유다.</p>
+<h2>투자자가 실제로 확인해야 할 것</h2>
+<ul>
+<li><strong>미국 쪽 밸류 부담</strong>: GEV는 신고가지만 이미 PER 59배 수준이고, 애널리스트 목표주가가 현재가보다 오히려 낮다. "미국을 따라간다"가 자칫 <strong>고점을 따라 들어가는</strong> 것일 수 있다.</li>
+<li><strong>떨어지는 칼 리스크</strong>: 일부 종목은 연중 저점 코앞이다. 수렴 트레이드는 바닥을 확인하기 전까지 계속 밀릴 수 있으니, <strong>무효화 기준(예: 연저점 이탈 시 철회)</strong>을 미리 정해두는 게 낫다.</li>
+<li><strong>촉매 관찰</strong>: 국내 전력기기 기업들의 분기 실적·수주 공시, 그리고 미국 대표주가 높은 밸류에서 계속 버티는지 흔들리는지. 미국이 롤오버하면 테마 전체가 함께 디레이팅된다.</li>
+</ul>
+<h2>결론</h2>
+<p>전력기기 테마의 큰 그림(AI·전력망 수요)은 여전히 유효하다. 하지만 한국 대장주들이 "고점 대비 반토막"이라는 사실이 곧 매수 신호는 아니다. <strong>이건 동행이 아니라 괴리이고, 그 괴리가 좁혀질지는 수주잔고라는 데이터로 갈린다.</strong> 미국 신고가라는 헤드라인에 끌려 서두르기보다, 벌어진 이유를 먼저 확인하고 무효화 기준을 세운 뒤 접근하는 편이 안전하다.</p>
+<hr />
+<p><em>본 글은 공개된 시장 데이터에 기반한 개인적 분석·기록이며, 특정 종목의 매수·매도를 권유하는 투자 자문이 아니다. 투자 판단과 그 결과의 책임은 투자자 본인에게 있다.</em></p>
+</article>
+</body>
+</html>

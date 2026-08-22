@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260717] 한국어로 물었는데 영어로 답했다 — 그리고 코드 감사 시즌 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>[260717] 한국어로 물었는데 영어로 답했다 — 그리고 코드 감사 시즌</h1>
+<p class="subtitle">데이터 넘기는 방식을 바꿨더니 리포트가 갑자기 영어로 나왔고, 그 김에 여러 곳을 감사했더니 실버그와 사각지대가 하나씩 나왔습니다</p><p>어제는 뭔가를 새로 만들기보다 이미 있는 걸 점검하는 날에 가까웠습니다. 그런데 점검을 하다 보니 예상 못한 버그도 나오고, 예상 못한 사각지대도 나왔습니다.</p>
+<h2>한국어로 물었는데 영어로 답하기 시작했다</h2>
+<p>AI 담당들에게 데이터를 넘기는 방식을 손봤습니다. 예전엔 필요할 때마다 직접 도구를 불러 자료를 가져오는 방식이었는데, 필요한 자료를 미리 한 번에 모아서 통째로 넘겨주는 방식으로 바꿨습니다. 처리 속도가 눈에 띄게 빨라졌습니다.</p>
+<p>그런데 부작용이 하나 있었습니다. 리포트가 갑자기 영어로 나오기 시작한 겁니다. 원인을 추적해보니, 한국어 데이터를 영어로 된 시스템 안내문 쪽으로 옮겨 넣다 보니 AI가 "지금 영어로 대화하는 상황"이라고 착각한 것이었습니다.</p>
+<p>고치는 방법은 단순했습니다. "원문이 영어여도 서술은 반드시 한국어로 하라"는 지시를 명시적으로 박아 넣었습니다. 데이터를 넘기는 형식을 바꿀 땐 내용뿐 아니라 그 형식 자체가 AI에게 보내는 또 다른 신호라는 걸 다시 확인한 셈입니다.</p>
+<h2>데이터 아카이브 감사 — 버그 하나, 사각지대 하나</h2>
+<p><a href="https://finaltype.tistory.com/31" target="_blank" rel="noopener noreferrer">데이터 아카이브</a>(새 창) 우산 프로젝트도 한 번 더 감사를 받았습니다. 이번엔 실제로 쓸모 있는 결과가 두 가지 나왔습니다.</p>
+<p>하나는 진짜 버그였습니다. 게시판 데이터를 저장할 때 "같은 시점에 관측한 값을 나중 값이 덮어쓰지 않게" 이중으로 기록해두는 장치가 있었는데, 뒤늦게 채워 넣는 과거분 데이터가 최신 관측값을 거꾸로 덮어쓰는 결함이 있었습니다. 최신 값을 우선하도록 순서를 바꿔서 고쳤습니다.</p>
+<p>다른 하나는 사각지대 발견이었습니다. 과거 뉴스를 종목과 연결하는 작업이 실제로는 전체 종목이 아니라 상위 일부 종목만 대상으로 하고 있었다는 걸 알게 됐습니다.</p>
+<p>나머지 종목은 기사가 실제로 존재하는데도 연결이 안 되고 있었던 겁니다. 어떻게 고칠지는 정해졌지만, 실제로 적용할지는 아직 결정을 미뤄뒀습니다.</p>
+<h2>네트워크 감시병, 두 번째 조각도 맞췄다</h2>
+<p>어제 소개한 <a href="https://finaltype.tistory.com/37" target="_blank" rel="noopener noreferrer">네트워크 감시 프로그램</a>(새 창) 이야기의 후속입니다. 와이파이 복구 기능은 이미 만들어뒀는데, 여기에 원격 접속이 끊기는 경우를 감시하는 기능도 하나 더 추가했습니다.</p>
+<p>이 둘은 위험도가 다릅니다. 네트워크 자체가 죽었으면 어차피 다른 것도 다 멈춰있는 상태라 강한 조치(재부팅까지)를 써도 되지만, 원격 접속 프로그램만 죽고 네트워크는 멀쩡한 경우엔 본체가 실제로 돌아가고 있을 가능성이 있어서 재부팅은 절대 안 되고 그 프로그램만 살살 다시 살리는 선에서 멈춰야 합니다.</p>
+<p>권한 문제도 실제로 확인했습니다. 필요한 권한 설정을 넣고, 실제로 그 권한으로 서비스를 재시작할 수 있는지까지 직접 실행해서 확인했습니다. 이제 남은 건 실제로 스위치를 켜는 결정뿐입니다.</p>
+<h2>그 밖에</h2>
+<ul>
+<li>실거래 쪽 안전장치 문서를 다시 보다가, 문서에는 "아직 안 만들었다"고 적혀 있던 핵심 코드가 사실은 이미 다 구현돼 있었다는 걸 발견했습니다. 문서가 현실을 못 따라간 경우였습니다. 실계좌 자금이 걸린 유일한 경로라, 실제로 쓰기 전에 한 번 더 꼼꼼한 코드 감사를 시작했습니다.</li>
+<li>코드 감사 중에 제 실수도 하나 잡았습니다. "오늘 날짜"를 기준으로 데이터가 오래됐는지 판단하는 로직이 있었는데, 휴장일을 감안 안 해서 정상적으로 운영되는 날에도 매번 오탐이 날 수 있는 버그였습니다. "가장 최근 거래일" 기준으로 다시 짰습니다.</li>
+<li>네트워크 장애가 났을 때 직접 복구를 시도하던 로직을 정리했습니다. 이제 본체는 복구를 시도하지 않고, 몇 번 재시도한 뒤 그냥 건너뛰기만 합니다. 복구는 전적으로 네트워크 감시 프로그램의 몫으로 넘겼습니다.</li>
+</ul>
+<hr />
+<p>돌아보면 어제는 "새 걸 만든 날"이 아니라 "이미 있는 걸 의심해본 날"이었습니다. 의심해보지 않았으면 계속 몰랐을 것들이 세 군데에서 나왔습니다.</p>
+</article>
+</body>
+</html>

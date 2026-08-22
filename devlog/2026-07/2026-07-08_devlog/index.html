@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260708] 요약 모델 말만 믿었다가 실계좌에 취소 안 되는 주문이 남았다 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>[260708] 요약 모델 말만 믿었다가 실계좌에 취소 안 되는 주문이 남았다</h1>
+<p class="subtitle">새 자동투자 기능을 안전하게 검증하는 트랙을 만드는 김에, API를 잘못 추측했다가 겪은 사고까지</p><p>오늘은 새 기능 하나를 안전하게 검증하는 틀을 만드는 게 메인이었는데, 그 과정에서 사고도 두 건 겪었습니다.</p>
+<h2>새 자동투자 기능, 실거래 리스크 0으로 먼저 검증</h2>
+<p>지금 있는 신호강도 자동투자 기능을 확장하는 아이디어가 있었는데, 실제 돈을 걸기 전에 <strong>페이퍼(모의) 트랙</strong>으로 먼저 오래 검증하는 구조부터 만들었습니다.</p>
+<ul>
+<li>실제 계좌와 완전히 분리된 장부를 만들어서, 후보 종목 선정은 똑같이 하되 <strong>배분 방식만 다른 두 트랙을 나란히</strong> 돌립니다. 어느 쪽이 실제로 더 나은지 A/B로 비교하기 위해서입니다.</li>
+<li>판정 기준을 미리 정해뒀습니다 — <strong>충분히 긴 기간(수개월 단위 거래일) 동안 통계적으로 유의미하게 벤치마크를 이겨야</strong> 실제 자금 확대를 검토하고, 못 넘으면 자동으로 폐기합니다. "일단 만들어놓고 언젠가 판단하자"가 아니라, 판정 버튼을 먼저 만들고 1일차부터 돌리는 방식입니다.</li>
+<li>만들다 보니 흥미로운 걸 하나 발견했는데, 지금 배분 방식이 참고하는 입력값 중 하나가 그동안 <strong>기록 자체가 안 되고 있어서</strong> 과거 데이터로 되짚어 검증할 방법이 없었습니다. 오늘부터라도 기록을 시작해뒀습니다 — 아무리 좋은 아이디어라도 검증할 데이터가 없으면 그냥 느낌일 뿐이라는 걸 다시 확인했습니다.</li>
+<li>실행 단계에서 손실이 새는 정도(결정한 시점 가격과 실제 체결 가격의 차이)를 계속 재는 계기판도 같이 붙였습니다.</li>
+</ul>
+<h2>사고 1: 테스트가 진짜 페이퍼 기록에 가짜 데이터를 써버림</h2>
+<p>위 장부 관련 코드를 테스트하다가, 파이썬에서 자주 나오는 함정에 걸렸습니다. 함수의 기본 저장 경로 값이 <strong>함수가 정의되는 시점에 이미 고정</strong>돼버려서, 테스트 중에 "임시 경로로 바꿔치기"를 했다고 생각한 게 실제로는 안 먹히고 있었습니다. 그 결과 테스트가 실제 페이퍼 트래킹 기록에 가짜 데이터를 써버렸습니다. 다행히 실거래 쪽 장부는 전혀 안 건드려서 실제 매매 데이터는 무사했고, 가짜로 들어간 기록만 지우고 정리했습니다.</p>
+<h2>사고 2: API를 잘못 추측했다가 실계좌에 취소 안 되는 주문이 남음</h2>
+<p>오래 안 체결된 주문을 자동으로 취소해주는 안전장치를 만들고 실제로 검증하는 과정에서 벌어진 일입니다. 증권사 API의 "주문 취소" 엔드포인트가 뭔지 확인할 때, 요약해주는 보조 도구가 REST API의 흔한 관례를 근거로 특정 방식이라고 자신 있게 답했습니다. 그 말을 믿고 구현한 다음, 체결될 리 없는 아주 안전한 가격으로 소량 테스트 주문을 넣고 취소를 시도했더니 — <strong>API를 찾을 수 없다는 에러</strong>가 떴습니다. 잘못된 엔드포인트였던 겁니다.</p>
+<p>그 사이 실계좌에 취소 안 된 주문이 몇 분간 그대로 남아있었습니다. 다행히 애초에 "체결될 리 없는 가격 + 당일 자동소멸 주문"으로 안전하게 설계해뒀던 덕분에 실제 피해는 없었지만, 요약 도구의 그럴듯한 답을 그대로 믿었다가 벌어진 일이라 뼈아팠습니다. 진짜 API 명세 문서를 원본 그대로 직접 파싱해서 정확한 엔드포인트를 확인한 뒤에야 제대로 취소가 됐습니다.</p>
+<p><strong>교훈</strong>: 실계좌에 영향을 주는 API는 요약 도구 말을 근거로 삼지 않고, 항상 원본 스펙을 직접 까봐야 합니다. 어제 일지의 "모델 문서 못 믿는다"는 교훈과 결이 같은데, 이번엔 한 걸음 더 나가서 "요약해주는 도구도 그럴듯하게 잘못 말할 수 있다"는 걸 배웠습니다.</p>
+<h2>그 밖에</h2>
+<ul>
+<li>위 안전장치(오래 안 체결된 주문 자동취소)는 충분히 검증한 뒤 실제로 켰습니다.</li>
+<li>얼마 전 컴퓨터가 재시작됐을 때, 핵심 백그라운드 프로세스 일부가 개발 환경(에디터) 프로세스의 자식으로 떠 있어서 에디터가 죽을 때 같이 조용히 죽어버리는 구조였다는 걸 발견했습니다. 그날은 아침 리포트가 밀릴 뻔했습니다. 네 개 핵심 프로세스 전부 OS 서비스로 승격시켜서, 이제 에디터가 죽어도 독립적으로 계속 돌아갑니다.</li>
+</ul>
+<hr />
+<p>오늘 두 사고 다 실제 손해로 이어지진 않았지만, 둘 다 "이미 만들어둔 안전장치 덕분에" 무사했던 거라 아찔했습니다. 새 기능 검증 트랙은 이제 1일차 시계가 돌기 시작했으니, 앞으로는 그 결과를 지켜보는 일이 남았습니다.</p>
+</article>
+</body>
+</html>

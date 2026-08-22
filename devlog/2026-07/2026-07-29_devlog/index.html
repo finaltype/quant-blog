@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260727~29] 조용한 크래시, 기록 누락, 27시간 신호 침묵 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>[260727~29] 조용한 크래시, 기록 누락, 27시간 신호 침묵</h1>
+<p class="subtitle">사흘 내내 &quot;돈이 잘못 나간&quot; 사고가 아니라 &quot;아무 일도 안 일어난&quot; 사고들을 쫓아다녔습니다 — 월요일 새벽의 조용한 크래시, 독자 제보로 찾은 성과 기록 누락, 그리고 서킷브레이커 상황에서 하루 넘게 이어진 신호 침묵까지</p><p>며칠 정신없이 사고 대응만 하다 보니 글 쓸 틈을 못 냈습니다. 27일, 28일, 29일 사흘을 한 번에 정리합니다.</p>
+<p>돌이켜보면 이 사흘은 유독 "조용히 실패하는" 종류의 사고들이 몰렸던 기간이었습니다. 주문이 잘못 나간 게 아니라, 그냥 아무것도 안 일어난 채 멈춰있었던 사고들입니다.</p>
+<h2>월요일 새벽, 알림 없이 멈춘 매매</h2>
+<p>월요일 장 시작 직후, 캐시가 얼마나 신선한지를 판단하는 두 기준이 서로 어긋나면서 매매 실행 경로가 알림 없이 그대로 멈춰버리는 일이 있었습니다. 다행히 잘못된 주문이 나가거나 돈이 오간 건 아니었습니다.</p>
+<p>그냥 아무 일도 안 일어난 채 조용히 멈춘 것이었는데, 오히려 그래서 한동안 눈치채지 못할 뻔했습니다. 당일 바로 원인을 찾아 고치고 배포했습니다.</p>
+<h2>독자 제보로 찾은 기록 누락</h2>
+<p>블로그를 보던 분이 "성과 통계가 예전 값 그대로인 것 같다"는 댓글을 남겼습니다. 확인해보니 실제로 추천 성과 기록이 몇 주째 조용히 누락되고 있었고, 원인은 위와 같은 종류의 캐시 판단 버그였습니다.</p>
+<p>바로 고치고 나서, 최근 눈에 띄게 좋아 보이던 성과 수치가 진짜인지도 다시 들여다봤습니다. 표본이 작고 한 종목의 급등락 구간이 우연히 겹친 영향이 커서, 아직은 액션으로 옮길 근거가 아니라는 결론이었습니다.</p>
+<p>그래서 따로 손대지 않고 계속 지켜보는 지표로만 남겨뒀습니다. 좋아 보이는 숫자를 스스로 의심하고 다시 검증하는 과정도 이 프로젝트에서 계속 반복되는 루틴 중 하나입니다.</p>
+<h2>화요일, 27시간 동안의 신호 침묵</h2>
+<p>화요일엔 장중 급변동(서킷브레이커) 상황에서 실시간 감시 프로세스가 멈춰버렸습니다. 알림도 없이 27시간 가까이 신호가 끊긴 채 방치됐고, 다음 날에야 뒤늦게 발견해서 재가동했습니다.</p>
+<p>이번 사흘 중 가장 무거운 사고였습니다. 돈이 잘못 나가는 실패보다, "아무것도 안 하고 있다는 사실 자체를 아무도 모르는" 실패가 알아채기 훨씬 어렵다는 걸 다시 확인했습니다.</p>
+<h2>알림 체계를 다시 짰다</h2>
+<p>이 흐름을 계기로 알림 체계를 손봤습니다. 매매 관련 알림과 시스템 상태 알림을 서로 다른 채널로 분리하고, 감시 프로세스에는 하트비트와 정지 감지 장치를 붙여서 같은 종류의 침묵 사고가 재발하면 바로 알아채도록 했습니다.</p>
+<p>증권사 쪽 요청 제한에 걸렸을 때도 그냥 실패 처리하지 않고, 재시도할 수 있는 경우와 아닌 경우를 구분해서 재시도하도록 고쳤습니다. 안전장치를 겹겹이 쌓아가는 방향은 <a href="https://finaltype.tistory.com/43" target="_blank" rel="noopener noreferrer">예전에 정리한 실거래 안전장치 이야기</a>(새 창)와 같은 결입니다.</p>
+<p>이 과정에서 알림 범위를 좁히다가 실수로, 매일 아침 가족과도 공유하던 리포트까지 같이 꺼버린 적이 있었습니다. 바로 알아채서 그날 안에 되돌렸습니다.</p>
+<p>프로세스를 나누고 상태를 감시하는 이야기는 <a href="https://finaltype.tistory.com/48" target="_blank" rel="noopener noreferrer">운영 구조를 다룬 글</a>(새 창)에서 이어집니다.</p>
+<h2>그 밖에</h2>
+<ul>
+<li>예전에 "특정 종목군을 매매하지 않고 있다"고 판단했던 게 스냅샷을 잘못 읽은 착오였음을 확인했습니다. 실제로는 매수 후 정리까지 정상적으로 진행되고 있었습니다.</li>
+<li>사전에 정해둔 "5일 연속 무사고" 기준을 이번에 채웠습니다.</li>
+<li>커밋 이력이 없던 오래된 폴더 하나를 정리해서 지웠고, 백업 암호를 물리적으로도 한 부 보관해뒀다는 걸 다시 확인했습니다.</li>
+</ul>
+<hr />
+<p>사흘 내내 새 기능보다는 "실패했을 때 조용히 넘어가지 않게 만드는" 작업에 시간을 더 썼습니다. 화려하진 않지만, 실거래 범위를 넓히기 전에 꼭 필요한 종류의 일이라고 생각합니다.</p>
+</article>
+</body>
+</html>

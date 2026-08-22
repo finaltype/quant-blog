@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260731~0804] 알림 정비 마무리, 성과 계산 오차, 그리고 회귀 사고 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>[260731~0804] 알림 정비 마무리, 성과 계산 오차, 그리고 회귀 사고</h1>
+<p class="subtitle">주말을 사이에 두고 닷새를 정리합니다 - 알림 체계 정비를 마무리하다가, 모의계좌 성과 계산이 실제 잔고와 미묘하게 안 맞는다는 걸 발견했고, 하루 뒤엔 그 여파로 작은 회귀 사고까지 겪었습니다</p><p>며칠 만에 다시 씁니다. 주말 이틀은 특별한 일이 없었고, 평일 사흘은 정리 작업을 마무리하다가 발견한 성과 계산 오차와, 그 다음날 벌어진 작은 회귀 사고로 채워졌습니다.</p>
+<h2>정리하던 것들의 마무리</h2>
+<p>먼저 현금 배치를 판단하는 기준을 다시 잡았습니다. 예전에는 "현금이 목표 비중 안에 들어와 있는가"를 기준으로 봤는데, 이 기준 자체가 실제 상황을 잘 설명하지 못한다는 결론이 나왔습니다. 그래서 지금은 "매수 제안이 거부된 횟수"와 "쓸 수 있는데 못 쓴 한도"를 직접 세는 방식으로 바꿨습니다.</p>
+<p>알림 체계 정비도 이 시기에 마무리 단계에 들어갔습니다. 허용 목록 서명, 알림 등급별 발송, 정상일 때는 조용히 지나가는 처리, 하루를 정리하는 요약과 "이번 주도 잘 살아있다"는 주간 생존 알림까지 갖췄습니다. 프로세스 분리와 리포트 체계를 다룬 <a href="https://finaltype.tistory.com/48" target="_blank" rel="noopener noreferrer">예전 글</a>(새 창)의 연장선에 있는 작업입니다.</p>
+<h2>성과 계산이 실제 잔고와 안 맞았다</h2>
+<p>완전자동 검증 트랙의 성과 리포트를 들여다보다가, 리포트에 찍힌 수익률이 실제 계좌 잔고와 미묘하게 안 맞는다는 걸 발견했습니다. 확인해보니 리포트가 실제 증권사 계좌가 아니라 내부적으로 기록해둔 매매 장부를 기준으로 계산되고 있었고, 수수료와 세금이 제대로 반영되지 않아 실제보다 좋아 보이는 쪽으로 살짝 치우쳐 있었습니다. 하루를 마감하며 기록하는 시점에 아직 처리되지 않은 체결 건이 엉뚱한 날짜로 잡히는 문제도 겹쳐 있었습니다.</p>
+<p>바로 세 가지를 고쳤습니다. 수수료·세금을 제대로 반영하는 계산 방식, 매일 내부 장부와 실제 계좌를 서로 대조해서 어긋나면 바로 알리거나 막는 장치, 그리고 실제 계좌를 기준으로 삼는 성과 계산 경로를 새로 만들었습니다. 이 판단 트랙 자체에 대한 배경은 <a href="https://finaltype.tistory.com/44" target="_blank" rel="noopener noreferrer">따로 정리한 글</a>(새 창)에 있습니다.</p>
+<p>같은 날 랭킹 계산 쪽에서도 자잘한 버그를 하나 잡았습니다. 데이터가 최신인지 확인하는 장치가 종목 단위로는 걸려 있지 않아서, 특정 날에 일부 종목이 조용히 모델 입력에서 빠지고 있었던 걸 발견해 고쳤습니다.</p>
+<h2>하루 뒤의 회귀 사고, 그래도 안전하게 멈췄다</h2>
+<p>다음날 아침, 전날 고친 것 중 하나가 캐시 판단 기준을 살짝 바꾸면서 캐시가 새로 채워지는 타이밍 문제를 만들었습니다. 이게 다른 곳에 있던 오래된 경쟁 상태 문제와 겹치면서 무거운 재계산이 반복되는 상황이 벌어졌고, 배포가 완전히 끝나지 않은 채 신구 버전 코드가 동시에 떠 있던 것도 문제를 키웠습니다.</p>
+<p>다행히 결과적으로는 매매가 안전하게 멈췄을 뿐, 잘못된 주문은 하나도 나가지 않았습니다. 원인을 찾아 네 군데를 고쳤고, "코드를 고치면 그걸 쓰는 상주 프로세스는 전부 같이 재시작한다"는 예전에 이미 배웠던 교훈을 다시 한번 되새기는 계기가 됐습니다.</p>
+<h2>그 밖에</h2>
+<ul>
+<li>최근 급락장 구간을 대상으로 한 백테스트에서 좋은 성과가 나왔지만, 자세히 보니 성과 대부분이 며칠 안 되는 급락 구간에 몰려 있어서 일반화하기엔 이르다고 판단하고 참고용으로만 남겨뒀습니다.</li>
+<li>데이터 아카이브 쪽에서는 오래된 과거 기사까지 계속 모아둘 가치가 있는지 다시 검토했는데, 새로운 신호를 찾기 위해서가 아니라 나중에 문제가 생겼을 때를 대비하는 차원에서 계속 모으기로 했습니다. <a href="https://finaltype.tistory.com/31" target="_blank" rel="noopener noreferrer">자세한 이야기</a>(새 창)로 다뤘습니다.</li>
+<li>실거래 전환 판단 시점은 8월 11일 이후로 다시 미뤘습니다. "사고가 있었는가"와 "얼마나 꾸준히 매매할 수 있었는가"를 구분해서 보기로 기준도 함께 정리했습니다.</li>
+</ul>
+<hr />
+<p>닷새 중 이틀은 조용했고, 나머지 사흘은 "숫자가 진짜로 맞는지"를 확인하고 되짚는 작업이었습니다. 화려한 날은 아니었지만, 실거래 범위를 넓히기 전에 꼭 거쳐야 하는 종류의 점검이라고 생각합니다.</p>
+</article>
+</body>
+</html>

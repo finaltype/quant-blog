@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260730] 미국 시장 이식 검토 - 기술은 가능해도 아직 이르다 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>[260730] 미국 시장 이식 검토 - 기술은 가능해도 아직 이르다</h1>
+<p class="subtitle">지난 며칠 고친 것들이 실제로 버티는지 확인한 하루였고, 동시에 이 시스템을 미국 주식 시장으로 옮길 수 있을지도 진지하게 검토해봤습니다</p><p>오늘은 사고 대응보다는 지난 며칠 고친 것들이 실제로 버티는지 확인하는 하루였습니다. 그리고 다른 쪽에서는 "이 시스템을 미국 시장으로도 옮길 수 있을까"라는 질문을 진지하게 검토해봤습니다.</p>
+<h2>어제 고친 것들의 첫 성적표</h2>
+<p>서킷브레이커 이후 며칠 만에 처음으로 매매가 정상적으로 진행된 날이었습니다. 오전 한 차례 증권사 쪽에서 일시적인 오류가 났지만, 며칠 전 손봐둔 <a href="https://finaltype.tistory.com/43" target="_blank" rel="noopener noreferrer">재시도 로직</a>(새 창)이 설계한 대로 작동해서 중복 주문 없이 그대로 넘어갔습니다.</p>
+<p>추천 성과 기록도 하루 종일 정상적인 양으로 쌓였습니다. 지난 누락 사고 이후로 이 부분을 매일 확인하는 습관이 생겼는데, 오늘로 완전히 정상 범위에 들어왔다고 판단했습니다.</p>
+<p>겸사겸사 같은 종류의 버그가 다른 곳에도 숨어있는지 전수조사를 했고, 이번엔 다른 곳은 이상이 없다는 걸 확인했습니다. 며칠 전 재부팅 때 있었던 자잘한 사고도 원인을 찾았는데, 이미 있던 재시작 정책 덕분에 스스로 복구돼서 별도 조치는 필요 없었습니다.</p>
+<p>오래 막혀있던 매수도 오늘부터 다시 풀렸습니다. 목표로 하던 자산 배분 비율도 거의 맞아떨어지는 수준으로 돌아왔고, 다음 결정을 위해 정해둔 "며칠 연속 무사고" 조건도 오늘을 첫날로 다시 세기 시작했습니다.</p>
+<h2>미국 시장으로 옮길 수 있을까</h2>
+<p>다른 자문을 받아, 이 시스템을 미국 주식 시장에도 이식할 수 있을지를 검토해봤습니다. 결론부터 말하면 기술적으로는 몇 달이면 옮길 수 있는 수준이라는 답이 나왔습니다.</p>
+<p>하지만 지금 한국 시장에서 붙잡고 있다고 믿는 우위들 — 개인투자자 비중이 높은 시장 특성, 상대적으로 덜 분석된 데이터, 언어 장벽 덕에 아직 덜 파헤쳐진 정보 — 이 미국 시장에서는 오히려 반대로 작용할 가능성이 크다는 지적이 나왔습니다. 우위의 원천 자체가 시장을 옮기는 순간 사라질 수 있다는 뜻입니다.</p>
+<p>더 현실적인 문제도 있었습니다. 미국 장은 한국 시간 기준 밤에 열리는데, 사람이 잠든 사이에 문제가 생기면 대응이 늦어질 수밖에 없습니다. 세금이나 계좌 관련 규제도 별도로 챙겨야 할 부분이었습니다.</p>
+<p>그래서 결론은 "기술적으로는 가능하지만 지금은 시기상조"였습니다. 한국 시장에서도 아직 충분히 검증된 우위를 확보하지 못한 상태에서, 새로운 시장으로 확장하는 건 지금의 우선순위가 아니라고 판단했습니다.</p>
+<h2>그 밖에</h2>
+<ul>
+<li>매일 아침 오던 "이상 없음" 알림은 끄고, 실패나 정지를 알리는 알림만 남겨뒀습니다.</li>
+<li>잘못된 경로로 가던 알림 하나도 바로잡았습니다.</li>
+</ul>
+<hr />
+<p>오늘은 새로운 걸 만들기보다, 그동안 고친 것들이 실제로 버티는지 확인하고 다음 확장 방향을 가늠해본 날이었습니다. 확장은 아직 이르다는 결론이었지만, 이런 질문을 미리 던져보는 것도 나쁘지 않다고 생각합니다.</p>
+</article>
+</body>
+</html>

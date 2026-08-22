@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[Aug 17-22] We Swapped GPUs, Then Kept Finding Blind Spots in Our Own Checks · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-22_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>[Aug 17-22] We Swapped GPUs, Then Kept Finding Blind Spots in Our Own Checks</h1>
+<p class="subtitle">A hardware verdict flipped twice in one week, two verification tools turned out to be quietly missing errors, and a real brokerage account needed two manual human interventions</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.tistory.com/23" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>It's been a while since the last devlog, and it turned out to be the busiest week yet. We swapped the GPU entirely on Monday, and that verdict got reversed twice within a few days.</p>
+<p>The same week, two newly built verification tools surfaced problems we'd been missing without noticing. And a real brokerage account needed two direct human interventions.</p>
+<h2>The GPU got swapped, and the verdict flipped twice</h2>
+<p>On Monday we replaced the graphics card with a different brand's model. The compute backend changed along with it — a big move.</p>
+<p>Tuesday's production rollout, combined with tuning a separate speed-up technique, landed on "one new card does the work of two old ones." While we were at it, we ran a large code review on everything that had piled up recently and caught several serious issues, including a bug that could have allowed a double-buy.</p>
+<p>Wednesday brought an unexpected self-inflicted error while investigating something unrelated (an old question about AI model size). A self-built groundedness checker turned out to be misjudging different formatting styles of the same value as errors. We invalidated it immediately and added a guard against the same failure mode recurring.</p>
+<p>From Thursday night through Friday, we re-examined the evidence for buying yet another graphics card, and the verdict flipped twice in a single day. We ended up buying nothing, decided to return the expensive card already on order, and pivoted to answering the question with a small, near-zero-cost experiment instead.</p>
+<p>Saturday (today) we were debugging that experiment's mid-run interruptions, while also exploring "using less GPU overall." We tested whether the morning report commentary could be produced with an AI subscription we already pay for instead of the local GPU — quality came out comparable or slightly better. A shared usage-cap issue with other tasks is still unresolved, so no final call yet.</p>
+<h2>Automated checks were quietly hiding gaps</h2>
+<p>We wired a new automated numeric checker into production reports. It immediately showed formatting errors in more than half of the tickers in every single daily report.</p>
+<p>Looking back 45 days, the same class of error had shown up every day without exception. Before this tool existed, nobody knew. It was another case of "the system runs, but nothing is actually being checked."</p>
+<p>A gauge that checks model reproducibility every day also died two nights running. The cause: another overnight job was holding the GPU, but the gauge decided "it's free" from a single instant read.</p>
+<p>We switched it to directly check occupancy. Instead of spinning up a fresh instance, it now hands off from the overnight job right as that job wraps up, removing the failure point entirely.</p>
+<h2>A real account needed two human interventions</h2>
+<p><a href="https://finaltype.tistory.com/43" target="_blank" rel="noopener noreferrer">Background on order execution and safety-layer design</a>(new tab) is in an earlier post. This week, those safety layers themselves caused two incidents.</p>
+<p>On Thursday we found a specific position that had a sell order queued for days but kept not executing. The root cause was a structural flaw in the daily trading-budget allocation rule that always pushed small orders to the back of the queue.</p>
+<p>While fixing the rule, one order that couldn't go through in time was handled manually — a real, irreversible trade on a live account.</p>
+<p>Friday brought the opposite failure. A drawdown safety guard was reacting to momentary intraday dips, which incorrectly blocked two legitimate buy orders.</p>
+<p>After review, the blocked buys were executed manually, and the guard was redesigned to react only to close-to-close comparisons instead of intraday snapshots.</p>
+<p>During this, a separate bug surfaced in the tool that records manual trades into the ledger — it didn't have a "new buy" case defined, so the asset briefly showed up as if it were outside the ledger. We fixed it immediately by respecting the correct order (record the sell first, then the buy), and verification confirmed the ledger matched the live account exactly.</p>
+<h2>Also this week</h2>
+<ul>
+<li>The documentation had grown too large, so we reorganized it into five purpose-based groups and added an always-on check for broken internal links.</li>
+<li>We created a document that collects the standing rules every session must check at startup, and wired it to load automatically.</li>
+<li>We wrote up the manual order procedure as a standalone document and linked it from several code paths that touch the live account, so it can't be missed.</li>
+</ul>
+<hr />
+<p>Looking back, this was less a week of new features and more a week of re-checking things we thought were already working. The GPU verdict, the verification tools, and the safety guards each betrayed us at least once.</p>
+<p>Fortunately we caught each one as it happened, and the live account balance matched the ledger exactly by the end of the week. Next week we should have results from the small experiment we redesigned this week.</p>
+</article>
+</body>
+</html>

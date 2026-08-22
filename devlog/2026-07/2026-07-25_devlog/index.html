@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260723~25] 현금 배치 버그, 위험종목 안전망, 시계 오차 사고 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>[260723~25] 현금 배치 버그, 위험종목 안전망, 시계 오차 사고</h1>
+<p class="subtitle">사흘 동안 새 기능보다는 이미 있던 것들을 촘촘하게 다듬었습니다 — 모의계좌 현금 배치 버그를 잡고, 지인이 알려준 종목 하나가 계기가 된 위험종목 안전망을 만들고, 재부팅 후 생긴 시계 오차 사고를 수습했습니다</p><p>7월 23일 작업일지를 깜빡하고 못 올렸습니다. 그 사이 24일, 25일까지 밀렸는데, 25일은 거의 손을 안 댄 날이라 사흘을 한 번에 정리합니다.</p>
+<h2>모의계좌에 현금이 계속 쌓이던 이유</h2>
+<p>모의계좌에서 현금의 상당 부분이 계속 안 쓰이고 남아있는 문제가 있었습니다. 원인을 파보니, 사려는 수량이 딱 맞아떨어지지 않으면 주문을 아예 통째로 거부해버리는 로직 때문이었습니다.</p>
+<p>조금이라도 살 수 있는 만큼은 사도록 고쳤습니다. 정확한 목표 수량을 못 맞추더라도, 최대한 가깝게 채우는 쪽이 아예 안 사는 것보다 낫다고 판단했습니다.</p>
+<h2>지인이 알려준 종목 하나가 만든 안전망</h2>
+<p>지인이 종목 하나를 알려준 적이 있는데, 찾아보니 위험 신호가 있는 종목이었습니다. 감사의견 관련 사항이나 대규모 증자, 상장폐지 관련 공시처럼, 공개된 자료만 봐도 알 수 있는 신호들이었습니다.</p>
+<p>이런 걸 놓치지 않게, 공개된 공시 데이터를 기반으로 위험 신호를 자동으로 걸러내는 장치를 하루 만에 만들어서 테스트하고 바로 적용했습니다. 새로운 수익 신호가 아니라, 명백히 위험한 종목을 거르는 안전망이라는 점을 분명히 해뒀습니다.</p>
+<h2>실거래 직전 마지막 점검을 마쳤다</h2>
+<p>실계좌 주문과 관련된 여러 예외 상황(거절, 부분체결, 응답 지연, 결제 처리)을 하나씩 다시 확인하는 작업도 이날 마무리됐습니다. 실거래 범위를 넓히기 전에 챙겨야 할 체크리스트의 마지막 항목이었습니다.</p>
+<h2>재부팅 한 번이 부른 9시간짜리 시계 오차</h2>
+<p>어느 날 재부팅을 했는데, 시스템 시계가 잠깐 9시간 빠르게 표시되는 일이 있었습니다. 시간 동기화가 다시 맞춰지기 전까지 잠깐 벌어진 일이었는데, 그 사이 백그라운드로 도는 일부 작업의 예약 스케줄러가 조용히 9시간 동안 멈춰 있었습니다.</p>
+<p>다행히 그 시간대엔 실제 매매가 예정돼있지 않아서 실질적인 피해는 없었고, 엉뚱한 경보가 하나 울린 정도였습니다. 그날 밤 바로 시간 동기화가 끝날 때까지 스케줄러가 기다리도록 고쳐서, 같은 문제가 다시 안 생기게 해뒀습니다.</p>
+<h2>그 밖에</h2>
+<ul>
+<li>매매 판단 과정에서 검토 단계를 몇 번 더 거치게 하면 결과가 더 좋아지는지 실험해봤는데, 오히려 더 안 좋아진다는 결론이 나서 지금 방식을 유지하기로 했습니다.</li>
+<li>미국 시장 마감 흐름을 다음날 국내 순위에 반영하는 아이디어도 다시 검증해봤는데, 이번에도 뚜렷한 효과는 없었습니다. 그래도 나중을 위해 관련 데이터는 계속 모아두기로 했습니다.</li>
+<li><a href="https://finaltype.tistory.com/31" target="_blank" rel="noopener noreferrer">데이터 아카이브</a>(새 창) 쪽에 공개적으로 발언하는 몇몇 인물의 발언을 수집하는 스트림도 하나 더 열었습니다. 다만 이걸로 매매 신호를 만들 수 있는지는 따로 검토해봤는데, 아니라는 결론이 나서 수집만 하고 신호로는 안 쓰기로 했습니다.</li>
+</ul>
+<hr />
+<p>사흘 다 화려한 신기능은 없었지만, 돌이켜보면 전부 "이미 있는 걸 더 안전하게 만드는" 쪽의 작업이었습니다. 이런 날들이 쌓여야 실거래 범위를 넓힐 명분이 생기는 것 같습니다.</p>
+</article>
+</body>
+</html>

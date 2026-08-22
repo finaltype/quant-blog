@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3 Reasons Automated Trading Verification Tools Miss Errors · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_verification-tool-blind-spots/index.html">한국어로 보기</a></p>
+<article>
+<h1>3 Reasons Automated Trading Verification Tools Miss Errors</h1>
+<p class="subtitle">Every new verification tool I added this week failed in a different way — a bug in the tool itself, a blind spot nobody had wired a check for, and a gauge that lied about the moment it was reading</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.tistory.com/23" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I've been adding several verification tools to my automated trading system lately. Each one broke in a different way when it actually got used.</p>
+<p>One turned out to be wrong itself. One didn't exist yet, so I had no idea anything was off. One existed but read its target at the wrong moment. Here are the three cases.</p>
+<h2>1. The verification tool can have its own bug</h2>
+<p>While digging into an old question about AI model size, I went back and looked at a groundedness checker I'd built earlier.</p>
+<p>Its job was to automatically flag report sentences that weren't backed by real data. Looking closer, it turned out to be flagging sentences that were correct but just written with a different formatting style than it expected — as "unfounded errors." The tool wasn't catching real mistakes. It was catching correct statements and calling them mistakes.</p>
+<p>I invalidated it immediately and added a separate guard so the same kind of false positive can't slip through again.</p>
+<p>You can't treat a verification tool as an infallible judge. The tool itself is also something that needs verifying.</p>
+<h2>2. You don't know what you're missing until you wire the check</h2>
+<p>I built a new tool to automatically check the numbers in daily reports and connected it to production.</p>
+<p>As soon as it ran, it turned out that more than half the tickers in every daily report had formatting errors. Looking back 45 days, the same class of error had been there every single day without exception.</p>
+<p>There had already been a self-consistency check on report numbers before this. But it was structurally blind to this particular class of error — it simply couldn't see it. "We have a check" and "we have a check for this specific error" turned out to be two different sentences.</p>
+<p>Until the new tool was wired in, nobody knew this error existed. It was another case of "the system is running, but nothing is actually being verified."</p>
+<p>Believing you have verification isn't enough. You have to explicitly confirm what class of error that verification actually covers.</p>
+<h2>3. If the read timing doesn't reflect real state, the gauge fools itself</h2>
+<p>There's a gauge that automatically checks model reproducibility every day. It died two nights in a row.</p>
+<p>The cause: another overnight job was holding onto the GPU, but the gauge decided "it's free right now" based on a single instantaneous read. Starting up under that false assumption failed every time.</p>
+<p>I switched it to directly check occupancy instead. Instead of loading a fresh instance each time, it now takes over the one the overnight job was already using right as that job wraps up — removing the failure point at its root.</p>
+<p>If the way a gauge reads "current state" competes for the same resource it's trying to measure, that reading can't be trusted. A snapshot in time and actual occupancy are two different questions.</p>
+<h2>Putting the three together</h2>
+<p>All three cases showed the same thing: "we built a verification tool" and "we are actually being verified" are different sentences.</p>
+<p>Building the tool wasn't the end of the work. I still had to keep asking whether the tool itself could be wrong, whether some error class was invisible to it from the start, and whether its read method could collide with the thing it was measuring.</p>
+<p>Every time I bolt on a new verification tool now, "what is this thing missing right now" goes on the list as the next thing to check.</p>
+</article>
+</body>
+</html>

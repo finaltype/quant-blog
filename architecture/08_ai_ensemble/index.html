@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 추천 파이프라인 - 세 모델이 합의로 판단하는 방법 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>AI 추천 파이프라인 - 세 모델이 합의로 판단하는 방법</h1>
+<p class="subtitle">종목을 추천하는 AI 파이프라인의 핵심은 개별 모델의 성능이 아니라, 서로 다른 시각을 가진 세 모델이 합의를 만드는 방식에 있습니다</p><p>퀀트봇에는 실계좌에 연결된 트레이딩봇과 별개로, 여러 AI 모델로 종목을 분석해서 참고용 리포트를 보내는 파이프라인이 있습니다. 아직 실제 자금으로 자동매매를 시키지는 않고, 추천이 맞았는지 계속 기록만 하고 있습니다.</p>
+<p>이 파이프라인의 핵심은 개별 모델 하나하나가 아니라, 여러 모델의 판단을 "합의로 묶는 방식" 자체에 있습니다. 오늘은 그 얘기를 이야기하듯 풀어보겠습니다.</p>
+<h2>누가 회의 테이블에 앉는가</h2>
+<p>주식을 오래 보신 분들껜 익숙한 명제로 시작하겠습니다 — <strong>좋은 판단은 한 명의 천재보다, 서로 다른 시각을 가진 여러 전문가의 합의에서 나오는 경우가 많습니다.</strong></p>
+<p>서로 완전히 다른 렌즈로 시장을 보는 AI 셋을 회의 테이블에 앉혀뒀습니다.</p>
+<ul>
+<li><strong>계량 담당(LightGBM)</strong> — 수년치 가격·거래량·재무 지표에서 통계적인 규칙성을 읽습니다.</li>
+<li><strong>흐름 담당(Transformer)</strong> — 시장이 시간을 따라 움직이는 추세와 국면 전환을 읽습니다.</li>
+<li><strong>리서치 담당(TradingAgents)</strong> — 뉴스·공시·펀더멘털을 사람처럼 읽고 근거를 세워 리포트를 씁니다. 로컬 GPU에서 오픈소스 모델을 돌리는 멀티에이전트 구조입니다.</li>
+</ul>
+<p>참고로 이 GPU로 어느 정도 크기까지 돌릴 수 있는지 감을 잡자면, 카드 한 장이면 체감상 예전 ChatGPT 무료판(GPT-3.5) 정도 급이고, 두 장을 나눠 쓰면 각 회사의 가벼운 무료 등급(GPT-4o mini나 제미나이 플래시 같은) 근처까지 올라옵니다.</p>
+<p>(예전엔 강화학습으로 매매 정책 자체를 학습시키는 네 번째 담당도 있었는데, 벤치마크를 이긴 적이 없어서 미련 없이 접었습니다.)</p>
+<h2>왜 굳이 합치는가</h2>
+<p>계량 담당은 갑자기 터진 뉴스의 서사를 놓치고, 리서치 담당은 미묘한 수급 신호를 놓칩니다. 서로 독립적인 시각을 합치면 각자의 오차가 상쇄됩니다.</p>
+<p><strong>콩도르세의 배심원 정리</strong>라는 수학 정리가 있습니다. 서로 독립적이고 평균적으로 무작위보다 조금씩이라도 나은 판단을 여럿 모으면, 집단의 정확도가 어떤 개인도 뛰어넘는다는 내용입니다. 핵심은 "의견이 많다"가 아니라 <strong>"의견이 서로 다르다"</strong>는 것인데, 실제로 세 담당의 판단이 꽤 독립적으로 갈린다는 것도 확인했습니다.</p>
+<p>최근엔 "흐름 담당이 읽는 추세가 결국 모멘텀 아니냐"는 질문까지 포함해서 이 독립성을 다시 짚어봤습니다. 아직 첫 확인 단계이긴 하지만 결론은 같았고, 이 얘기는 <a href="https://finaltype.tistory.com/45" target="_blank" rel="noopener noreferrer">따로 정리한 글</a>(새 창)에 남겼습니다.</p>
+<h2>어떻게 합치는가 — 목소리 크기가 아니라 순서</h2>
+<p>여기가 의외로 인문학적입니다. 순진하게 점수를 평균 내지는 않습니다. 그러면 "이 종목 100% 확신!"이라고 크게 외치는 담당 하나가 판 전체를 지배해버리니까요.</p>
+<p>대신 각 담당에게서는 <strong>"순위표"만</strong> 받습니다. 확신의 크기가 아니라, 누구를 위에 뒀는지의 서열만 셉니다. 목소리가 큰 쪽이 아니라 판단의 순서를 존중하는 방식입니다(선호투표에서 순위를 합산하는 방식과 같은 원리입니다).</p>
+<ul>
+<li>누구도 과도하게 신뢰받지 않도록 세 담당에게 거의 균등하게 무게를 둡니다. 자산배분에서 잘 알려진 통찰과 결이 같은데, "단순 균등배분을 이기기가 생각보다 어렵다"는 겁니다.</li>
+<li>어떤 담당이 특정 종목에 대해 침묵하면(예: 참고할 데이터가 부족하면), 그건 반대표가 아니라 <strong>"기권"</strong>으로 중립 처리합니다.</li>
+</ul>
+<h2>설계 철학 — 겸손</h2>
+<p>가장 중요한 대목이라고 생각합니다. 이 합의 방식은 <strong>일부러 단순하게</strong> 만들어뒀습니다.</p>
+<p>우위(엣지)는 영리한 합산 공식에 있는 게 아니라, "정말로 서로 다른, 독립적인 시각을 가진 담당들을 갖추는 것" 자체에 있다고 보기 때문입니다. 합산 방식을 더 정교하게 다듬고 싶은 유혹은 늘 있는데, 그런 시도는 대개 과거 데이터에만 딱 맞아떨어지는 함정으로 이어지는 걸 여러 번 확인했습니다.</p>
+<p>그래서 개선하고 싶을 때도 합의 방식 자체보다는, 회의 테이블에 앉은 담당들을 더 다양하게 만들거나 각 담당의 실력을 키우는 쪽에 힘을 쏟는 편입니다. 원칙은 한 줄로 요약됩니다 — <strong>다양한 입력, 그리고 견고하고 단순한 합의.</strong></p>
+<h2>모델은 계속 손보는 중</h2>
+<p>같은 조건으로 여러 로컬 LLM을 정식 비교해본 적도 있습니다. 표면적인 등급 분포만 보고는 못 잡는 문제(최종 답변 생성 자체가 실패해서 기본값으로 몰린 경우, 낮은 확률로 완전히 다른 종목을 분석해버리는 환각, 도구 호출 자체가 아예 안 먹혀서 리포트가 무근거로 나오고 있었던 적)가 있어서 로그를 직접 까봐야 했던 경험도 여러 번 있습니다.</p>
+<p>이건 로컬 모델끼리의 비교였는데, 이후에 아예 다른 질문도 하나 생겼습니다. 로컬에서 무료로 돌리는 모델과 돈을 내고 쓰는 외부 API 모델 중, 실제 매매 성과 기준으로는 어느 쪽이 나은지였습니다. 이 질문에 답하려고 만든 별도의 시뮬레이터 이야기는 <a href="https://finaltype.tistory.com/40" target="_blank" rel="noopener noreferrer">따로 글로 정리</a>(새 창)했습니다.</p>
+<p>최근엔 이 프레임워크를 돌리는 서빙 엔진과, 각 담당에게 자료를 넘기는 방식도 손봐서 종목 하나를 훑는 속도를 꽤 줄였습니다.</p>
+<hr />
+<p>돌이켜보면 이 파이프라인에서 가장 공들인 건 어느 모델을 쓸지가 아니라, 서로 다른 의견을 어떻게 존중하며 묶을지였습니다. 전체 프로젝트 구조가 궁금하시면 <a href="https://finaltype.tistory.com/23" target="_blank" rel="noopener noreferrer">프로젝트 구조 글</a>(새 창)도 함께 봐주세요.</p>
+</article>
+</body>
+</html>

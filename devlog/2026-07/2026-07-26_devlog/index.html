@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[260726] 시스템 자산의 백업 체계 구축 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>[260726] 시스템 자산의 백업 체계 구축</h1>
+<p class="subtitle">시작 이후 쌓아온 데이터가 단일 디스크 위에 있는 치명적 위험을 발견하고, 오프사이트 백업과 버전관계를 완전히 새로 꾸몄습니다</p><h2>쌓아둔 자산이 백업 없이 잠들었다는 사실</h2>
+<p>오늘은 새 기능 개발이 아닌, <strong>기반 시설 구축</strong>에 모든 에너지를 쏟았습니다. 최근 진행된 시스템 성찰에서 다음과 같은 치명적 문제를 발견했습니다:</p>
+<p>프로젝트 시작 이후 쌓아온 모든 데이터(무사고 원장, 시장 기록, 집행 로그, 분석 아카이브)가 <strong>백업 한 건 없이 버전관리조차 없이 단일 디스크</strong> 위에 있다는 사실이 드러났습니다.</p>
+<p>KRX가 무료 분봉 데이터를 제공하지 않는다는 건, 우리가 만드는 데이터가 <strong>유일한 원본</strong>이라는 뜻입니다. 원본이 디스크 한 번 망가지면 그동안의 모든 것이 0이 됩니다.</p>
+<h2>Google Drive 기반 오프사이트 백업 구축</h2>
+<p>이 문제를 해결하기 위해 Google Drive를 오프사이트 저장소로 사용하는 매일 자동 백업 체계를 구축했습니다.</p>
+<h3>무엇을 백업하고 무엇을 제외할지</h3>
+<p>백업 범위를 <code>trading</code>, <code>data-archive</code>, <code>news-archive</code>, <code>netwatcher</code> 네 프로젝트로 정했습니다. 개인 취미 블로그나 다른 개별 프로젝트는 제외했습니다.</p>
+<p>토큰이나 비밀번호 같은 민감 정보는 아예 백업에서 제외하기로 했습니다. 이런 것들은 만료 후 다시 받으면 되지만, 한번 잃으면 다시는 못 찾는 데이터는 꼭 백업에 넣어야 합니다.</p>
+<p>보안 스크린을 통과한 로그와 기록 데이터는 모두 백업에 포함했습니다.</p>
+<h3>백업은 매일 장마감 후</h3>
+<p>매일 오후 6시에 장마감 흐름이 정리된 시점에 백업이 돌도록 했습니다. GPU 작업이 진행되는 저녁 시간전이라 자원 충돌도 없습니다.</p>
+<p>백업이 성공하면 조용합니다. 실패했을 때만 경고를 보냅니다.</p>
+<p>조용함이 정상이지만, 혹시 <strong>감시 시스템 자체가 멈추면</strong> 그건 성공 알림도 받지 못하는 문제가 됩니다. 그래서 월요일마다 한 번, 감시 시스템이 살아있는지를 확인하는 생존 확인 메시지를 보내기로 했습니다. 이 메시지가 안 오면 감시자가 죽은 것입니다.</p>
+<h2>버전관리 체계 새로 구축</h2>
+<p>전체 프로젝트 파일을 하나의 git 저장소로 묶고, commit 전에 자동 검사하는 훅을 만들었습니다.</p>
+<p>민감 파일명, 실명 데이터, 너무 큰 파일, 코드 안에 박힌 시크릿 값 — 이런 것들이 staging 되려면 자동으로 막습니다. 테스트로 가짜 민감 파일을 넣었더니 정확하게 차단했습니다.</p>
+<h2>부팅 후 작은 사고들</h2>
+<p>최근 재부팅 후 두 가지 작은 문제를 겪었습니다.</p>
+<p>하나는 시스템 시계가 잠깐 어긋나면서 자동 작업들의 예약이 어그러진 것이었고, 다른 하나는 백업 타이머는 지연 시간이 설정되어 있는데 감시 타이머는 없어서 부팅 직후 오탐이 나는 것이었습니다. 둘 다 바로잡았습니다.</p>
+<p>그 밖에 원격 조회 실패 시 즉시 경보하던 것을 로컬 캐시로 폴백하도록 고치고, 매주 한 번 백업 자체의 무결성을 확인하며, 매주 일요일에만 무거운 정리 작업을 돌리도록 조정했습니다.</p>
+<hr />
+<p>오늘은 새로운 기능은 없습니다. 코드 한 줄 추가도, 새로운 모델 한 번 돌리지도 않았습니다.</p>
+<p>하지만 쌓아온 데이터가 백업 없이 매일 밤 잠든다면, 오늘 쓴 모든 분석은 공 위에 성을 쌓는 것과 다를 없습니다.</p>
+<p><strong>기반이 먼저입니다.</strong> 그건 매번 잊었다가 잊지 않게 됩니다.</p>
+</article>
+</body>
+</html>

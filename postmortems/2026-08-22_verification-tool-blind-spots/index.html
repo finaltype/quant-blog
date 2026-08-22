@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자동매매 검증 도구가 오류를 놓치는 이유 3가지 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_verification-tool-blind-spots/index.html">Read in English</a></p>
+<article>
+<h1>자동매매 검증 도구가 오류를 놓치는 이유 3가지</h1>
+<p class="subtitle">검증 도구를 새로 붙일 때마다 걸리는 방식이 매번 달랐습니다 — 도구 자신의 버그, 아예 없던 관측, 판독 시점의 착시</p><p>최근 자동매매 시스템에 검증 도구를 여러 개 새로 붙였습니다. 그런데 붙일 때마다 걸리는 방식이 매번 달랐습니다.</p>
+<p>한 번은 검증 도구 자신이 틀렸고, 한 번은 도구가 없어서 몰랐고, 한 번은 도구는 있는데 판독 방식이 틀렸습니다. 세 사례를 정리해봤습니다.</p>
+<h2>1. 검증 도구 자신도 버그를 가진다</h2>
+<p>AI 모델 크기에 관한 오래된 의문을 풀어보려고 조사하다가, 자체 개발한 신뢰도 검증 도구 하나를 다시 들여다봤습니다.</p>
+<p>이 도구는 리포트 문장이 실제 데이터에 근거하는지 자동으로 판정하는 역할이었습니다. 그런데 살펴보니, 같은 값을 표기 스타일만 다르게 썼을 뿐인 문장을 "근거 없는 오류"로 잘못 판정하고 있었습니다. 도구가 틀린 걸 오류로 잡은 게 아니라, 맞는 걸 오류로 잡고 있었던 셈입니다.</p>
+<p>바로 무효 처리하고, 같은 유형의 오판이 다시 통과되지 않도록 별도 장치를 걸었습니다.</p>
+<p>검증 도구를 "정답을 아는 심판"으로 무조건 믿으면 안 됩니다. 도구 자체도 검증 대상입니다.</p>
+<h2>2. 배선하기 전까지는 있는지도 몰랐다</h2>
+<p>리포트 수치를 자동으로 점검하는 도구를 새로 만들어서 실제 운영에 배선했습니다.</p>
+<p>돌리자마자 매일 리포트마다 절반이 넘는 종목에서 표기 오류가 나오고 있었다는 게 드러났습니다. 과거 45일치를 되짚어보니, 하루도 빠짐없이 같은 종류의 오류가 있었습니다.</p>
+<p>이전에도 리포트 수치를 확인하는 검사 로직이 있긴 했습니다. 다만 구조적으로 이 종류의 오류는 애초에 볼 수 없는 사각지대였습니다. "검증하고 있다"는 것과 "이 오류를 검증하고 있다"는 것은 다른 문장이었던 겁니다.</p>
+<p>새 도구를 배선하기 전까지는 이런 오류가 있는 줄도 몰랐습니다. "돌아가고는 있는데 정작 아무것도 확인하지 않고 있었다"는 유형의 문제였습니다.</p>
+<p>검증하고 있다는 믿음만으로는 부족합니다. 그 검증이 실제로 어떤 오류를 커버하는지 범위를 구체적으로 확인해야 합니다.</p>
+<h2>3. 판독 시점이 실제 상태를 반영하지 못하면 계기가 스스로를 속인다</h2>
+<p>모델의 재현성을 매일 자동으로 확인하는 계기가 있는데, 이게 이틀 연속 죽었습니다.</p>
+<p>원인을 찾아보니, 다른 야간 작업이 그래픽카드를 쥐고 있는데도, 계기가 순간적인 판독만으로 "지금 비어 있다"고 착각하는 구조였습니다. 그 상태에서 무리하게 시작하니 매번 실패했습니다.</p>
+<p>점유 여부를 직접 확인하는 방식으로 바꿨습니다. 계기를 매번 새로 띄우는 대신, 야간 작업이 끝나갈 무렵 쓰던 걸 그대로 넘겨받는 구조로 바꿔서 사고 지점 자체를 없앴습니다.</p>
+<p>계기가 "현재 상태"를 읽는 방식이, 측정하려는 대상과 같은 자원을 놓고 경합하면 그 판독값은 믿을 수 없습니다. 순간의 스냅샷과 실제 점유 상태는 다른 질문입니다.</p>
+<h2>세 가지를 묶어보면</h2>
+<p>세 사례 모두 "검증 도구를 만들었다"와 "검증되고 있다"가 서로 다른 문장이라는 걸 보여줬습니다.</p>
+<p>도구를 만든 것 자체가 끝이 아니었습니다. 그 도구가 스스로 틀릴 수 있는지, 어떤 오류는 처음부터 못 보는지, 판독 방식이 측정 대상과 충돌하지는 않는지를 계속 물어야 했습니다.</p>
+<p>검증 도구를 하나 새로 붙일 때마다, "이게 지금 뭘 놓치고 있을까"를 다음 점검 항목으로 남겨두려고 합니다.</p>
+</article>
+</body>
+</html>
