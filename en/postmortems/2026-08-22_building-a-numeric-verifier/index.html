@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building a Numeric Verifier for AI Report Output · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_building-a-numeric-verifier/index.html">한국어로 보기</a></p>
+<article>
+<h1>Building a Numeric Verifier for AI Report Output</h1>
+<p class="subtitle">A self-consistency check can&#x27;t catch a number that&#x27;s internally coherent but simply wrong — so I designed a different kind of verifier</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>My automated trading system generates an AI-written report for every ticker, every day. There's no way I can read every single one and check every number by hand.</p>
+<p>Those reports are dense with concrete figures — prices, financial numbers. If a number is wrong, the reasoning built on top of it is wrong too, so I'd had some kind of check on report numbers in place for a while.</p>
+<p>Then I had reason to look at that check again. I wasn't sure "there's a check running" actually meant "the thing I care about is being checked."</p>
+<h2>What the existing check actually did</h2>
+<p>The check I already had looked at whether numbers agreed with each other <em>inside</em> a single report. If a figure appeared early in the report and again later, it verified the two mentions matched — a self-consistency check.</p>
+<p>That catches a report contradicting itself. It does nothing if the report got a number wrong from the very start and then just repeated that same wrong number consistently throughout.</p>
+<p>Say a number from the source data gets converted to a different unit and a digit gets dropped in the process. If the report keeps citing that wrong number the same way everywhere, the document is internally coherent from end to end. To a self-consistency checker, that's a clean pass.</p>
+<h2>So I designed a different kind of verifier</h2>
+<p>What I actually needed was something that compared report sentences directly against the source data — not internal consistency, but agreement with ground truth outside the document.</p>
+<p>Numbers in these reports fell into two rough categories: price and technical-indicator figures pulled from candle data, and financial figures like revenue or market cap. Because the source data behind each is shaped differently, I split the verifier into two separate axes — a price axis and an amount axis.</p>
+<p>That split mattered more than I expected. Candle data (the ground truth for the price axis) keeps accumulating every trading day, so it can always be checked retroactively. The ground truth for the amount axis, on the other hand, only exists as the financial data block that was actually fed into that day's report — once a day passes, there's no ground truth left to retroactively check against. That asymmetry ended up shaping how I later had to measure the scale of the problem.</p>
+<h2>The first version cried wolf</h2>
+<p>The first version of the price-axis verifier fired constantly the moment I built it. Most tickers tripped it, but on inspection, none of it was real — it was all coincidence.</p>
+<p>The problem was volume: candle data gives you hundreds of candidate reference values. With a loose tolerance window, almost any number in a report will happen to land close to one of those candidates by chance alone.</p>
+<p>I tightened it with three layers: only exact matches count, the comparison window is limited to recent candles, and a flag only counts as real when the same error pattern shows up in a cluster rather than in isolation. Net effect: lower recall, much higher precision.</p>
+<p>That trade-off was deliberate. In an unattended system, a verifier that keeps crying wolf eventually gets ignored altogether. I'd rather miss the occasional isolated error than train myself to tune out the alerts.</p>
+<h2>What showed up the moment it was wired in</h2>
+<p>Once both axes were wired into the actual production pipeline, I measured the first real baseline against production data. The price axis came back nearly clean, matching what I'd already observed informally.</p>
+<p>The amount axis was the opposite story. More than half the tickers in a single day's reports had a financial-figure error. Looking at one concrete case, a source number had been converted to a different unit and the trailing digits got dropped along the way — inflating the reported value well past the true figure. Because the report cited that wrong number consistently throughout, the old self-consistency check had been letting it through this whole time.</p>
+<p>Wiring it in also surfaced two bugs I hadn't anticipated. The caller was making a wrong assumption about the shape of the data structure the verifier returned, and this only broke once real production data ran through it. One version of the bug would have silently logged genuine detections as "tool errors." The other would have silently crashed the step that writes results out, wiping an entire night's output. Neither was visible from reading the source — only running it for real exposed them.</p>
+<h2>Looking back 45 days</h2>
+<p>A single day's result right after wiring wasn't enough to tell whether this was a fluke or the norm. So I re-ran the same check retroactively across the past 45 days of reports.</p>
+<p>The price axis was easy to check retroactively, since its ground truth persists. Re-running it across the past several weeks of trading days turned up almost nothing — consistent with what production had already shown.</p>
+<p>The amount axis was harder. Since the ground-truth financial data block only survives for a single day, I couldn't do a direct retroactive comparison. Instead I used "a physically impossible amount" — a figure that exceeds the entire domestic stock market's total capitalization — as a proxy signal for an error.</p>
+<p>The result: this class of error showed up every single day across all 45 days, without exception. The daily rate varied, but there wasn't one clean day in the whole window.</p>
+<p>That number has to be read as a floor, not a full count. The proxy can only catch errors that inflate a value, so on the one day I could do a direct ground-truth comparison, the proxy caught only a fraction of what direct comparison found. The real error rate was almost certainly much higher.</p>
+<p>This retrospective sweep also surfaced another gap in the verifier itself — a specific unit-scaling error pattern it hadn't been built to recognize at all. Building the verifier turned out to be an ongoing process of finding the verifier's own blind spots.</p>
+<h2>Why the old check was structurally blind to this class</h2>
+<p>To sum it up: the old self-consistency check only ever asked "does the report contradict itself?" It never went back and looked at the source data again.</p>
+<p>The error class I found here came from mistranscribing a unit or a digit count while copying a number from source into the report. As long as the report then repeated that wrong number consistently, nothing inside the document ever contradicted itself.</p>
+<p>"There's a check running" and "this specific error is being checked for" turned out to be two different sentences. Until I built the new verifier and actually ran it, I had no idea this error had been happening every day.</p>
+<h2>Generalizing it</h2>
+<p>If you're verifying output from an AI-generated report or any LLM pipeline, a few things from this are worth carrying over.</p>
+<p><strong>Self-consistency checks and ground-truth checks measure different things.</strong> A document not contradicting itself and a document being factually correct are separate claims. Having only one of the two means you're only half-verified.</p>
+<p><strong>Building the verifier isn't the finish line.</strong> Keep asking what error shape it's structurally incapable of seeing. Even while building this one, I found another blind spot in it along the way.</p>
+<p><strong>Decide the false-positive/false-negative trade-off on purpose.</strong> In an unattended system especially, a verifier that cries wolf too often does more damage than one that occasionally stays quiet. Pick a side deliberately and write down why.</p>
+<p><strong>Nothing is safe until it's wired into real data.</strong> The two interface bugs here were invisible on code review and only surfaced once real production data flowed through the pipeline.</p>
+<p><strong>When ground truth only partially exists, a proxy metric is fine — as long as you label it a floor.</strong> Knowing the proxy likely undercounts keeps you from mistaking that number for reassurance.</p>
+<p>Every time I bolt on a new verifier now, "what is this thing still missing" goes straight onto the next checklist.</p>
+</article>
+</body>
+</html>

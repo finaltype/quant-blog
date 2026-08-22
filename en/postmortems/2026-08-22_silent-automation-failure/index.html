@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why the Devlog Automation Sat Broken for Nearly a Month · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_silent-automation-failure/index.html">한국어로 보기</a></p>
+<article>
+<h1>Why the Devlog Automation Sat Broken for Nearly a Month</h1>
+<p class="subtitle">With no logs at all, there was no way to tell &quot;running&quot; apart from &quot;dead&quot;</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>This blog's devlog gets wrapped up automatically every night. If I'd written a draft in conversation that day, it gets converted and logged; if not, one skip line gets logged instead. I recently had reason to look at this pipeline, and found the log had been completely empty since July 24th.</p>
+<h2>What happened</h2>
+<p>The last line in the automation log (<code>.automation.log</code>) was dated 2026-07-24. After that, all the way through August 22nd — nearly a month — not even a single skip line had been recorded.</p>
+<p>I wondered if the automation had simply stopped running, so I opened the execution log (<code>cron_output.log</code>). It was packed with traces of runs, every single night.</p>
+<p>Checking the date, summarizing the draft when one existed, wiring up cross-links — a full night's worth of work was recorded there, every night. The work was happening. Nothing was just failing to be saved.</p>
+<h2>Why nobody noticed</h2>
+<p>Reading through the execution log, the cause was the same every night: the run got stuck waiting for a file-write permission approval that never came.</p>
+<p>A "workspace has not been trusted" warning was printed on every single run. The draft would be neatly prepared, and then the very last step — writing the file — would sit blocked on approval until the session simply ended. This pattern repeated for nearly a month.</p>
+<p>The problem was that this happened to block the exact step that would have left a log trail. On skip days, not even the skip line could be written. So the log itself couldn't distinguish "the automation stopped" from "there was quietly nothing to write."</p>
+<p>Since this is unattended automation, nobody is watching a screen every night either. As a result, this gap had no way of surfacing until someone happened to open the log file by chance.</p>
+<h2>The real cause</h2>
+<p>The cause was a trust setting. This headless automation session needs its working folder to be trusted before it can write files, but the key for that trust setting was scoped one level too high — to the parent directory that holds all the projects, not to this blog's own folder.</p>
+<p>Looked at from this blog folder alone, it was being treated as "a brand-new workspace that has never gone through interactive trust approval." Ten allow-rules already existed in the settings file, but the scope those rules were keyed to was being ignored entirely.</p>
+<p>Unattended overnight automation has nobody around to answer an interactive approval prompt. One trust setting scoped to the wrong level was quietly disarming the run at exactly the same point, every single night.</p>
+<h2>One interesting detail — a ghost completion record</h2>
+<p>While retracing this gap, I found one unusual line. At 12:41 PM on August 22nd, a "weekly: complete" line had been logged, but no actual output file existed for that timestamp.</p>
+<p>Later that same day, at 4 PM, there was a separate manual run recorded, and this one did produce the actual file correctly. What caused the earlier 12:41 PM entry to log "complete" with nothing actually written couldn't be pinned down.</p>
+<p>It landed in the middle of the permission trouble, so the best guess is that some part of the write sequence succeeded while another part failed. Either way, this one line carried its own separate lesson: <strong>a log line that says "complete" isn't fully trustworthy on its own.</strong> Without cross-checking the log against the actual output file, this ghost entry would have gone unnoticed.</p>
+<h2>How it was fixed</h2>
+<p>Rescoping the trust setting to this blog folder specifically fixed it immediately, starting that same night. No complicated remediation was needed.</p>
+<p>The real problem wasn't how to fix it. It was that the problem had gone unnoticed for nearly a month.</p>
+<h2>The general lesson</h2>
+<p>What this confirmed, once again, is that "no logs" is itself a signal in unattended automation. But treating that signal as a signal requires the system to be designed, from the start, to distinguish silence from successful inaction.</p>
+<p>This pipeline was built to log one line even on skip days. That design is exactly what made it possible to eventually notice that "logs stopped accumulating entirely" was itself out of normal range.</p>
+<p>If that skip-log mechanism hadn't existed, it would have been easy to mistake the gap for "must have just been a quiet month with no drafts." Whether it's a CI/CD pipeline, a cron job, or any background batch process, this same gap can appear whenever the absence of output doesn't itself trigger an alert.</p>
+<p>I relearned that when designing anything meant to run unattended, you need at least one mechanism that lets a person tell apart "quiet because it's working fine" from "quiet because it's dead." A heartbeat, a skip log — the specific mechanism doesn't matter. What matters is never letting a total absence of signal get mistaken for normal.</p>
+</article>
+</body>
+</html>

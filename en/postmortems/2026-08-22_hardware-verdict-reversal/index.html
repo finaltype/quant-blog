@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comparing GPU Performance After a Hardware Swap - Why the Verdict Flipped Twice · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_hardware-verdict-reversal/index.html">한국어로 보기</a></p>
+<article>
+<h1>Comparing GPU Performance After a Hardware Swap - Why the Verdict Flipped Twice</h1>
+<p class="subtitle">My first direction call was wrong, and my later purchase call was wrong too, for two completely different reasons — the root cause both times was how I was reading benchmarks</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I swapped my GPU for one from a different brand, and had to pick which execution mode to run it in.</p>
+<p>There were two candidate modes, and I judged one clearly better at first. That call turned out to be backwards, and the verdict flipped again after that. Writing this down to work out why it kept happening.</p>
+<h2>First verdict — the direction was backwards</h2>
+<p>Moving to the new card meant choosing between two execution modes. I looked at some external reference numbers to compare them, and concluded that the speedup technique I was already relying on (predicting several tokens ahead instead of one at a time) simply didn't work well on one of the two modes.</p>
+<p>If that conclusion held, dropping the technique was the right call. But looking again the next day, it was the opposite. The technique wasn't unsupported at all — it produced garbage output, which is a correctness problem, not a performance one.</p>
+<p>The root cause was a misread reference number. One of the two figures I'd cited turned out to belong to a different kind of model (one with far less active computation per token), and the naming was close enough that I mistook it for the model I was actually running. Working backwards through the math showed that number was physically impossible for the model structure I was using — that's what exposed the misread.</p>
+<p>Once the direction was corrected, I went ahead and deployed. A single card ended up matching or beating the throughput of the two older cards it replaced, and I tuned batch settings on top and confirmed the numbers directly. At that point the verdict looked settled.</p>
+<h2>Second verdict — flipped again while evaluating an additional purchase</h2>
+<p>A few days later, I had to re-evaluate whether adding another card, or a different card entirely, was worth it. This time I gathered several external benchmark numbers into a comparison table.</p>
+<p>Going back over the table, I found one row where the evidence column was completely empty. Three of the four core arguments in the source material that row cited had already been contradicted by our own measurements.</p>
+<p>A deeper problem surfaced too. I'd been converting throughput differences between cards using a memory-bandwidth ratio, but that conversion doesn't hold once the speedup technique is turned on. With it on, next-token computation stops being purely bandwidth-bound in places, and the ratio formula didn't account for that — it ended up underestimating one card and overestimating the other, wrong in both directions.</p>
+<p>Cross-checking against newly found external measurements the same day turned up yet another flaw. Most of the external benchmarks I'd been citing hadn't controlled for input context length at all. Throughput drops sharply as context grows, and I'd been applying numbers that ignored that to a workload that actually runs on much longer context.</p>
+<h2>Third check — a second review caught still more</h2>
+<p>I thought that was thorough enough, but having a different AI review the same material turned up three more corrections.</p>
+<p>One was a model-structure mismatch. A figure I'd used to compare the currently running model against a candidate card actually came from a much heavier model structure. The conclusion (hold off on buying) didn't change, but the stated reason for it had to be rewritten.</p>
+<p>Another was about the direction of my own correction. For non-speculative comparisons — with the speedup technique off — the bandwidth ratio formula still held; I'd overcorrected by declaring it invalid across the board. It was only invalid for the regime where that technique is on.</p>
+<p>The third was an argument that collapsed entirely. I'd blamed a language-mixing glitch on quantization precision, but a different model running at the exact same precision showed none of it. The counter-evidence had been sitting in hand the whole time.</p>
+<h2>How I finally settled it — a cheap direct experiment</h2>
+<p>Every extra round of review meant reading external benchmarks more carefully, and every round turned up a new flaw. So I changed approach.</p>
+<p>I returned the expensive extra card I'd already ordered, and instead planned a low-cost direct experiment on the hardware I already had — actually measuring what a one-step precision upgrade buys, within a few days, instead of arguing from a catalog.</p>
+<p>No matter how carefully I cross-referenced external benchmarks, none of them matched our actual working conditions (context length, model structure, whether the speedup technique was on) exactly. A direct experiment always does, by construction.</p>
+<h2>The general lesson</h2>
+<p>Looking back, the two mistakes looked similar on the surface but had different roots. The first was a simple misattribution — citing the wrong source for the wrong model. The second was citing the right source but applying it under conditions it was never measured under.</p>
+<p>After both, I added a few checks to how I evaluate hardware or product comparisons. First: does the number I'm citing actually come from the same conditions I'm comparing against — same model structure, same auxiliary techniques enabled, same workload?</p>
+<p>Second, whenever I use a conversion formula, I check what assumptions it depends on. One condition changing — in this case, whether a speedup technique is on — was enough to break the formula, and I didn't see that until it already had.</p>
+<p>And now, if a verdict flips more than once in a short window, I treat that as a signal that it needs a third, independent review rather than a fourth pass at the same sources. When catalog comparisons stop converging, a cheap direct measurement gets to the answer faster than reading benchmarks more carefully.</p>
+</article>
+</body>
+</html>

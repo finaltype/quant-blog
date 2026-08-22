@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3 Cases Where Fully Automated Trading Still Needed a Human · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_when-automation-needs-a-human/index.html">한국어로 보기</a></p>
+<article>
+<h1>3 Cases Where Fully Automated Trading Still Needed a Human</h1>
+<p class="subtitle">Making something run automatically and having it actually get handled to completion turned out to be two different sentences</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I designed this system to judge and trade on its own, without needing human approval for each decision. The <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety-guard layer</a>(new tab) was built around that same goal.</p>
+<p>Over the past month, though, there were three separate moments where I had to step in and act directly on the live account. Each one failed for a structurally different reason.</p>
+<h2>1. An allocation rule structurally starved one order</h2>
+<p>I noticed a particular ticker had a sell plan queued for several days running, yet it never actually went out. The system kept nominating it as a sell candidate every day, but the order never reached execution.</p>
+<p>The cause was the rule that splits the daily trading budget across multiple rounds. This position's order size was consistently larger than whatever sell budget remained that day. No matter how the rounds were reordered, it could never clear.</p>
+<p>The budget cap itself was working exactly as designed. The problem was that the underlying assumption — "if it doesn't clear this time, it'll clear next time" — never held for this position. New opportunities kept arriving, but none of them was ever big enough.</p>
+<p>I executed the one blocked order by hand. It was an irreversible sell on the live account. Afterward, I reworked the allocation rule itself so the same starvation pattern couldn't recur.</p>
+<h2>2. A safety guard confused a snapshot with a cumulative reading</h2>
+<p>On a different day, the opposite kind of failure happened. A guard meant to detect cumulative drawdown wrongly blocked two legitimate buy orders.</p>
+<p>The index was nearly flat that day, but the loss figure this guard was tracking read much larger. Looking closer, the guard was designed to measure "decline from peak," but the current value it compared against was an intraday snapshot.</p>
+<p>A brief intraday swing pushed the cumulative metric up, tripping the guard in a situation where it shouldn't have fired at all. A gauge meant to track cumulative state and a gauge meant to read an instant were tangled together.</p>
+<p>I judged the two blocked buys were legitimate and executed them by hand. I then changed the guard to only react to "today's close versus yesterday's close," never an intraday reading. A separate, faster guard now handles sharp intraday drops instead.</p>
+<h2>3. The intervention path itself didn't know about "buying something new"</h2>
+<p>While cleaning up after the second case, a third incident happened. I used the tool built to record manually-placed orders into the ledger, and the entry silently failed to land.</p>
+<p>That tool classifies any hand-placed trade into one of three categories: selling an existing position, adding to an existing position, or a trade unrelated to the system.</p>
+<p>But this particular buy was a brand-new position — something not in the ledger before. It didn't fit any of the three categories, so the tool defaulted it to "unrelated to the system." As a result, an asset I had actually bought briefly showed up as if it sat outside the ledger entirely.</p>
+<p>This tool existed specifically to handle human intervention. But when it was designed, nobody accounted for the case of a human opening a brand-new position from scratch. The intervention path itself was missing one form of intervention.</p>
+<p>I fixed it by following the correct sequence — booking the other day's sells first, then this buy — and verification confirmed the ledger matched the live account exactly. Adding this missing case to the classification logic is still on the to-do list.</p>
+<h2>Putting the three together</h2>
+<p>All three showed the same gap: "built to run automatically" and "actually carried through to completion" are two different sentences.</p>
+<p>The first had a rule in place, but that rule was structurally impossible to clear for a particular input. The second had a guard in place, but what it measured — instant versus cumulative — didn't match what it was meant to measure. The third had a human-intervention path in place, but that path itself didn't know about one form of intervention.</p>
+<p>In all three cases, I didn't know in advance that automation could miss this specific case. I only found out after it already had.</p>
+<h2>Generalizing</h2>
+<p>This reconfirmed something for me: the more fully automated a system is meant to be, the more important it is to build in a path for a human to step in at the last moment. Not because automation is imperfect in some abstract sense, but because you can't fully know in advance where it will break.</p>
+<p>But that intervention path is itself a system component, and it can carry the same kind of design flaw as anything else. The third case made that clear. Treating a human-intervention path as "just an exception handler, doesn't need much design" turns that path into the next failure point.</p>
+<p>So when I build an intervention path now, I try to keep a few things together. Make the fact that a human intervened get recorded automatically, rather than depending on memory, and enumerate the situations where intervention might be needed in advance — cases like "opening a brand-new position" are easy to miss.</p>
+<p>When intervention was needed because of some underlying rule — an allocation rule, a time-window design — fixing that root rule instead of patching around it each time matters just as much, so the same intervention doesn't keep recurring.</p>
+<p>The goal of automation isn't removing the human entirely. It's closer to making sure that when a human does have to step in, that intervention is safe and gets recorded.</p>
+</article>
+</body>
+</html>

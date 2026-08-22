@@ -28,7 +28,7 @@
 <h1>01_project_architecture.en.md</h1>
 <h1>Building a Korean Stock Quant Bot Solo - Project Architecture (Updated)</h1>
 <p><em>This is the English version of a post originally written in Korean. <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">See the Korean original and other posts</a>(new tab).</em></p>
-<p>This is a personal quant trading system that runs on a single desktop at home. There's no separate server — one CPU (Ryzen 7 7700) and two GPUs (RTX 4070 Ti SUPER 16GB, split across layers) handle everything.</p>
+<p>This is a personal quant trading system that runs on a single desktop at home. There's no separate server — one CPU and one graphics card handle everything (swapped to a different brand's single card on 2026-08-17; before that it was two cards of the same brand, split across layers).</p>
 <p>A lot has changed since I first wrote about this project, so here I'm just re-summarizing the big picture. The details of each piece have been moved out to their own posts, linked below.</p>
 <h2>Three axes</h2>
 <p>This project splits into three parts that differ in character.</p>
@@ -92,7 +92,7 @@
 <h2>Side project: backups</h2>
 <p>Separate from the core logic, I found a dangerous hole in the infrastructure — all the code and data I'd built up were sitting on a single disk with no backup at all. If the data itself were lost, every judgment built on top of it would become meaningless too, so I fixed it.</p>
 <p>Now code and configuration are kept in version control, and data that can't be recreated gets backed up automatically to a separate disk every day. I also added monitoring that catches not just "the backup failed" but "the backup silently stopped altogether." As a hedge against the worst case — the same disk becoming entirely unusable — I also upload an encrypted copy to the cloud.</p>
-<p>I've covered the details in <a href="https://finaltype.github.io/quant-blog/en/" target="_blank" rel="noopener noreferrer">today's devlog</a>(new tab).</p>
+<p>I've covered the details in <a href="https://finaltype.github.io/quant-blog/" target="_blank" rel="noopener noreferrer">the devlog</a>(new tab).</p>
 <h2>Wrapping up</h2>
 <p>Right now I'm carefully widening the trading bot's live-trading scope from a very small starting point, while verifying the same judgment fully automatically on a paper account. The AI recommendation pipeline itself remains reference-only.</p>
 <p>I'll post updates here occasionally as things change.</p>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Trading Safety Guard Misfired - The Time Scale of the Threshold Was Wrong · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_manual-override-safety-guard/index.html">한국어로 보기</a></p>
+<article>
+<h1>A Trading Safety Guard Misfired - The Time Scale of the Threshold Was Wrong</h1>
+<p class="subtitle">A guard meant to catch cumulative losses reacted to a brief intraday dip instead — the fix came down to whether two numbers were measured on the same time scale</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>My automated trading system has a safety guard that blocks new buys once losses accumulate past a certain point. Recently, that guard wrongly blocked two perfectly normal buy orders.</p>
+<p>Tracing it back, the problem wasn't a bug in the usual sense. Two numbers feeding into the same judgment were measured on different time scales. Here's how it played out.</p>
+<h2>What happened</h2>
+<p>One morning, one of the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">execution and safety-guard layers</a>(new tab) that sit between a signal and a live order blocked two normal buy signals.</p>
+<p>The market index that day was essentially flat. Yet this account's intraday valuation had dropped noticeably, and the guard fired a judgment of "cumulative loss at a dangerous level" based on that one instantaneous reading.</p>
+<p>What made it stranger: the guard that watches for a same-day crash (a separate circuit-breaker layer) hadn't reacted at all. The crash monitor stayed quiet while the cumulative-loss monitor fired.</p>
+<p>In the moment, I stepped in and manually placed the blocked buys myself, after confirming the system wasn't malfunctioning — it was judging exactly as designed. The real problem was inside that design.</p>
+<h2>Why the guard was built that way</h2>
+<p>This particular guard watches how far the account has fallen from its recent peak — a peak-to-trough drawdown check.</p>
+<p>It exists to catch a strategy slowly deteriorating over several days. A same-day crash is already someone else's job (the circuit-breaker layer), so this guard's whole reason for existing was to see "slow erosion across multiple days."</p>
+<p>But of the two numbers it compared, one came from an end-of-day time series, and the other was whatever intraday valuation happened to be passed in at the moment the check ran.</p>
+<p>At design time, the reasoning was probably "using the freshest number available is safer." It was a deliberate choice not to give up real-time responsiveness.</p>
+<h2>The real cause — the baseline and the current value used different time scales</h2>
+<p>The peak updates once a day (end-of-day close). The value compared against that peak was a minute-by-minute intraday snapshot.</p>
+<p>Mix a cumulative metric with one instantaneous input, and ordinary intraday noise alone can trigger a "cumulative loss at a dangerous level" verdict. That's exactly what happened — the index barely moved, but the account's valuation happened to dip at the one moment the check ran, and that moment is when the judgment fired.</p>
+<p>Recomputing the same historical window on a close-to-close basis, the threshold had actually never been crossed in that period. The guard hadn't been catching a real cumulative loss at all — it had been seeing a loss that only existed because of the time-scale mismatch.</p>
+<h2>How I fixed it</h2>
+<p>The first fix was straightforward: switch the comparison to close-to-close. Peak from the daily series, current value from the daily series too — both numbers on the same time scale.</p>
+<p>But that creates a different problem. If a genuinely dangerous crash happens intraday, this guard now stays silent until the next close. Fixing the slow-erosion case pushed the fast-danger case a day behind.</p>
+<p>So I split the two thresholds and treated them differently. The threshold that fires relatively often but is forgiving to miss — because the next close catches it anyway — stayed on close-to-close. The threshold that fires rarely but, if missed, leaves the account trading through a further day of collapse, went back to intraday evaluation. The two thresholds were guarding against risks of a genuinely different character.</p>
+<p>Along the way, I found a second, related issue. A reset routine that runs automatically the next morning could run before the fast-danger judgment did, quietly erasing the drawdown that judgment was supposed to see. I reordered it so the danger check runs before the reset. Fixing one guard surfaced a second path that had been quietly disarming it.</p>
+<h2>The generalized lesson</h2>
+<p>The biggest takeaway was that "what a guard's threshold is meant to watch for" and "what time scale the value actually compared against it uses" have to be checked together, every time.</p>
+<p>A cumulative or trend metric exists specifically to catch gradual change across multiple points in time. Mix in a single instantaneous value, and that moment's ordinary noise can hijack the cumulative judgment. A metric being named "cumulative" doesn't guarantee the implementation actually behaves cumulatively — that turned out to be a separate question worth checking explicitly.</p>
+<p>There's a trap in the opposite direction too. Loosen every time scale uniformly (e.g., force everything onto end-of-day) and you'll miss a genuinely fast-moving danger instead. I hit exactly that while fixing this guard — I had to remember partway through that some risks still need to be caught immediately.</p>
+<p>The real answer was to let the judgment window differ by the character of the risk. Give a loosely-timed window to the kind of threshold that fires often but is cheap to miss, and a tightly-timed window to the kind that fires rarely but is expensive to miss. Don't collapse two different risks into one guard measured on one time scale — that's the most general lesson this incident left behind.</p>
+<p>Every time I touch one safety guard now, I try to also write down where its boundary with the neighboring guard sits, and which direction responsibility shifts to when I narrow this one's scope. If coverage isn't disappearing but just moving somewhere else, and I don't write that down, the next person reads it as a bug.</p>
+</article>
+</body>
+</html>
