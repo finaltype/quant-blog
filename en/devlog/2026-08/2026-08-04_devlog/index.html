@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wrapping Up Notification Cleanup, a Performance Calc Error, and a Regression · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-04_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>Wrapping Up Notification Cleanup, a Performance Calc Error, and a Regression</h1>
+<p class="subtitle">Five days across a weekend — I finished cleaning up the notification system, found that paper-account performance math didn&#x27;t quite match the real balance, and a day later ran into a small regression from the fix</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Writing again after a few days. The weekend was uneventful, and the three weekdays were filled with wrapping up cleanup work, a performance calculation error I found in the process, and a small regression the following day.</p>
+<h2>Finishing up the cleanup work</h2>
+<p>First, I redefined the standard for judging cash deployment. The old standard was "is cash within the target allocation range," but that turned out not to describe the real situation well. Now it directly counts "how many buy proposals got rejected" and "how much usable limit went unused."</p>
+<p>The notification system cleanup also entered its final stage around this time. It now has an allowlist signature, alerts sent by severity tier, quiet handling when things are normal, a daily summary, and a weekly "still alive" check-in. This is an extension of an <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">earlier post</a>(new tab) about process separation and reporting.</p>
+<h2>Performance math didn't match the real balance</h2>
+<p>While reviewing the performance report for the fully automated verification track, I noticed the return shown in the report didn't quite match the real account balance. It turned out the report was calculated from an internally kept trade ledger rather than the actual brokerage account, and fees and taxes weren't being properly reflected — skewing it slightly better than reality. On top of that, unsettled trades at end-of-day close were getting logged under the wrong date.</p>
+<p>I fixed three things right away: a calculation method that properly reflects fees and taxes, a daily cross-check between the internal ledger and the real account that alerts or blocks on mismatch, and a new performance path calculated from the real account. Background on this verification track itself is in <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">a separate post</a>(new tab).</p>
+<p>The same day, I caught a small bug in the ranking calculation too. The staleness check on input data wasn't wired at the per-ticker level, so on certain days some tickers were silently dropped from the model input. Fixed.</p>
+<h2>A regression the next day, but it stopped safely</h2>
+<p>The next morning, one of the previous day's fixes had subtly changed the cache-invalidation criteria, creating a timing issue where the cache got refilled at the wrong moment. That collided with an old race condition elsewhere, triggering repeated heavy recalculations — made worse by old and new code running simultaneously during an incomplete deployment.</p>
+<p>Fortunately, the end result was just that trading safely stopped — no bad orders went out. I traced it to four spots and fixed them, and it was a good reminder of a lesson learned before: when you fix code, restart every resident process that imports that module, all at once.</p>
+<h2>Also this week</h2>
+<ul>
+<li>A backtest over a recent sharp-drop period showed good performance, but looking closer, most of the gains were concentrated in just a few crash days — too early to generalize, so I kept it as a reference only.</li>
+<li>On the data-archive side, I reconsidered whether it's still worth collecting old news articles indefinitely. Decided to keep collecting, not to hunt for new signals but as insurance for future troubleshooting. Covered in <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">more detail here</a>(new tab).</li>
+<li>Pushed the live-trading go/no-go decision point back to after August 11th, and clarified the criteria — separating "were there incidents" from "how consistently could it trade."</li>
+</ul>
+<hr />
+<p>Two of the five days were quiet, and the other three were about confirming and re-checking whether the numbers were actually correct. Not a flashy stretch, but the kind of check I think is necessary before widening the scope of live trading.</p>
+</article>
+</body>
+</html>

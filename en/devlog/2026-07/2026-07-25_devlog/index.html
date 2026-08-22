@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 23-25] A Cash-Deployment Bug, a Risky-Stock Safety Net, and a Clock-Skew Incident&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-25_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 23-25] A Cash-Deployment Bug, a Risky-Stock Safety Net, and a Clock-Skew Incident&quot;</h1>
+<p class="subtitle">Three days of tightening up things that already existed rather than building new ones — fixed a paper-account cash-deployment bug, built a risky-stock safety net after a friend flagged a ticker, and cleaned up a clock-skew incident after a reboot</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I forgot to publish the July 23rd devlog, and it slipped through the 24th and 25th as well. The 25th was a nearly untouched day, so I'm summarizing all three at once.</p>
+<h2>Why cash kept piling up in the paper account</h2>
+<p>There was an issue where a large chunk of cash in the paper account kept sitting unused. Digging in, the cause was logic that rejected an order entirely whenever the desired quantity couldn't be matched exactly.</p>
+<p>Fixed it to buy as much as it could when an exact match wasn't possible. Filling as close as possible to the target quantity is better than not buying at all, even if the exact number can't be hit.</p>
+<h2>A safety net built after a friend flagged one ticker</h2>
+<p>A friend once mentioned a stock ticker, and looking into it, it turned out to carry risk signals. Things like audit-opinion issues, large capital raises, or delisting-related disclosures — the kind of signal that's visible in public filings alone.</p>
+<p>To avoid missing this kind of thing, I built a tool in a single day that automatically screens for risk signals based on public disclosure data, tested it, and put it into use right away. Made it explicit that this isn't a new profit signal — it's a safety net for filtering out clearly risky stocks.</p>
+<h2>Finished the last pre-live-trading checklist item</h2>
+<p>Also wrapped up re-verifying several live-account order edge cases one by one — rejections, partial fills, delayed responses, settlement processing. This was the last item on the checklist before expanding the scope of live trading.</p>
+<h2>A reboot caused a 9-hour clock-skew incident</h2>
+<p>One day, a reboot briefly left the system clock showing 9 hours ahead of actual time. It only lasted until time sync corrected itself, but during that window, the scheduler for some background jobs quietly stalled for 9 hours.</p>
+<p>Fortunately no actual trades were scheduled during that window, so there was no real damage — just one spurious alert. Fixed it that same night so the scheduler waits for time sync to finish before proceeding, closing off the same failure mode.</p>
+<h2>Also this stretch</h2>
+<ul>
+<li>Tested whether adding a few more review passes to the trading-decision process improves results — it actually got worse, so I kept the current setup.</li>
+<li>Re-tested the idea of feeding overnight U.S. market close moves into the next day's domestic rankings — again, no clear effect. Still keeping the related data collection going for later.</li>
+<li>Opened one more collection stream on the <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">data archive</a>(new tab) side, capturing public statements from a few figures who speak publicly. Separately checked whether this could feed a trading signal — concluded it can't, so it's collection-only for now.</li>
+</ul>
+<hr />
+<p>None of these three days had flashy new features, but looking back, all of it was work on making existing things safer. Days like these are what build the case for expanding live-trading scope.</p>
+</article>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quant Trading and Momentum Trading Weren&#x27;t the Same Question · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/07_quant_vs_momentum/index.html">한국어로 보기</a></p>
+<article>
+<h1>Quant Trading and Momentum Trading Weren&#x27;t the Same Question</h1>
+<p class="subtitle">A quant trading concept I happened to revisit this morning cleared up a confusion I&#x27;d been carrying about my project&#x27;s identity for a while</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I got curious this morning. It's been a couple of months since I started using the term "quant trading" for this project, and I realized I'd never really nailed down how precisely I was using it. So I sat down and worked through the concept again.</p>
+<h2>What quant trading actually is</h2>
+<p>In one line: it's finding statistical regularities in quantitative data — price, volume, financial statements — and turning those regularities into code that trades mechanically. The core isn't "throw away intuition." It's turning intuition into something verifiable.</p>
+<p>For example, turning the intuition "undervalued stocks eventually rise" into a testable question like "does buying the bottom percentile on some metric every month produce excess returns." Once it's phrased that way, you can actually check it against historical data.</p>
+<p>Quant covers a lot of ground. Factor investing that picks undervalued, high-quality names. Statistical arbitrage that bets on the gap between two assets that used to move together. Trend following. Lately, machine-learning-based prediction too. What all of these share isn't "what to buy" — it's "how to decide and execute."</p>
+<h2>So is my project quant, or momentum?</h2>
+<p>Working through this brought back a question I'd been vaguely confused about for a while: is my project aiming to be quant trading, or momentum trading?</p>
+<p>Sitting with it, I realized the question itself was off. I'd been treating the two as if they were competing choices on the same axis.</p>
+<p>Here's where I landed. <strong>Quant is a methodology for "how to decide." Momentum is just one of several signals you can use inside that methodology.</strong> Value, which buys what's undervalued. Momentum, which buys what's recently risen. Quality, which picks names with sound financials — these are all choices about "what to treat as a signal."</p>
+<p>Execute any of that mechanically with data and rules, and that's quant. So "quant or momentum" was never a question at the same level to begin with.</p>
+<h2>Looking back at my own project through this lens</h2>
+<p>I ran my project back through this frame. Inside the <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">AI recommendation pipeline</a>(new tab) there are three roles looking at the market through different lenses, and one of them reads trends and regime shifts as the market moves through time. That's closer to a momentum-style view.</p>
+<p>But that role doesn't decide trades on its own. It produces a ranking alongside a role that reads valuation and financial data, and a role that reads news and disclosures, and the three rankings get combined into a final judgment through consensus. Momentum was never an identity this system "became" — it was already sitting there as one ingredient among several.</p>
+<p>To be sure, I had an AI advisor double-check whether this frame actually held up for my project. The conclusion came back the same: there's no separate trading logic in this system worth calling a standalone "momentum strategy" — it's just one trend-reading signal mixed in with the others.</p>
+<h2>What the confusion actually was</h2>
+<p>Looking back, the reason I was confused was simple. I'd been putting "quant" and "momentum" on the same scale and thinking I had to pick one.</p>
+<p>In reality they weren't on a scale at all — they were different questions. Quant answers "how." Momentum is one of several answers to "what to look at." Treating them as if they belonged in the same spot was the wrong question from the start.</p>
+<hr />
+<p>It's strange how just re-deriving a concept from scratch untangled a confusion I'd been carrying for a while. Sometimes redefining the terms turns out to be a faster path than staring at the code.</p>
+</article>
+</body>
+</html>

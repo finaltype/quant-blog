@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 20] Two Suspicions I&#x27;d Been Carrying, Both Turned Out Wrong&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-20_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 20] Two Suspicions I&#x27;d Been Carrying, Both Turned Out Wrong&quot;</h1>
+<p class="subtitle">Had another AI advisor stress-test worries about the network-watchdog program — both turned out to be unfounded — and caught one more real safety-layer bug on the live-trading prep side</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Today felt close to the final stretch of live-trading prep. Several different threads of verification wrapped up at once.</p>
+<h2>Two suspicions I'd been carrying, both turned out wrong</h2>
+<p>Yesterday I wrote about the <a href="https://finaltype.github.io/quant-blog/en/architecture/03_netwatcher/" target="_blank" rel="noopener noreferrer">network-watchdog program</a>(new tab). Today brought a bit of a twist.</p>
+<p>I asked a separate AI advisor to give the program a full review before trusting it in production. Two suspicions the assistant helping with development had been carrying both turned out to be wrong.</p>
+<p>The first was "what if a reboot damages an analysis job that happens to be running." It turned out to be the opposite — that job was already designed to resume from where it left off, so a reboot actually helps rather than hurts.</p>
+<p>The second was "what if there's only one channel for checking network status, and everything breaks together if it fails." It turned out there were already three independently-checking channels, so one going wrong wouldn't take the others down with it.</p>
+<p>Both worries turned out to be unnecessary. I decided to keep the current level of alertness as is.</p>
+<h2>A safeguard meant to prevent double orders almost caused one</h2>
+<p>On the live-trading prep side, a code audit turned up one more real bug — this time a case where the safeguard itself nearly worked backwards.</p>
+<p>Because the same account gets used for multiple purposes, I need a marker that distinguishes "did I place this order or not." One spot in the code that was supposed to leave that marker was skipping it, which meant the "list of orders I placed" was always coming back empty.</p>
+<p>Judging "how many orders have I placed" off an empty list meant the safeguard existed but couldn't recognize orders it had already placed — creating real risk of a duplicate order. I fixed the two spots that were supposed to leave the marker.</p>
+<h2>Logged the reason a number suddenly changed</h2>
+<p>After changing how data gets fed into the model recently, I noticed the distribution of the resulting scores had shifted noticeably.</p>
+<p>I dug in worried something had broken, but it turned out to be a natural consequence of the method change. The problem was that months from now, when someone looks back at this log, nobody would remember why things suddenly changed at that point.</p>
+<p>So I added something that permanently records the fact itself — "the input method changed starting this date." The point is to make sure that if something looks off later, at least one candidate cause is immediately findable.</p>
+<h2>Re-measured news sentiment over two years — still no signal</h2>
+<p>I also finally closed out a question I'd been putting off for a long time: whether news sentiment signals actually help returns. This time I re-measured it against more than two years of data.</p>
+<p>The result matched the earlier small-sample check. Effectively no relationship — and with a much larger sample this time, even the doubt of "maybe it's just not enough data" went away.</p>
+<p>I've fully decided not to use this signal. It's a disappointing result, but I think a solid "no" is a valuable conclusion in its own right.</p>
+<h2>Also today</h2>
+<ul>
+<li>Moved several background jobs the bot used to run itself (checking unfilled orders, logging balances, checking positions) out to a standalone always-on service. Pending approval requests now get written to disk instead of memory, so they survive a bot restart. Also tested that monitoring alerts actually arrive.</li>
+<li>An interesting calculation came out of the <a href="https://finaltype.github.io/quant-blog/en/architecture/04_sim_harness/" target="_blank" rel="noopener noreferrer">measurement simulator</a>(new tab) work: capturing a very small effect (5% annualized) with statistical confidence would take roughly a century of data. A numeric confirmation that "just wait and you'll eventually find out" isn't actually an answer.</li>
+<li>One piece of live-trading prep remains — deliberately saved for last because it's the highest-risk part. Plan to start on it after market close tomorrow.</li>
+</ul>
+<hr />
+<p>Looking back, today was a day where two worries disappeared, one real bug got added to the list, and one long-standing question closed for good. Altogether, the remaining distance to live trading shrank noticeably from yesterday.</p>
+</article>
+</body>
+</html>

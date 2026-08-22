@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 14] Swapping the Case Unstuck a Backlog of Deferred Work&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-14_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 14] Swapping the Case Unstuck a Backlog of Deferred Work&quot;</h1>
+<p class="subtitle">I finally got the second GPU properly seated, and along the way found that two of the most important tickers had been missing from data for weeks</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Today I finished the job I'd deferred a few days ago because of a case-fit issue, and along the way found a problem that had been quietly buried for quite a while.</p>
+<h2>The temporarily-running second GPU finally got seated properly</h2>
+<p>A few days ago, when I picked up a second graphics card, the slot for two cards side by side collided with the power supply's mounting spot by a few centimeters, so I couldn't fully install it in the case. Even so, from Sunday I had both cards connected and running in a makeshift setup.</p>
+<p>Today I swapped in a case that puts the power supply in its own separate compartment, and finally got it properly seated in place.</p>
+<p>I ran a load test with power moderately capped. Both cards held their temperatures well (staying around 68°C under load), and ran stably with no slowdowns or errors. The machine rebooted twice during the work (one of them unintended), and the background services all came back up on their own each time. As a side note, I'd once suspected "the GPU fan sounds off" — looking again today, that turned out to be a case fan, not the GPU. Wrong suspect all along.</p>
+<h2>Two of the most important tickers had been missing from data for weeks</h2>
+<p>Keeping an eye on the old-news collection job I mentioned a few days ago, I found something fairly serious. Tickers without data yet are shown as a placeholder in the form of "[No info] CompanyName(TickerCode)," and the name-extraction logic couldn't parse this format properly.</p>
+<p>As a result, the names for two of the most frequently mentioned, effectively most important large-cap tickers stayed blank the whole time. With the name blank, no matter how many articles mentioning that ticker got collected, the system couldn't connect them to "this is about that ticker."</p>
+<p>Other, less important tickers piled up thousands of records fine, while the two biggest names sat at nearly zero for weeks straight. It was more unsettling that this happened to the most important tickers rather than some obscure one.</p>
+<p>Fortunately the raw data (the article headlines themselves) had already been collected in full, so once I fixed the name-recognition bug, I could re-match against the existing collected data and recover tens of thousands of records almost instantly. Not having to start collection over from scratch was the saving grace.</p>
+<h2>A bug that mistook a normal article for being "blocked"</h2>
+<p>The collector sometimes judged "this page looks blocked" and skipped an entire day's worth of collection. Looking into it, one of the criteria for detecting a block was checking whether a certain phrase appeared on the page.</p>
+<p>It just so happened that one IT article's body coincidentally contained the exact same phrase (something like "authentication procedure ~"), so the collector mistook a completely normal page for a block — even though the article was perfectly visible.</p>
+<p>The fix was simple: even if that phrase is present, never treat the page as blocked if it also contains a normal-looking article list. It was a case where a coincidental word match nearly wiped out an entire otherwise-fine day.</p>
+<h2>Also today</h2>
+<ul>
+<li>I found that requesting too many tickers at once from an external API caused some requests to silently fail. The large-cap tickers with the most news kept getting cut off at the tail end of the batch every time; reducing the concurrent request count eliminated the loss entirely.</li>
+<li>I also adjusted the start time of the nightly automated analysis. Instead of running right after market close, I pushed it back to after after-hours trading settles, so it starts on cleaner data. I also switched the price reference point to the regular-session closing price instead of the after-hours price to match.</li>
+<li>The ongoing comparison between the newly added model and the existing one can now continue as well, now that today's data gap is filled. It's too early to tell which is better; I'll need a few more days of data.</li>
+</ul>
+<hr />
+<p>Today was one of those days where fixing a physical problem (the case) opened the door to a string of data problems coming into view right after. Seeing the pattern of "the most important thing quietly goes missing first" repeat itself, I think going forward I need to check not just whether totals are growing, but whether the important tickers are getting covered evenly.</p>
+</article>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02_data_archive.en.md · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/02_data_archive/index.html">한국어로 보기</a></p>
+<article>
+<h1>02_data_archive.en.md</h1>
+<h1>Perishable Data - a Side Project That Grew From One Stream to Three</h1>
+<p><em>This is the English version of a post originally written in Korean. <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">See the Korean original and other posts</a>(new tab).</em></p>
+<p>Not long ago I split a small project off from the main quant bot project. It's now grown into three. It started with just archiving old stock news.</p>
+<h2>Why I built it separately</h2>
+<p>I set a rule for deciding whether to spin up a new project: <strong>perishability</strong>. Is this data I'll lose forever if I don't capture it now, or is it something I can always recreate later?</p>
+<ul>
+<li><strong>Daily price and macro data</strong> is non-perishable. I can always look up a specific date from years ago through an official source. There's no real reason to archive it separately.</li>
+<li><strong>Stock news</strong> is different. Portal news pages get locked down after a while, or the articles themselves get deleted. If I don't collect today's news today, I won't be able to get it later.</li>
+</ul>
+<p>So I split news out into its own dedicated project first. An interesting conclusion followed from that: <strong>if I archive news thoroughly enough, I can reconstruct a full snapshot of any past moment from it alone.</strong></p>
+<p>Price and macro data can always be recreated on demand, so once I have the news, I can backfill the rest whenever I need it. That makes this project less of a storage system and more of a materials warehouse the main project pulls from when needed.</p>
+<h2>Keeping the format 100% identical to the original</h2>
+<p>The thing I cared about most when re-collecting old news was that it had to match the exact same format as the news being collected in real time. Even a small format mismatch would make it impossible later to tell whether a difference in the results came from the data being different, or from an actual real-world difference.</p>
+<p>So instead of writing new filtering/processing logic from scratch, I reuse the exact code the main project already uses. I could have made this a fully independent project, but that risked the two codebases slowly drifting apart over time. Instead I deliberately made this depend on the main project, removing that risk of format drift entirely.</p>
+<h2>Finding a collection path</h2>
+<p>Figuring out where and how to get the old news took some trial and error. The first approach I tried had too shallow a reach, and the next one produced too much data to afford. I eventually settled on scanning entire portal news sections and picking out only the articles that mention a given ticker — and confirmed this approach can reach any past date I need (in practice, back to 2015).</p>
+<p>Right now there's a background job running continuously, working backward from the most recent date to 2015. It's built to quietly step out of the way of the main project's nightly analysis jobs so they don't compete for resources, and collecting everything should take a couple of months.</p>
+<h2>What it's for, and what it's not for</h2>
+<p>I deliberately narrowed this data's use case up front. I decided not to use news reconstructed from the past to validate anything tied to actual future returns — since it was collected after the fact, there's no guarantee it exactly matches "which articles actually existed at that point in time," and mixing it into live validation risks distorting the results. Instead, I limited it to a use case that isn't directly tied to returns: checking how consistent models are across the same input.</p>
+<h2>From news to three streams</h2>
+<p>What started as a news project has now grown into three branches.</p>
+<p>Investor sentiment from stock discussion boards and intraday minute-level price data got added under the same criterion (perishability). Minute-level prices are especially urgent — portal news at least gives you a few days of leeway, but minute-level prices can already be unrecoverable within a few hours, sometimes as soon as the same afternoon.</p>
+<p>All three store data the same way: I keep the first time something was observed and, separately, the last time I re-checked whether the value had changed.</p>
+<p>Board post view counts and reactions keep changing, and the still-forming last candle of a minute bar keeps updating. Without recording both timestamps, I couldn't reconstruct "what the value actually was at that point in time" later.</p>
+<p>The board data is still just being collected for now. Feeding that signal into another comparison experiment I'm currently running could contaminate it, so I've deliberately held off on using it.</p>
+<h2>What the three streams share</h2>
+<p>As the project grew to three, some natural overlap emerged.</p>
+<p>Ticker-name recognition logic, portal request-rate throttling, and detecting and tolerating network failures are needed by all three projects in almost identical form. I originally implemented each one separately, but after seeing the same class of bug repeat across all three, I pulled them out into a shared module.</p>
+<p>Now these three pieces don't belong to any single stream — they sit as shared components directly under the umbrella project. Fix one place, and all three streams get fixed at once.</p>
+<hr />
+<p>As the main project keeps growing, I keep having to decide "should this live together, or split off." The original criterion I set (perishability) has now been applied three times over, consistently. If similar data comes up again, it'll probably fold naturally into this umbrella project.</p>
+</article>
+</body>
+</html>

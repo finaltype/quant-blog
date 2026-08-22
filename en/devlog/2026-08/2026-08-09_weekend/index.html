@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekend Devlog — Reviewing Strategy Hypotheses and a Pre-Live-Trading Checkup · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-09_weekend/index.html">한국어로 보기</a></p>
+<article>
+<h1>Weekend Devlog — Reviewing Strategy Hypotheses and a Pre-Live-Trading Checkup</h1>
+<p class="subtitle">The three weekdays were quiet, but the weekend was packed — I reviewed and shelved three strategy ideas, then a full pre-live-trading checkup turned up bigger gaps than expected</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>The weekdays (8/5–8/7) passed quietly, mostly confirming that last week's fixes held up. Work piled onto the weekend instead — Saturday I worked through some long-standing questions about the strategy itself, and Sunday I ran a full checkup I'd been putting off ahead of expanding live trading.</p>
+<h2>Reviewed three strategy ideas, shelved all three</h2>
+<p>Hearing that an acquaintance had done quite well trading US stocks was the trigger. I spent Saturday working through three strategy questions that had been sitting unanswered for a while.</p>
+<p>The first was whether changing the trading cadence from the current three-times-a-day batch execution would help — analysis showed no clear benefit. The second was running trading decisions continuously throughout the session, which landed on the same conclusion I'd reached and shelved once before. The third was switching to the US market, which reconfirmed last time's conclusion: technically possible, but premature.</p>
+<p>Having shelved all three, I decided to keep the current framework as-is — three daily batch rounds, focused on the domestic market. The confirmation was that reinforcing what already exists made more sense than starting something new.</p>
+<h2>The real reason cash kept piling up on one side</h2>
+<p>Sunday, I first addressed a problem that had been nagging at me for a while. Buys and sells shared the same daily budget, and when sells used up most of that budget first, it structurally cut into the room left for buying.</p>
+<p>I split the daily limits for buys and sells so they're independent of each other, and switched order sizing to a ratio-based calculation. While at it, I also built a new boundary check that cross-references deposits and withdrawals against the ledger and filters mismatches.</p>
+<h2>Reversed three of my own wrong conclusions</h2>
+<p>I also refined a tool that replays trades offline before going live, and in the process discovered that three conclusions I'd previously drawn myself were wrong — and reversed them.</p>
+<p>One was particularly painful. A bug in the budget calculation happened to sidestep trading on sharp-drop days, which made performance look much better than it actually was. A single bug had accidentally produced a good-looking result — if I hadn't traced the cause, it could have kept feeding false confidence.</p>
+<h2>The real problem the pre-live-trading checkup found</h2>
+<p>The core of Sunday was a full checkup ahead of expanding live trading. The biggest issue wasn't a new bug at all — it was that the real order path, which documentation claimed was already wired up, was in fact still pointing at the paper-trading account.</p>
+<p>The safety-guard tests had a problem too. On the surface, everything showed green, but the specific safety guard that was supposed to be checked was actually disabled while the test passed. I also found that during a recent period of reworking the funds-flow path, a date-calculation bug meant the core safety tests never even reached the real logic — they just passed through without touching it.</p>
+<p>All three were the same kind of problem: "it's running, but nothing was actually being verified." Without this full pre-live-trading checkup, I'd likely still be unaware of all three. I sorted the findings by severity and documented them; background on this order-execution and safety-layer design is in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">an earlier post</a>(new tab).</p>
+<h2>Also redesigned the day's opening reference point</h2>
+<p>I also changed how the ledger sets its daily opening reference. It used to be the unstable quote right after market open. The concern was that opening-minute prices swing too much to serve as a reliable baseline, so it now just carries over the previous day's closing price — which also removed the need for a live quote lookup entirely.</p>
+<p>In the process, I found and fixed a contamination bug where test code had been writing fake values directly into a production file.</p>
+<h2>Also this week</h2>
+<ul>
+<li>Updated the externally shared project summary document to reflect the shrinking role of human approval. As before, I deliberately left the brokerage's name out of the public document.</li>
+</ul>
+<hr />
+<p>Looking at just the weekend, there was almost nothing new feature-wise. Instead, I re-checked things I'd assumed were already working, one by one — and several of them weren't. I think it's a good thing these turned up at this last gate before widening the scope of live trading.</p>
+</article>
+</body>
+</html>

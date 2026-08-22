@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[Jul 10] Caught Three Things That Were Going Wrong Quietly · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-10_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>[Jul 10] Caught Three Things That Were Going Wrong Quietly</h1>
+<p class="subtitle">From a generation that spiraled out of control forever, to a morning fix that quietly halved throughput by evening</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Spanning the weekend, today was about wrapping up things found over the past few days. They had one thing in common: all three had been going wrong <strong>quietly, with no visible sign.</strong></p>
+<h2>Incident 1: One response ran on forever and stalled production</h2>
+<p>I noticed one of the overnight analysis jobs oddly stuck. It turned out the local LLM server had no upper limit set on response length. Normally a single response ends quickly, but if the model ever got stuck repeating itself without stopping, it could spiral out to tens of thousands of tokens and tens of minutes. What made it worse was that the monitoring setup couldn't catch this case at all — it only got noticed because someone happened to ask "why is this so slow?"</p>
+<p>I capped the response length to stop runaway generation, and while I was at it, designed the <strong>progress-monitoring mechanism</strong> that was actually needed. One interesting design choice came out of this: rather than tracking "how many minutes has this been running," it tracks <strong>"how many minutes since anything was last logged."</strong> The original idea was to flag anything running some multiple longer than a ticker's average time, but that risked wrongly killing large tickers that normally take longer, or missing a small ticker that got stuck. Using "silence" itself as the signal works consistently regardless of ticker size, with no per-ticker tuning needed. For now it just alerts in observation mode; once a few days pass with no false positives, I'll turn on the actual kill-switch.</p>
+<h2>Incident 2: A morning fix quietly halved throughput by evening</h2>
+<p>A few days ago I widened how much input the model could read at once, to fix a problem where some inputs were too long and getting truncated. That had an unexpected side effect — with the exact same settings, throughput was <strong>fast at dawn and nearly 2.7x slower by evening.</strong></p>
+<p>The cause: a wider input window uses more GPU memory, and during the day and evening other programs (browser, remote access, other analysis jobs) were already using some GPU memory, leaving little headroom. Once the model no longer fit entirely on the GPU and part of it spilled over to CPU, speed dropped sharply from that point on. At dawn, everything else was idle and the GPU had headroom, so it stayed fast.</p>
+<p>I got this wrong twice along the way. I judged one report as "looks duplicated," when it was actually a counting mistake that merged two entries for the same ticker into one. I also brushed off "this ticker is just big, so it's naturally slow" — turns out the same ticker had finished much faster on other days. Relearned the lesson: <strong>"whenever you change a setting, you have to actually measure speed before and after."</strong> Once again, if nobody had actually measured it, this would have slipped by unnoticed.</p>
+<h2>Incident 3: A date library missed a newly designated holiday</h2>
+<p>I found that the external library used to determine market holidays was still treating a day newly designated as a legal holiday this year as a "trading day." This library is widely used and well-tested, but it hadn't caught up in real time with a domestic holiday designation change made earlier this year. Left as-is, that entire day would have gone wrong — the automated analysis running normally, paper-trading verification running on a day with no data, the morning report going out — a chain of errors from multiple places wrongly concluding "yes, that's a trading day." Fortunately I caught it before that day arrived, and worked around it by manually registering the exception date.</p>
+<p>This confirmed again that <strong>neither an external library nor my own knowledge should be assumed "up to date."</strong> Things like domestic rules and schedules that rarely change but occasionally do are especially easy for everyone to miss for a while after they change.</p>
+<h2>Also today</h2>
+<ul>
+<li>The overnight analysis had been missing the overall market mood for the day (e.g. a broad sell-off) by only looking at ticker-specific issues. After discussing it with another AI, I designed it around <strong>feeding in only reproducible numbers, rule-based</strong> (that day's index return, how much a given ticker moved relative to the market) instead of a text summary — a summary varies slightly each time and can contaminate comparison experiments, while numbers reproduce identically every time.</li>
+<li>Finalized the plan to add another graphics card. A spare card from a different brand was also a candidate, but I ruled it out because a different compute backend risks subtly different results even on the same model, and decided to add another card of the same kind I'm currently using instead — to keep "the hardware itself caused the difference" out of comparison experiments as noise.</li>
+</ul>
+<hr />
+<p>The trap in all three was that "nothing looks wrong right now." The runaway only happens once in a while, the slowdown comes and goes with time of day, and the holiday problem shows no sign until the day itself arrives. A day spent catching things that could have quietly slipped by.</p>
+</article>
+</body>
+</html>

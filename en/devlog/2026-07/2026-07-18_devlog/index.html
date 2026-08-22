@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On the Verge of the First Real Order, the Code Voted No · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-18_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>On the Verge of the First Real Order, the Code Voted No</h1>
+<p class="subtitle">Auditing the code that actually moves real money turned up several genuine bugs, and it also prompted a fresh look at which broker to use</p><p>I mentioned a few days ago that I was preparing to expand live trading. Yesterday turned out to be a genuinely important day in that preparation.</p>
+<h2>On the verge of the first real order, the code voted no</h2>
+<p>The code path that actually places orders is the most carefully handled part of this project. Before putting it to real use, I had it audited from an outside perspective one more time — and the verdict was: don't place the first real order in the current state.</p>
+<p>Several genuine bugs turned up. The safeguard meant to prevent duplicate orders had a hole: when the check itself failed, it silently let the order through instead of blocking it. I'd recently introduced a third "result unknown" state alongside success/failure, but there was still one path where that state wasn't caught properly and leaked through as a false success.</p>
+<p>The design was supposed to record an order before actually placing it, but there was a path where the order still went out even if the recording itself failed. Now, if recording fails, the order doesn't go out either.</p>
+<p>I also re-examined the assumption that the account might hold other positions the bot doesn't know about, and added a safeguard so the bot's tracked position can never exceed the actual balance.</p>
+<p>Individually these look like small bugs, but every one of them was the kind that "normally doesn't trigger, only under specific conditions" — the kind you can't find without an audit. Since this is the only code path that touches real account funds, this audit was worth the time it took.</p>
+<h2>Reconsidered which broker to use</h2>
+<p>While expanding live trading, I also reconsidered whether to keep using the current broker's API or switch to a different one. The first pass concluded "no need to switch," but revisiting it within the same day flipped that conclusion.</p>
+<p>The reasoning is simple: no real order has gone out yet, so this is the cheapest point to switch brokers. Switching after weeks of real use would mean throwing away accumulated verification and familiarity — right now, there's nothing to throw away.</p>
+<p>Once decided, I tested the new broker's connection immediately — authentication, balance lookup, and ticker lookup all worked without issue.</p>
+<h2>Confirmed: no AI in the intraday loop</h2>
+<p>There's been an old idea floating around — running a lightweight AI judgment continuously during market hours. Yesterday I finally shelved it for good, after several rounds of review.</p>
+<p>The core reasoning: information that needs a fast intraday reaction is mostly already priced in instantly, and the slower information where AI could actually add value is already being digested by the daily-cycle analysis. The case for running it continuously was weak, and the cost was not small.</p>
+<p>Instead, intraday will keep only rule-based detection, with AI narration requested on demand only when needed. Decisions still get made at night, on a daily cycle.</p>
+<h2>Data archive — yesterday's blind spot, wrapped up today</h2>
+<p>Wrapped up the issue found the day before yesterday in the <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">data archive</a>(new tab): the blind spot where historical news-to-ticker linking only covered a subset of tickers.</p>
+<p>Expanded the coverage to the full ticker universe and re-linked the articles already collected. No need to re-scrape anything — re-matching the existing data was enough.</p>
+<h2>Also this week</h2>
+<ul>
+<li>Considered buying historical news from a paid service, decided against it for now — the current approach is good enough.</li>
+<li>Finished the risk-free portion of prep work for an upcoming large structural rework ahead of time: how experiment results get recorded, and documenting what each running process currently does.</li>
+<li>Consolidated network-error detection logic that had been scattered across several places into one spot — now there's just one place to fix.</li>
+</ul>
+<hr />
+<p>Looking back, yesterday was a day spent asking, over and over, "how much should I distrust what I already have before expanding live trading further." Several things turned up that I wouldn't have known about without the audit.</p>
+</article>
+</body>
+</html>

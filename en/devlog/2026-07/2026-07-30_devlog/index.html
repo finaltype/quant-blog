@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US Market Feasibility Check — Technically Possible, Not Yet Time · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-30_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>US Market Feasibility Check — Technically Possible, Not Yet Time</h1>
+<p class="subtitle">Today was about confirming that the last few days of fixes actually hold up, plus a serious look at whether this system could move to the US stock market</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Today was less about incident response and more about confirming that the last few days of fixes actually hold up. On the side, I seriously looked into whether this system could move to the US market too.</p>
+<h2>First report card on yesterday's fixes</h2>
+<p>This was the first day trading ran normally since the circuit breaker incident days earlier. There was one transient error from the brokerage in the morning, but the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">retry logic</a>(new tab) I'd fixed a few days ago worked exactly as designed, and it passed through without any duplicate orders.</p>
+<p>Recommendation performance logging also accumulated at a normal volume all day. Since the earlier omission incident, checking this every day has become a habit, and today it looked fully back in normal range.</p>
+<p>While I was at it, I did a full sweep for the same class of bug elsewhere and confirmed nothing else was affected this time. I also found the root cause of a minor incident from a reboot a few days ago — the existing restart policy had already self-recovered from it, so no separate action was needed.</p>
+<p>Buying that had been blocked for a long time also opened back up today. The target asset allocation ratio is now close to where it should be, and the "several consecutive days without incident" condition set for the next decision restarted counting from today.</p>
+<h2>Could this move to the US market?</h2>
+<p>With input from another advisor, I looked into whether this system could be ported to the US stock market. The short answer: technically, it's a matter of months.</p>
+<p>But there was a catch. The edges I believe I currently hold in the Korean market — the high share of retail investors, relatively under-analyzed data, information that's still under-explored thanks to the language barrier — could work in the opposite direction in the US market. The very source of the edge might disappear the moment the market changes.</p>
+<p>There were more practical problems too. US market hours fall at night in Korean time, so if something goes wrong while I'm asleep, response would inevitably lag. Tax and account-related regulations would also need separate handling.</p>
+<p>So the conclusion was "technically possible, but premature right now." Since I haven't yet secured a fully validated edge even in the Korean market, expanding into a new market isn't the current priority.</p>
+<h2>Also today</h2>
+<ul>
+<li>Turned off the daily "all clear" morning notification and kept only the alerts for failures or stoppages.</li>
+<li>Fixed one notification that was going to the wrong destination.</li>
+</ul>
+<hr />
+<p>Today wasn't about building something new — it was about confirming that recent fixes actually hold up and gauging the next direction for expansion. The conclusion was that expansion is premature, but I think it's worth asking these questions early anyway.</p>
+</article>
+</body>
+</html>

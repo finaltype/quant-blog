@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 11] GPU Expansion: Swapped In the New Card First to Test It Alone&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-11_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 11] GPU Expansion: Swapped In the New Card First to Test It Alone&quot;</h1>
+<p class="subtitle">Before plugging both cards in together, I checked the new card&#x27;s stability on its own — and dug up an old idea I&#x27;d shelved as &quot;no effect&quot; and flipped it</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>A few days ago I'd already decided on the direction for a hardware expansion, and today I actually carried it out. Along the way I also dug up an old idea I'd given up on and flipped it.</p>
+<h2>GPU expansion: swapped in the new card first to test it alone</h2>
+<p>I picked up a second graphics card, the same model as the one already running. The end goal is to run both at once, but today I just swapped in the new card and tested its stability solo first.</p>
+<p>I ran a load test with power slightly capped. Temperatures actually stayed lower than before, fan noise dropped, and there were no slowdowns or errors at all.</p>
+<p>I haven't actually installed both cards together yet. Checking the case's internal layout ahead of time, I found that the slot for two cards side by side collides with the power supply's mounting spot by just a few centimeters.</p>
+<p>Checking the dimensions before blindly assembling meant I could reach the conclusion — "I need a case that puts the power supply in its own separate compartment" — before actually running into the collision. Running both cards together for real is on hold until that case swap happens.</p>
+<h2>I dug up something I'd shelved as "no effect" and flipped it</h2>
+<p>A while back I tried letting the local LLM server handle multiple requests concurrently, hoping it would speed things up. I measured it, concluded "no real effect," and shelved the setting.</p>
+<p>Today I pulled it back out under different conditions and measured it properly, and the result was completely different this time — nearly double the raw generation speed, and about 1.5x on the full task end to end.</p>
+<p>Thinking back on why the old conclusion was wrong, the measurement method or conditions back then were probably different enough that the improvement was masked by some other bottleneck. I learned again that "it didn't work before" has an expiration date once conditions change — when the premise shifts, an old idea shelved before is sometimes worth pulling back out.</p>
+<h2>Also today</h2>
+<ul>
+<li>An experiment comparing two local LLMs (a lighter, faster one vs. a heavier, slower one) on how much they actually sway investment decisions cleared a major hurdle. It's taking longer than expected, so results are still a ways off.</li>
+<li>I'd mentioned moving the core processes to OS-level services a while back. Today I actually rebooted the machine and confirmed all four came back up on their own without any manual intervention. During the check I briefly chased a false alarm — I'd queried a service by the wrong name and thought "why is this down?" when it had been running fine the whole time.</li>
+</ul>
+<hr />
+<p>Today leaned more toward hardware than software. Running both cards together is left for the next step, and today's attitude was: check what needs checking first, before jumping ahead.</p>
+</article>
+</body>
+</html>

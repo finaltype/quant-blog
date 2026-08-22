@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 6-12] A Week That Started By Doubting Surface Metrics and Ended With Reproducible Speed&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-12_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 6-12] A Week That Started By Doubting Surface Metrics and Ended With Reproducible Speed&quot;</h1>
+<p class="subtitle">&quot;Monday&#x27;s &#x27;cleanest&#x27; model turned out on Tuesday to be running on no real grounding at all — and that same distrust of surface metrics and speed gains ran through the rest of the week&quot;</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>One question followed me through this whole week, Monday to Sunday — <strong>"is what I'm looking at right now actually real?"</strong> A clean-looking metric, a plausible-sounding tool answer, a speed gain — each got flipped on its head once a day, and that suspicion ended up shaping the whole week.</p>
+<h2>The turning point: the "cleanest model" was actually running ungrounded</h2>
+<p>Early in the week felt like straightforward optimization. I ran several candidate local LLMs under the same conditions and compared them, picking the one with the cleanest failure rate and grade distribution.</p>
+<p>I'd already caught two failures that surface metrics alone wouldn't catch — the final judgment generation itself silently failing and falling back to a default, and a low-probability case where it analyzed the wrong target entirely — so I felt like I'd been careful.</p>
+<p>The next day, though, it turned out that "cleanest" conclusion itself was standing on a blind spot. One stage of the research pipeline was supposed to look up real data, but it <strong>couldn't actually make the tool call</strong>, and instead just wrote "I will look this up" as text and produced a report with no real grounding behind it.</p>
+<p>The metrics (failure rate, grade distribution) looked clean, but nobody had checked whether the report actually contained real data. After switching models and fixing the tool-calling issue, more than half the reports still looked off. Digging further, there was a <strong>context window silently left at its default</strong>, cutting off a large chunk of the input underneath.</p>
+<p>This discovery changed the direction of the whole week. "Which model is best" turned into "can I even trust my own measurement."</p>
+<h2>That same doubt repeated once a day</h2>
+<p>Once burned this way, the following days kept repeating the same pattern of "trusting something at face value, then getting burned."</p>
+<ul>
+<li>When checking how a brokerage API handled order cancellation, a helper tool answered confidently based on common convention. I trusted it and implemented accordingly, and a cancel-should-have-worked order sat on a real account for a few minutes. It happened to be safely designed from the start — priced so it could never fill, and set to expire same-day — so there was no real damage, but it only actually cancelled once I parsed the original API spec directly.</li>
+<li>A model tasked with verifying another model's output confidently misjudged a real, recent news event as "this doesn't exist." Being the "verifier" didn't make it immune to the same trap.</li>
+<li>One day I caught three things quietly going wrong at once: a rare case where a response spiraled endlessly and stalled production, a recent input-length increase that was cutting speed in half only during evening hours, and a widely used date library missing a newly designated holiday for this year. None of the three were the kind of thing that would show itself in the moment.</li>
+</ul>
+<p>The common lesson was one thing: whether it's a model, a summarizing tool, another model set up to verify things, or even a well-established external library — <strong>the moment you let "this is probably right" slide is where trouble gets in.</strong> After a config change I started actually measuring speed instead of assuming, checking raw API specs directly instead of trusting a summary, and looking facts up myself instead of taking a verdict at face value.</p>
+<h2>Not just doubting — rebuilding a foundation I could actually trust</h2>
+<p>Doubting more didn't mean giving up. If anything, I spent more time on the question of what I actually could trust.</p>
+<p>For a new automated-investing idea, I set up a <strong>paper-trading track</strong> before putting any real money on it. Two tracks run side by side with the same candidate selection but different allocation methods, with a pass/fail bar (must meaningfully beat the benchmark over a long-enough period) decided in advance, running from day one.</p>
+<p>Building it out, I also found that one input the current allocation logic relies on wasn't even being logged, leaving no way to check it retroactively — I started logging it starting that same day.</p>
+<p>On the infrastructure side, I finally caught the real culprit behind an overnight crash that had been a mystery for weeks. Memory that Python code had already released wasn't actually being reclaimed at the OS level (memory fragmentation), building up a little each day until it killed the system overnight.</p>
+<p>I fixed it with three changes: reading from cache instead of recomputing, explicitly releasing memory after heavy computation, and skipping computation entirely when the date hasn't changed — one process's memory usage dropped substantially. It was digging down to the root instead of papering over it with "restart and it's fine."</p>
+<p>I also found that the core background processes were running as child processes of the dev environment (the editor), so they'd die whenever the editor did — all four got promoted to independent OS-level services.</p>
+<h2>From "fast" to "doesn't wobble"</h2>
+<p>The story around GPU resources and speed flipped the most dramatically this week.</p>
+<p>At first I tried to solve it purely in software. Adding another serving engine made things noticeably faster on the same GPU, so I put the graphics-card-expansion question on hold for a moment.</p>
+<p>But this week's speed and memory issues largely traced back to insufficient GPU memory headroom, and to remove even the noise of "did the result change because of a hardware difference" from comparison experiments, I committed to adding <strong>a second card of the same model</strong> already in use.</p>
+<p>Over the weekend I actually swapped the card in and confirmed its stability solo (temperature, noise, and error rate all fine), then found that fitting both cards in the case at once collided with the power supply mount by a few centimeters, deferring full installation until a case swap.</p>
+<p>In the meantime, I pulled an old parallel-processing setup (one server handling multiple requests concurrently) back out and re-measured it — this time, maybe because conditions were different, it came out noticeably faster. On Saturday I was happy that "an old conclusion also has an expiration date once its premise changes" — then Sunday flipped it again.</p>
+<p>The speed gain was real, but running the same input with the same settings repeatedly produced slightly different results each time. Even a single request run repeatedly with no concurrency at all still varied, so the culprit wasn't concurrency — it was <strong>the preexisting property that GPU computation doesn't reproduce identically every single time.</strong> Concurrency only amplified that wobble slightly.</p>
+<p>So I decided not to use this parallel setup in the pipeline used for real judgment calls, at least for now. If results wobble, there's no way to tell whether a difference between yesterday's and today's judgment reflects a real market change or just computational noise.</p>
+<p>Instead I pivoted to using the newly added second card to run two fully independent computations side by side, gaining speed without the wobble. In the same spirit, when feeding overall market sentiment into the nightly analysis, I designed it to use only rule-based numbers that are always perfectly reproducible, instead of a summary that varies each time.</p>
+<p>Early in the week it was "I can't trust surface metrics." By the weekend, that had naturally turned into "choose slower-but-reproducible over fast-but-wobbly."</p>
+<h2>What needed retiring got retired</h2>
+<p>Not clinging to things that weren't working was another thread this week. One experimental model that had sat for a long time in "not yet verified for live use" status never beat the benchmark across several tuning attempts, and re-examining it from a design standpoint confirmed the approach was never a good fit for this role — so I let it go without regret.</p>
+<p>On the flip side, several core prediction models had gone stale enough to fall behind recent markets, so I decided to add periodic automatic retraining for them going forward.</p>
+<h2>Closing thoughts</h2>
+<p>Looking back, this was less a week of "building a lot of new things" and more a week of <strong>"re-doubting things I'd already believed were working."</strong> The cleanest-looking model, the most plausible-sounding tool answer, even yesterday's speed gain — something new turned up every time I dug in. What's left is a simple conclusion: don't trust surface metrics and speed at face value — only build judgments on a foundation that's reproducible, even if slower.</p>
+</article>
+</body>
+</html>

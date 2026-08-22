@@ -23,10 +23,10 @@
 </head>
 <body>
 <header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-
+<p class="lang-switch"><a href="../../en/architecture/06_paper_trading_validation/index.html">Read in English</a></p>
 <article>
 <h1>5억짜리 가짜 계좌로, 완전자동매매를 먼저 돌려보기로 했다</h1>
-<p class="subtitle">실주문 한 번 테스트한 것과는 다른 얘기입니다. 사람 승인 없이 스스로 판단하고 주문까지 내는 자동매매가, 진짜 돈을 만나기 전에 가짜 돈으로 얼마나 버티는지 보는 중입니다</p><p>지난 글(<a href="https://finaltype.tistory.com/43" target="_blank" rel="noopener noreferrer">실전 계좌 적용편</a>(새 창))에서 실주문을 한 번 내봤다는 얘기를 했습니다. 그런데 그건 사실 "배관이 뚫리는지" 확인한 것에 가깝습니다. 딱 한 번, 사람이 지켜보는 채로 사고팔아본 것뿐이니까요.</p>
+<p class="subtitle">실주문 한 번 테스트한 것과는 다른 얘기입니다. 사람 승인 없이 스스로 판단하고 주문까지 내는 자동매매가, 진짜 돈을 만나기 전에 가짜 돈으로 얼마나 버티는지 보는 중입니다</p><p>지난 글(<a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실전 계좌 적용편</a>(새 창))에서 실주문을 한 번 내봤다는 얘기를 했습니다. 그런데 그건 사실 "배관이 뚫리는지" 확인한 것에 가깝습니다. 딱 한 번, 사람이 지켜보는 채로 사고팔아본 것뿐이니까요.</p>
 <p>진짜 중요한 검증은 따로 있습니다. <strong>사람 승인 없이 스스로 판단해서 계속 매매하는 게, 시간이 지나도 안 무너지는가</strong>라는 질문입니다. 이건 주문 한 번으로는 절대 답할 수 없는 질문입니다.</p>
 <h2>트레이딩봇과는 다른 트랙</h2>
 <p>지금까지 얘기한 트레이딩봇은 사람이 매번 개입합니다. 목표 비중에서 벗어나면 텔레그램으로 제안이 오고, 승인 버튼을 눌러야 실제로 주문이 나갑니다.</p>

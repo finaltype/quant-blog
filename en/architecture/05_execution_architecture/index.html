@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05_execution_architecture.en.md · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/05_execution_architecture/index.html">한국어로 보기</a></p>
+<article>
+<h1>05_execution_architecture.en.md</h1>
+<h1>Quant Trading Auto-Execution System - Going Live</h1>
+<p><em>This is the English version of a post originally written in Korean. <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">See the Korean original and other posts</a>(new tab).</em></p>
+<p>Over the past few weeks, bits and pieces of live-trading prep kept showing up scattered across my devlog — catching a bug in a code audit, switching brokers, sending the first real order. Today I want to pull those pieces together into one structural writeup.</p>
+<p>One thing up front: this post doesn't cover the logic that actually picks which stocks to buy (what I've been calling the "AI ensemble"). This is about the layer that wraps that judgment so it safely turns into a real order — not "what to buy," but "how to buy it safely."</p>
+<h2>There should be exactly one door money goes out through</h2>
+<p>The first principle I set when starting live-trading prep was that there should be exactly one code path that actually sends an order to the broker.</p>
+<p>Before, each feature (rebalancing, signal-based trading, etc.) had its own order-sending code. Convenient, but risky — fixing a safeguard in one place could leave another path untouched.</p>
+<p>So I merged every path into a single gateway. No matter which feature wants to place an order, it now has to go through this one gateway to actually reach the broker. The biggest win was being able to concentrate every safeguard in one place.</p>
+<h2>The broker needs to be swappable</h2>
+<p>This gateway isn't glued to any specific broker. Broker-specific details (authentication method, request format) live in a small adapter, and the rest of the logic is broker-agnostic.</p>
+<p>I actually benefited from this. When I recently decided to switch brokers, the only thing I touched was this one adapter — none of the safeguards or the rest of the logic changed at all. Without this separation up front, that would have been a much bigger job.</p>
+<h2>Success, failure, and "unknown"</h2>
+<p>When you send an order and get a result back, it's tempting to split it into just success or failure. But in practice there's a third case — never getting a response at all, so you can't tell whether it succeeded or failed.</p>
+<p>Lumping that in with "failure" is dangerous. If you assume "must have failed" and manually resend the order, but the original order had actually already gone through, you end up buying twice.</p>
+<p>So I split the result into three explicit states — success, failure, and unknown. When "unknown" comes back, instead of immediately resending, it goes through a process that first confirms what actually happened.</p>
+<h2>How to avoid sending the same order twice</h2>
+<p>Preventing duplicate orders relies on two mechanisms working together.</p>
+<p>One is attaching a unique tag to every order. If an order with the same tag comes in again, it's recognized as already processed and filtered out.</p>
+<p>The other is ordering: a record saying "I'm about to place this order" gets written safely first, before the order is actually sent. If that record itself fails to write, the order doesn't get sent either — because if the record fails but the order still goes out, that order's existence could end up known to nobody.</p>
+<h2>When the ledger and reality disagree, trust reality</h2>
+<p>After an order goes out, I reconcile what actually got filled against the broker's own records. At first this reconciliation only looked at regular trading hours, and I later found out that meant orders filled outside those hours fell into a blind spot, completely invisible.</p>
+<p>Now it checks every possible fill path there is. Whatever our own ledger says, if it disagrees with the actual fill record, I trust reality and fix the ledger.</p>
+<h2>My share and the whole account are different things</h2>
+<p>This bot manages only one part of the account, not the whole thing. So it's dangerous to assume "the quantity the bot thinks it holds" must always exactly equal "the account's actual holdings" — the account could have other holdings mixed in that the bot doesn't know about.</p>
+<p>Instead I use a weaker but actually-correct condition: "the share the bot thinks it holds must always be less than or equal to the actual holdings." If that condition breaks, something is wrong, and it stops immediately and sends an alert.</p>
+<h2>Stopping is also a design decision</h2>
+<p>Loss-prevention is split into two layers.</p>
+<p>One layer is automatic. If losses cross a set threshold, that part stops on its own.</p>
+<p>The other layer is human. There's a separate master switch that can freeze everything instantly at any time — a last line of defense for situations the automatic layer doesn't catch.</p>
+<p>Stopping and liquidating are kept as separate concepts. Stopping just freezes the current state — it's not the same as selling off what's held.</p>
+<h2>Safeguards also need to survive on their own</h2>
+<p>The processes actually running these safeguards are kept separate from the chat program I talk to. In the past, some background jobs used to run inside the same process as the chat bot, and restarting the chat program would cut those jobs off too.</p>
+<p>Now monitoring, settlement, balance logging, and similar jobs are all split out into separate always-on services. Pending approval requests are also written to disk instead of memory, so they survive even if the bot restarts.</p>
+<h2>Wrapping up</h2>
+<p>Taken individually, none of these are exotic — duplicate-order prevention, status checks, ledger reconciliation, kill switches. Names you've probably heard before, wherever you look.</p>
+<p>But building all of these out as a solo project meant less "designing it perfectly from the start" and more filling in the gaps one mistake at a time. Most of what's described here came from patching a hole an actual incident or code audit turned up.</p>
+<p>If you're curious about the overall architecture, it's worth reading the <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">project architecture post</a>(new tab) first. This post is a deeper dive into how the "trading bot" piece of that is actually built.</p>
+</article>
+</body>
+</html>

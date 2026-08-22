@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quant Bot Goes Live - Clearing the First Gate With Small Money, and What Broke in Week One · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/10_real_money_launch/index.html">한국어로 보기</a></p>
+<article>
+<h1>Quant Bot Goes Live - Clearing the First Gate With Small Money, and What Broke in Week One</h1>
+<p class="subtitle">After months of validating the system entirely on a paper account, it finally opened an account with real money. I started small and careful, and the first week still had some surprises</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>This week, I finally started automated trading on a live account with real money. It's been a while since I started this project, and up to now I'd only ever validated the system on paper. Now, with a small amount, trades started going through on an account with real money on the line for the first time.</p>
+<h2>The road here</h2>
+<p>I prepared along two tracks to get here. One was <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">running the fully-automatic, no-human-approval track on paper first</a>(new tab). The other was <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">designing the safety mechanisms</a>(new tab) that real money going out the door would need. Both came from the same instinct — doubt everything and verify as much as possible before going live.</p>
+<p>Last weekend, ahead of expanding into live trading, I did one final full review, and found and fixed a few genuinely important issues there. Only after that review wrapped up did it actually feel like "okay, this is ready to start."</p>
+<h2>The decision happened the same day</h2>
+<p>Going live wasn't some elaborately staged event. Once the review was done, I decided to just start that same day.</p>
+<p>The first round ran the usual way — a Telegram trade proposal, approved by me directly. But right after tapping approve, I found myself thinking "why am I still tapping this every single time," and decided on the spot to drop the approval step entirely. Instead of a human checking every time, the system now proceeds automatically once its own self-check conditions are satisfied, and always reports the outcome afterward.</p>
+<h2>Afternoon chaos on day one — the system doubted even my own trade</h2>
+<p>There was one surprise on the afternoon of day one. I manually cleared out a position myself, directly on the account, to free up some cash. The system flagged that fill as one it didn't recognize, treated it as an "unapproved trade," tripped its safety mechanism, and halted trading entirely. Twice, not just once.</p>
+<p>It was funny and reassuring at the same time. A system that can't even tell my own trade apart and defaults straight to suspicion might sound overly jumpy, but that was exactly the intended behavior. Afterward I built a proper procedure for formally notifying the system whenever I trade manually myself, so the system doesn't get confused even when I step in directly.</p>
+<p>Among the names it actually held this week were familiar large-cap names — nothing exotic, mostly recognizable blue chips, filled in carefully rather than chasing hot themes.</p>
+<h2>A moment my own judgment was right, twice</h2>
+<p>The moment from this week that stuck with me most personally was a disagreement with my AI advisor over the timing of increasing exposure to KOSDAQ names. The AI suggested waiting, being more cautious about timing. I overruled it both times and went with my own judgment.</p>
+<p>Looking back, both calls turned out right. It was a good reminder that going automated doesn't mean handing every decision to the machine — the big calls are still mine to make.</p>
+<h2>Day two — a deploy that quietly didn't take, and a stale baseline found late</h2>
+<p>The second day saw more trading volume but nothing went wrong there. Instead, I spent time making the daily trade summary notification a bit friendlier — clearer buy/sell labeling, showing round number instead of clock time, and a daily "quiet day, nothing happened" message even on days with no trades.</p>
+<p>There was a small deploy mishap that day, though. I fixed some code and restarted, but the process itself had fallen off the monitoring list, so the restart never actually took effect. I only noticed when the afternoon report didn't arrive and I went checking why it was late.</p>
+<p>The same day, I also found that the baseline used to calculate drawdown from the account's peak had been wrong from the very start. The balance on day one of live trading had accidentally been stored as the "all-time high," which meant the intended rule — that the circuit breaker could be manually reset intraday if needed — wasn't actually functioning. I fixed it immediately, and while I was at it, cleaned up the policy so that a circuit breaker or risk kill switch automatically resets on the next trading day. That was something I needed to nail down before moving to unattended operation without someone watching over it constantly.</p>
+<h2>Going forward</h2>
+<p>Looking back at the first week, what stands out most is relief that nothing broke badly. Most of the issues were the kind that only surface once real money is actually moving — things a paper account would never have exposed.</p>
+<p>I'm starting small, and I plan to scale up very slowly, only after stacking up enough incident-free days. I'll keep writing about what comes up along the way in future devlogs, so feel free to follow along if you're interested.</p>
+</article>
+</body>
+</html>

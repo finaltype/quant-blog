@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 27-29] A Silent Crash, a Missing Record, and 27 Hours of Signal Silence&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-29_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 27-29] A Silent Crash, a Missing Record, and 27 Hours of Signal Silence&quot;</h1>
+<p class="subtitle">Three days spent chasing incidents where &quot;nothing happened&quot; rather than &quot;money went out wrong&quot; — a silent Monday-morning crash, a performance-record gap found via a reader tip, and over a day of signal silence during a circuit-breaker event</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Spent several days doing nothing but incident response, so there was no time to write. Bundling the 27th, 28th, and 29th into one post.</p>
+<p>Looking back, this was a stretch unusually full of "silently failing" incidents — not orders going out wrong, but things just stopping with nothing happening at all.</p>
+<h2>Monday pre-dawn: trading stopped with no alert</h2>
+<p>Right after Monday's market open, two different criteria for judging cache freshness disagreed with each other, and the execution path stopped dead with no alert. Fortunately no bad orders went out and no money moved.</p>
+<p>It just quietly stopped with nothing happening — which is exactly why it almost went unnoticed for a while. Found and fixed the root cause the same day and shipped it.</p>
+<h2>A missing record found through a reader's comment</h2>
+<p>Someone reading the blog left a comment saying the performance stats looked stuck at an old value. Checking it out, the recommendation performance record had in fact been silently missing for a few weeks, caused by the same kind of cache-judgment bug as above.</p>
+<p>After fixing it, I also went back and double-checked whether the recently strong-looking performance numbers were real. The sample was small and happened to overlap with one stock's sharp swing, so the conclusion was that it's not yet a solid basis for action.</p>
+<p>So I left it alone as a metric to keep watching rather than acting on. Doubting good-looking numbers and re-verifying them is one of the recurring routines in this project.</p>
+<h2>Tuesday: 27 hours of signal silence</h2>
+<p>On Tuesday, the real-time monitoring process stopped during an intraday circuit-breaker event. Signals went silent for nearly 27 hours with no alert, and it wasn't discovered and restarted until the next day.</p>
+<p>This was the heaviest incident of the three days. It reconfirmed that a failure where "nobody knows nothing is happening" is much harder to notice than a failure where money goes out wrong.</p>
+<h2>Rebuilt the alerting setup</h2>
+<p>This chain of events prompted a rework of the alerting setup. Split trading alerts and system-health alerts into separate channels, and added heartbeat and stall-detection to the monitoring process so the same kind of silent failure gets caught immediately if it recurs.</p>
+<p>Also changed how brokerage rate-limit hits are handled — instead of treating every failure the same, it now distinguishes retryable cases from non-retryable ones and retries accordingly. Layering safeguards this way is in the same spirit as <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">the earlier writeup on live-trading safeguards</a>(new tab).</p>
+<p>During this work, narrowing the alert scope accidentally also turned off the daily morning report shared with family. Caught it quickly and reverted it the same day.</p>
+<p>The story of splitting processes and monitoring their health continues in <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">the post on the operational structure</a>(new tab).</p>
+<h2>Also this stretch</h2>
+<ul>
+<li>Confirmed that an earlier read of "not trading a certain group of stocks" was a misread snapshot — trades were actually going through and being closed out normally all along.</li>
+<li>Hit the pre-set "5 consecutive incident-free days" milestone.</li>
+<li>Cleaned out an old folder with no commit history, and reconfirmed a physical copy of the backup passphrase was on hand.</li>
+</ul>
+<hr />
+<p>Across these three days, more time went into "making sure failures don't slip by quietly" than into new features. Not flashy, but this is exactly the kind of work needed before expanding live-trading scope.</p>
+</article>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04_sim_harness.en.md · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/04_sim_harness/index.html">한국어로 보기</a></p>
+<article>
+<h1>04_sim_harness.en.md</h1>
+<h1>Which Makes More Money, the Free AI or the Paid One - a Simulator That Landed on "Can't Be Measured"</h1>
+<p><em>This is the English version of a post originally written in Korean. <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">See the Korean original and other posts</a>(new tab).</em></p>
+<p>There are two candidates for the "brain" that produces the quant bot's stock recommendations.</p>
+<p>One is a free model I run directly on my own machine. The other is a much larger model, but it costs money every time I use an external paid API.</p>
+<p>The hardware running the free model is a consumer gaming GPU. One card (16GB) comfortably runs a lightweight open-source model — in practical terms, roughly on par with the old free tier of ChatGPT (GPT-3.5).</p>
+<p>Adding a second identical card and splitting the workload across both lets me run a much larger model. It's hard to draw an exact equivalence, but in practice it lands somewhere close to the lightweight free tiers each company currently offers (things like GPT-4o mini or Gemini Flash).</p>
+<p>By contrast, today's top-end card (the 5090, priced around 7 million KRW alone) can run a similarly sized model much faster, with no need to split anything across cards. My two-card setup is a much cheaper compromise that reaches a similar capacity range.</p>
+<p>A natural question follows — <strong>which one should I actually run live trading on to make more money?</strong> I built a separate simulator to try to measure that properly.</p>
+<h2>What it takes to compare them fairly</h2>
+<p>The easiest mistake when comparing two models is running them under slightly different conditions and then blaming any difference in outcome on the model.</p>
+<p>So I built this simulator on a "paired comparison" principle. Same dates, same inputs, same trading rules — I run two portfolios side by side, changing <strong>only the model</strong>.</p>
+<p>That way, any final difference in returns can, in theory, be attributed entirely to the model.</p>
+<h2>But I hit a wall</h2>
+<p>Once I actually ran it, there was an unexpected wall. <strong>I couldn't even tell whether there was a return difference between the two models in the first place.</strong></p>
+<p>The reason is a bit deflating. Stocks can only be bought in whole shares, and when a portfolio has few positions, the noise from "do I buy one more share or not" is far larger than any real skill difference between the two models.</p>
+<p>Add ordinary market volatility on top of that, and the signal (the model difference) gets completely buried in noise.</p>
+<p>Buried how badly? The math worked out to needing <strong>tens of thousands of trading days</strong> to statistically distinguish this difference with confidence. Even collecting data for years wouldn't get close.</p>
+<p>So this isn't "the two models are the same." It's a different kind of conclusion: <strong>"the amount of data I could ever collect in my lifetime isn't enough to measure the difference."</strong></p>
+<h2>If you can't grow the sample, change how you measure</h2>
+<p>I could have just given up here, but I changed my approach instead.</p>
+<p>Instead of collecting more data, I tried <strong>measuring the same question multiple different ways.</strong> If the different methods converge on the same answer from different angles, that's trustworthy; if they diverge, that divergence itself becomes a diagnosis.</p>
+<p>I also built a ruler. I measured the return volatility that comes from picking stocks completely at random with no information, and used that as a "zero baseline." If the model difference is smaller than this random noise, it's effectively nothing.</p>
+<p>I ran several independent methods this way. All three landed in the same place.</p>
+<p><strong>Model choice turned out to be one of the smallest levers among everything that drives returns</strong> — barely distinguishable from picking randomly.</p>
+<h2>Even the benchmark was a trap</h2>
+<p>I learned one more thing while measuring: picking the wrong thing to compare against skews the answer before you even start measuring.</p>
+<p>At first I planned to use the market index as the win/loss benchmark. But our market index is dominated by a handful of mega-cap stocks, more than half the weight.</p>
+<p>Using that as a benchmark creates an illusion — you end up measuring "how did those few stocks do that day" instead of "did my strategy do well." So I switched the benchmark to a hypothetical portfolio holding every stock at an equal weight.</p>
+<h2>What actually decided the outcome</h2>
+<p>So what actually drove the results the most? Surprisingly, it wasn't the model — it was the <strong>safeguards</strong>.</p>
+<p>During the simulation period there was a stretch where the market crashed hard, and the amount of loss the circuit-breaker/halt mechanism (the kind that stops trading once a price drops past a certain threshold) prevented was several times larger than the return difference between the two models.</p>
+<p>I'd started out thinking this was a problem of picking a smarter brain. What actually protected the money turned out not to be the brain, but the "reflex to stop when things get dangerous."</p>
+<h2>So where is the money, then</h2>
+<p>At this point I had to reframe the question itself — what actually needs to happen to make more.</p>
+<p>Working it out, the return you actually end up capturing breaks down roughly as: <strong>the return you could theoretically expect, multiplied by how much of it you actually captured (the capture rate), minus the money that leaks along the way and the money lost to accidents.</strong></p>
+<p>What matters here is that the first term — "expected return" — isn't something I can force upward. The "can't be measured" finding above already showed that picking a smarter model doesn't raise that ceiling.</p>
+<p>So the only things I can actually influence are the rest: <strong>capturing the expected return that's already there without letting it leak</strong>, and <strong>not losing big during a crash</strong>.</p>
+<p>Reducing "leaks" — idle cash, trading costs, orders slipping away from the intended price — and using the safeguards above to prevent big losses. That's where the money actually was, not in a better brain.</p>
+<h2>So I moved the decision axis</h2>
+<p>If returns can't distinguish the two models, then the basis for choosing between them needs to move somewhere else entirely.</p>
+<p>If returns are effectively equal, what's left is <strong>operational reality</strong> — free versus paid, fast versus slow response, how well it tolerates incidents, and whether it can be reproduced identically later.</p>
+<p>This is a question that's largely already answered even without simulation. Running for free, being unaffected by external outages, and being able to rerun identically at any time — all favor one side.</p>
+<h2>The simulator's role changed too</h2>
+<p>Originally this simulator was supposed to become a scoreboard deciding "which model won."</p>
+<p>But once it became clear that score itself wasn't measurable, its role changed. Now it's closer to a <strong>disaster detector</strong>.</p>
+<p>Its job is to catch <strong>execution-stage failures</strong> before they happen with real money — cash math not adding up when actually running a portfolio, failing to stop when it should have stopped, accidentally buying the same thing twice. Catching these traps before putting real money in turned out to be a far more valuable output than an unmeasurable return number.</p>
+<p>The lesson I took from this — "watch for where money leaks" — carried over into small gauges that now run quietly every day. They place no real orders at all; they just shadow-measure and log whether money is leaking or returns are being missed.</p>
+<h2>Where this simulator sits</h2>
+<p>This tool sits, within the <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">overall quant bot architecture</a>(new tab), at the stage right before real money goes in.</p>
+<p>Fill prices at trade time are reproduced from actually collected minute-level market data. This price data is pulled from a <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">separate data archive project</a>(new tab).</p>
+<p>The code wasn't split off into a separate repository — it lives inside the main project. Since all its inputs already live in the main project, splitting it out would just add friction pulling things from here and there. For a solo project, over-separation isn't tidiness — it's debt.</p>
+<h2>"Can't be measured" is also a conclusion</h2>
+<p>Looking back, the real payoff of this project wasn't some flashy return number — it was honestly confirming <strong>that this question can't be answered this way.</strong></p>
+<p>At first it felt deflating. All that effort building a simulator, and it couldn't even measure the thing I originally wanted to know.</p>
+<p>But thinking it over, if I hadn't accepted "can't be measured" and had instead forced out some number and claimed "this model won," that would have been more dangerous — mistaking noise for skill.</p>
+<p>Sometimes the answer isn't "collect more data and you'll know." Sometimes the answer is "this is a kind of difference you can't measure at all." And that answer redirected the time I would have spent swapping brains for no reason toward where the real money actually was — plugging leaks, and not losing big. Accepting that is a conclusion too, and that's what I learned this time.</p>
+</article>
+</body>
+</html>

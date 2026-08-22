@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>First Week of Live Trading — Prep, Launch, and Follow-Up Fixes · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-12_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>First Week of Live Trading — Prep, Launch, and Follow-Up Fixes</h1>
+<p class="subtitle">Monday was one last checkup, Tuesday I started live trading, and over the following two days I fixed problems that only surfaced under real operation</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Writing again after a few days. Monday was a quiet checkup day, Tuesday live trading started, and over the two days that followed I fixed problems that only show up under real operation.</p>
+<h2>Monday — one last checkup</h2>
+<p>After sorting through the issues found last weekend, Monday was about one final confirmation that the newly patched safety guards and reference values were actually working. Rather than adding new code, I spent the time running the pre-market checkup routine one more time, carefully.</p>
+<h2>Tuesday — live trading started</h2>
+<p>Live trading finally began. Once I judged that paper-account validation was sufficient and last weekend's issues were all resolved, the decision came quickly.</p>
+<p>The first round went through the usual Telegram approval flow. But right after the order went out, the question came up: "why am I still pressing approve every single time?" So I removed the approval step then and there — instead of human approval every round, orders now proceed automatically once a set of mechanically checkable conditions are met, with results always reported afterward.</p>
+<p>That same afternoon brought an unexpected scare. I manually closed out one position directly in the account to free up some cash, and the system mistook this for an "unapproved fill" — the safety guard force-stopped trading twice. The root cause was that it couldn't distinguish a manual human trade from a trade it simply didn't know about.</p>
+<p>I unblocked it on the spot as a temporary fix, then built a proper channel for formally notifying the system about manually executed trades, so the same thing wouldn't happen again. The overall kill-switch and fill-reconciliation design is covered in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">an earlier post</a>(new tab). Around the same time, I also found and fixed a balance-reconciliation check that was still referencing the old brokerage's format.</p>
+<h2>Wednesday — volume picked up, and a deploy quietly failed to land</h2>
+<p>Wednesday saw higher trading volume but passed without major incident. I also polished the daily live-trading summary notification to be easier to read — buy/sell labeling, showing time as round number, less ticker-code clutter, and sending at least once a day even on days with no trades.</p>
+<p>There was a small deploy incident too. I fixed one piece of code and restarted it, but that particular process was missing from the watch list, so the restart quietly didn't take effect. I noticed only when the afternoon report failed to arrive, and added it to the watch list so this specific failure mode can't recur.</p>
+<p>The same day, I found that the reference value for calculating drawdown from the account's peak had been wrong from the start. The balance at the moment live trading began had accidentally been stored as the "all-time peak," so the intended rule — "the guard can be manually reset within the same day" — wasn't actually working. Fixed it right away, and while at it, cleaned up the policy so that circuit breakers and risk kill-switches auto-reset on the next trading day. Since unattended operation without someone watching continuously was starting the next day, this was something that needed to be wrapped up beforehand.</p>
+<h2>Also this week</h2>
+<ul>
+<li>Unified the trading-limit reference that had been set differently across rounds.</li>
+<li>Found and preemptively fixed a spot where overlapping deposits and withdrawals could throw off the circuit-breaker calculation.</li>
+</ul>
+<hr />
+<p>Looking back over the three days, this was less about new features and more about chasing down things that only become visible once real money starts moving. I think that's exactly why starting cautiously with a small amount made sense.</p>
+</article>
+</body>
+</html>

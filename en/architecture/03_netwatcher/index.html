@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03_netwatcher.en.md · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/03_netwatcher/index.html">한국어로 보기</a></p>
+<article>
+<h1>03_netwatcher.en.md</h1>
+<h1>It's Useless if Nobody's Watching - Why I Built a Network Watchdog</h1>
+<p><em>This is the English version of a post originally written in Korean. <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">See the Korean original and other posts</a>(new tab).</em></p>
+<p>I built one more small project, completely separate from the main quant bot. The name roughly means "network watchdog." What it does is simple — it notices when the home network goes wrong instead of me, and fixes it itself when it can.</p>
+<h2>The incident that triggered it</h2>
+<p>One night, home Wi-Fi dropped for about 15 seconds. It reconnected to the same router right away, showing "connected" — but the real problem started after that.</p>
+<p>It looked connected, but no data was actually moving, and it sat in that half-broken state for hours, unnoticed. It only fully recovered near dawn, when it happened to switch to a different wireless channel. The outage itself was 15 seconds; the actual damage lasted 4 hours and 45 minutes.</p>
+<p>What made it worse was that the OS already knew, within 4 minutes, that the internet wasn't working properly. It kept showing a degraded status the whole time — nobody was just watching that signal.</p>
+<h2>Why I couldn't just let it go</h2>
+<p>This incident caused several overnight analysis jobs to spin uselessly for hours. But the real problem wasn't the scale of the damage — it was the structure: <strong>the signal existed, but nobody read it.</strong></p>
+<p>Nobody can watch logs all night, so something needed to stand in for that role. I decided to build it as a program completely separate from the main project.</p>
+<h2>Detecting it two ways</h2>
+<p>Detection runs on two tracks at once.</p>
+<p>One is a dedicated fast path that specifically catches the exact pattern from this incident — showing as connected while no data actually moves. This pattern never persists for long under normal conditions, so if it continues past a threshold, it's immediately flagged as a problem.</p>
+<p>The other is a more conservative, general path that catches every other kind of network issue. It directly checks whether it can actually reach the outside world, and flags a problem if that keeps failing. I don't rely on link status or DNS response alone, because I actually saw cases where DNS kept responding fine off a cache even while the connection was down.</p>
+<h2>Recovery happens in stages too</h2>
+<p>Once a problem is confirmed, it doesn't jump straight to the strongest fix — it tries progressively stronger measures in order.</p>
+<p>First it tries to force a reconnect. If that doesn't work, it toggles the wireless radio off and on.</p>
+<p>If that still doesn't work, it tries the same thing again at a lower layer. When I actually reproduced this incident, the second stage (toggling the wireless radio) fixed it in one second.</p>
+<p>There's one more local judgment layered on top. "Connected but no data moving" is more likely a local issue a reset can fix, while "data moves but the outside internet itself is down" is more likely an upstream line issue that a reset won't help.</p>
+<p>In the latter case, it doesn't keep toggling things — it just waits.</p>
+<h2>Watch, but don't touch carelessly</h2>
+<p>This program's default mode is observation-only. With no configuration, it just detects, logs, and sends alerts — it doesn't actually toggle the radio or restart anything.</p>
+<p>To allow it to actually take action, I have to explicitly flip a switch. And it's not just one switch — there are three separate ones: toggling the radio, rebooting the system if that doesn't work, and reviving just the remote-access program if only that has died. Each has to be enabled separately.</p>
+<p>I split them carefully, since a misfire could mean the machine can't even turn itself back on. Right now all three switches are still off — this is the final rehearsal stage before flipping them on for real.</p>
+<h2>Two different kinds of risk</h2>
+<p>Among the recovery options, rebooting is handled with special care. The judgment criterion is one thing: <strong>is there a job currently running that would die if I rebooted?</strong></p>
+<p>If the network itself is completely down, then anything that was running on top of it — auto-trading, analysis jobs — has already stopped anyway. In that case, rebooting has nothing extra to kill, so it's the last resort after everything else has failed.</p>
+<p>It's a different story if the network is fine but just the remote-access program has died. In that case, the main system's auto-trading and analysis are likely still actually running, so rebooting is strictly off-limits — the response stops at reviving just that one program.</p>
+<h2>Not depending on the thing it protects</h2>
+<p>I set one design principle: <strong>this program must not depend on the thing it's supposed to protect.</strong></p>
+<p>It doesn't reuse the main project's code, and it isn't built to require the main project's processes to be alive. It runs entirely on its own, using nothing but OS built-ins and minimal standard tools. It's fine for the main system to read this program's status, but the reverse — this program depending on the main system — is off-limits by design.</p>
+<p>If the network is completely dead, a watchdog that's supposed to detect exactly that but has died along with the main system would be useless.</p>
+<h2>The watcher gets watched too</h2>
+<p>I also planned for the case where this program itself quietly dies. Existing health-check logic on the main project's side periodically confirms this watchdog is sending a signal that it's alive.</p>
+<p>If that signal goes silent past a threshold, a separate alert fires too. They watch each other.</p>
+<h2>Where things stand now</h2>
+<p>Since it's a fairly new project, I've gotten as far as writing all the detection/recovery logic and verifying it against deterministic scenarios. I've also confirmed, by actually running it, that it has the system permissions it needs.</p>
+<p>That said, I'm still only running it in observation mode with all three action switches off. I plan to do a real rehearsal of actually toggling the wireless radio, and confirm the whole system can stand back up on its own even after a reboot, before flipping the real switches on.</p>
+<p>I've also made it a principle to keep this as a single-file program. For a role this size, a test framework or splitting it into multiple modules would be overkill.</p>
+<hr />
+<p>Looking back, what actually scared me about this incident wasn't the outage itself — it was that nobody knew. Next time it happens, this program will notice before I do.</p>
+</article>
+</body>
+</html>

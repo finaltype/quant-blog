@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 21-22] Caught a Bug I Thought Was a &#x27;Hallucination,&#x27; Then Placed the First Real Order&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-22_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 21-22] Caught a Bug I Thought Was a &#x27;Hallucination,&#x27; Then Placed the First Real Order&quot;</h1>
+<p class="subtitle">The last stretch of live-trading prep was too hectic to write day by day, but these two days packed in a data bug and this project&#x27;s first real trade</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Bundling two days into one post. The final stretch of live-trading prep was too hectic to write day by day. Even so, quite a few important things happened in this project over these two days, so I'm writing them up together.</p>
+<h2>What I thought was a "hallucination" turned out to be a bug</h2>
+<p>I was in the middle of swapping out one price-data source for another. After the swap, something strange started happening — even before market open, price indicators would occasionally show values from several days earlier.</p>
+<p>I'd seen a similar symptom before, so at first I assumed "the AI is making up weird prices again" and moved on. This time I actually dug in, and the cause turned out to be completely different.</p>
+<p>The new data source was returning values oldest-first instead of most-recent-first, and the code hadn't noticed — it was trusting the first value in the list as "the most recent." It was just a reversed order, but on the surface it looked exactly like the AI insisting a days-old price was today's price.</p>
+<p>A slightly embarrassing but useful lesson: check the data ordering before doubting the AI's judgment. Fixed it to explicitly verify and sort the order.</p>
+<h2>Automated trading stopped for half a day</h2>
+<p>The same day, a small code change elsewhere unintentionally touched the paper-trading (simulated funds) auto-trading loop. From that morning on, every order had quietly been getting rejected.</p>
+<p>The cause was a marker that needed to be set in several places, missing from a few of them. Fortunately this was paper trading, not the live account, and things recovered on their own from the next trading cycle.</p>
+<p>Patched the missing markers back in. This is the kind of mistake that would have been much more serious on a live account, so it was fortunate this surfaced on paper trading first.</p>
+<h2>Locked down the retired brokerage's live-order path for good</h2>
+<p>I'd mentioned a few days ago that I decided to switch brokerages, and I finished the cleanup that day. Locked the old brokerage's live-order path behind three separate layers, so no real order could accidentally go out through it.</p>
+<p>Leaving an already-retired path loosely open is a lesson this project has learned the hard way more than once — it always causes trouble eventually. This time I handled it right away instead of putting it off.</p>
+<h2>And the next day, the first real order went out</h2>
+<p>Put a very small amount of money into the live account, bought one stock, and immediately sold it back. It was a single round-trip trade meant to confirm that the path I'd only ever verified with paper trading works end to end on the live account too.</p>
+<p>The order, went out, filled, and showed up correctly in the ledger — the whole process went exactly as planned. Since it was a round trip, the resulting P&amp;L was just a tiny amount equal to trading costs, and making money was never the point of this trade.</p>
+<p>All the doubting of the safeguards and bug-hunting from the day before turned out to be in service of this one trade. The fact that the door to live trading is now actually open is the real result of these two days.</p>
+<h2>Two more bugs caught just before</h2>
+<p>Before placing the real order, I ran a read-only check against the live account (no orders placed, just inspection) first. It turned up two real problems.</p>
+<p>One was that the code for checking balance, holdings, and order status was still sending requests in the paper-trading format even against the live account, so the live server was rejecting all of them. Fixed it to branch the request format by live vs. paper trading.</p>
+<p>The other was that the fill-confirmation logic only checked one trading path. Orders filled through a path outside regular trading hours were an entirely invisible blind spot — left alone, that could have caused the same order to be misjudged as "unfilled" and resubmitted. Fixed it to check both paths.</p>
+<p>Both were the kind of problem that could only really be caught right before real money was on the line, so I'm glad they surfaced when they did.</p>
+<h2>Set down the last piece of a weeks-long cleanup</h2>
+<p>The last piece of a structural cleanup that had been running in parallel with live-trading prep also wrapped up that day. It was the piece deliberately saved for last because it was judged the highest-risk part.</p>
+<p>Once I actually opened it up, the live-trading path was already safe enough. The old remaining path didn't need to be rebuilt urgently, so I decided not to rush it. Rather than rushing to fix something risky, I chose to confirm it wasn't risky and set it aside with room to spare.</p>
+<h2>Also this stretch</h2>
+<ul>
+<li>Upgraded one monitoring device that used to just alert on anomalies to one that takes action directly — a decision made only after it passed several rehearsals.</li>
+<li>Opened one more intraday order-flow data collection channel on the <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">data archive</a>(new tab) side.</li>
+<li>Rehearsed several scenarios on paper trading — a network disconnect, a duplicate order about to go out, a sharp-drop trading halt — and everything behaved as intended.</li>
+<li>Changed the allocation policy to pre-set the split between the two exchange boards, so a single market can't monopolize allocation purely on score.</li>
+<li>Reviewed splitting a single position purchase into multiple tranches, but decided against building it — at the current scale, the added complexity outweighed the benefit.</li>
+</ul>
+<hr />
+<p>Looking back, these two days held two opposite feelings at once. One day was the embarrassment of doubting the AI's judgment only to find out it was a data problem; the next was the satisfaction of seeing something long-prepared actually work.</p>
+</article>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[Jul 7] One Leg of the Ensemble Had Been Running on Zero Evidence for Six Months · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-07_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>[Jul 7] One Leg of the Ensemble Had Been Running on Zero Evidence for Six Months</h1>
+<p class="subtitle">Catching a research pipeline stage that turned out to be operating with no real grounding, and rebuilding overnight production while I was at it</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Yesterday was unusually busy. Part of it was recovering from a fairly serious incident found overnight, and the rest was infrastructure work done while already in there.</p>
+<h2>The research pipeline was running on zero grounding</h2>
+<p>In the multi-agent research pipeline (where several local LLM agents split up analysis, rebuttal, and final judgment), the stage that's supposed to look up real data <strong>couldn't call its tools at all.</strong> The model was leaving behind text saying "I'll look this up," then writing the report as if it had, without ever actually fetching any data. It later came out that the earlier conclusion — "this model is the cleanest of the three" from the formal LLM comparison — was itself a blind spot: I'd checked failure rate and grade distribution, but never whether real data was actually inside the report.</p>
+<p>Switching the model fixed the tool-calling problem, but more than half the reports were still off after that. I asked another AI to help dig deeper into the logs, and a <strong>more fundamental cause</strong> turned up: the local LLM server's context window (how much input the model can read at once) had quietly been left at its default, so a meaningful chunk of the actually-needed input was being silently truncated. Parts of the system prompt or ticker-specific context were getting cut off entirely, which led the model to say things that made no sense, or even misread numbers it had generated itself.</p>
+<p>This wasn't the first time a "quiet default" had caused an incident in this project, so once I found the cause it actually felt familiar. I widened the context window, ran a smoke test to confirm nothing was being truncated anymore, and only then reran the whole pipeline.</p>
+<p>I also found a bonus problem — the step that produces price targets was writing purely qualitative reasoning with no quantitative calculation behind it. In one real case, the target price this pipeline produced came out noticeably below actual market consensus, and the cause wasn't "not enough information" — it was that there was no formula computing the number in the first place. I've now added a rule that says "if you can't show your calculation, leave the target price blank," and that's still being verified.</p>
+<p><strong>Lesson</strong>: You can never fully trust documentation claiming a model or framework "supports this feature." You always have to call it and check with your own eyes.</p>
+<h2>Small mistakes made during the overnight recovery</h2>
+<p>The root-cause diagnosis itself went well, but I made a few operational mistakes during the recovery. Noting them here for the record.</p>
+<ul>
+<li>I'd written code so the automated scheduler would stop under a certain condition, but forgot to actually create the condition it depends on (a single file). That let an automated job and a manual one collide. Relearned that "I wrote the code" and "I actually created the state that code assumes exists" are two different things.</li>
+<li>I ran a cleanup command that killed processes without specifying a target, and it happened to also kill an unrelated job that was running normally at that exact moment. Fortunately it auto-restarted, so the only cost was some reload time.</li>
+<li>Twice I mistook the last line of a continuously-appended log file for the current state. When multiple runs get logged into the same file, the last line isn't guaranteed to be the most recent one — I missed that.</li>
+</ul>
+<p>None of the three relate to the root cause; they were procedural slips from quickly starting and stopping several processes, so I'm noting them separately.</p>
+<h2>Tried out an additional serving engine</h2>
+<p>I set up an additional server for running local LLMs and compared it against the existing one. Same model, same GPU, but the serving-layer overhead was lower, and it measured out to <strong>about 1.5x faster.</strong> That was enough to shelve a GPU-upgrade decision I'd been weighing, so I put the hardware upgrade on hold. While I was at it I also tested a much larger model (far more parameters than the current one), but throughput on the current GPU memory fell well short of practical use, so that's on hold too for now.</p>
+<p>The new engine isn't the default yet — it's opt-in. I ran the full overnight production run across all ~50 KOSPI tickers using it once, and it completed cleanly — confirmation that it works at real operating scale, not just in small tests.</p>
+<h2>Redesigned overnight production</h2>
+<p>While doing the above, I ended up redesigning the overnight automated analysis schedule itself.</p>
+<ul>
+<li>Increased the number of tickers analyzed and moved the start time up to right after market close (a necessary adjustment to finish everything within one night).</li>
+<li>Found a bug where the sentiment/news report had been <strong>completely empty for close to six months.</strong> The cause wasn't complicated — that analysis role simply hadn't been wired into the pipeline configuration in the first place.</li>
+<li>Found a gap where an external lookup during the data-refresh step had no timeout, which could stall the entire refresh for hours. Added timeout and circuit-breaker logic.</li>
+<li>Since multiple jobs have to share one GPU, I worked with another AI to re-establish resource allocation principles. I closed a gap where the new engine wasn't caught by the logic that detects whether a heavy job is using the GPU, added a safeguard so a ticker failing repeatedly and quickly isn't mistaken for "completed normally," and consolidated related timing settings that had been scattered around.</li>
+</ul>
+<p>There's still work left — I decided to add one more safeguard before actually turning the new automated schedule on, so it's paused for now, waiting on that next step.</p>
+<hr />
+<p>That's a lot for one day. The first incident in particular was a good reminder that clean-looking metrics are no reason to relax.</p>
+</article>
+</body>
+</html>

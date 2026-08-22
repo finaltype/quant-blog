@@ -26,7 +26,7 @@
 <p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-22_weekly/index.html">한국어로 보기</a></p>
 <article>
 <h1>[Aug 17-22] We Swapped GPUs, Then Kept Finding Blind Spots in Our Own Checks</h1>
-<p class="subtitle">A hardware verdict flipped twice in one week, two verification tools turned out to be quietly missing errors, and a real brokerage account needed two manual human interventions</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.tistory.com/23" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p class="subtitle">A hardware verdict flipped twice in one week, two verification tools turned out to be quietly missing errors, and a real brokerage account needed two manual human interventions</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>It's been a while since the last devlog, and it turned out to be the busiest week yet. We swapped the GPU entirely on Monday, and that verdict got reversed twice within a few days.</p>
 <p>The same week, two newly built verification tools surfaced problems we'd been missing without noticing. And a real brokerage account needed two direct human interventions.</p>
 <h2>The GPU got swapped, and the verdict flipped twice</h2>
@@ -41,7 +41,7 @@
 <p>A gauge that checks model reproducibility every day also died two nights running. The cause: another overnight job was holding the GPU, but the gauge decided "it's free" from a single instant read.</p>
 <p>We switched it to directly check occupancy. Instead of spinning up a fresh instance, it now hands off from the overnight job right as that job wraps up, removing the failure point entirely.</p>
 <h2>A real account needed two human interventions</h2>
-<p><a href="https://finaltype.tistory.com/43" target="_blank" rel="noopener noreferrer">Background on order execution and safety-layer design</a>(new tab) is in an earlier post. This week, those safety layers themselves caused two incidents.</p>
+<p><a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">Background on order execution and safety-layer design</a>(new tab) is in an earlier post. This week, those safety layers themselves caused two incidents.</p>
 <p>On Thursday we found a specific position that had a sell order queued for days but kept not executing. The root cause was a structural flaw in the daily trading-budget allocation rule that always pushed small orders to the back of the queue.</p>
 <p>While fixing the rule, one order that couldn't go through in time was handled manually — a real, irreversible trade on a live account.</p>
 <p>Friday brought the opposite failure. A drawdown safety guard was reacting to momentary intraday dips, which incorrectly blocked two legitimate buy orders.</p>

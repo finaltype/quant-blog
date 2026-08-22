@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[Jul 9] Finally Found the Real Culprit Behind Weeks of Overnight Crashes · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-09_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>[Jul 9] Finally Found the Real Culprit Behind Weeks of Overnight Crashes</h1>
+<p class="subtitle">Tracked down and fixed the real cause of a memory problem, and accidentally killed production while doing it</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Today I finally traced a problem that had been a mystery for weeks all the way down to its root cause and fixed it. Along the way I also made two mistakes.</p>
+<h2>Weeks of mysterious overnight crashes — found the real culprit</h2>
+<p>For a while now, the dev environment had been dying at a specific hour every early morning (I'd already moved core processes into separate services independent of the dev environment because of this, but that only masked the symptom rather than fixing the cause). Today, digging deeper into the logs with another AI, I finally found the real cause.</p>
+<p>A library used for heavy data computation was, at the Python code level, clearly releasing memory it was done with — but at the OS level, that memory wasn't actually being reclaimed (a phenomenon called memory fragmentation). This built up a little every day until the system eventually ran out of memory and died overnight. On top of that, digging further turned up a side issue: a calculation that only needed to run once a day was being repeated multiple times a day for no reason.</p>
+<p>I fixed three things — never recompute if a cached result already exists, explicitly force-release memory after heavy computation finishes, and skip the computation entirely if the date hasn't changed. Measuring memory usage before and after, one process dropped by more than 20x. This properly fixed something that had been papered over for weeks with "just restart it, it'll be fine."</p>
+<h2>Mistake 1: Killed the exact process that should never be killed</h2>
+<p>I restarted the related service to deploy the fix above, and it happened to land right in the middle of that night's core analysis job, which was actively running. I'd even written "this job is top priority, never interrupt it for any reason" directly in the code — and then broke that exact rule while deploying. There was a safeguard that auto-resumed it a few minutes later, so there was no major loss, but it was a reminder to be more careful about deploy timing.</p>
+<h2>Mistake 2: Automation couldn't tell "resting" from "briefly paused"</h2>
+<p>I paused the analysis job for a few minutes to fix something else, and in that window a separate piece of automation decided "nothing is running right now, so this is my chance" and kicked off a different GPU-heavy job. Shortly after, the analysis job resumed and the two collided over the same GPU resource, and one of them had to be cleaned up. The cause was missing the distinction between "nothing running right now" and "today's work is actually done."</p>
+<h2>Also today</h2>
+<ul>
+<li>Found that the brokerage's quote API was being called multiple times per ticker (up to six), so I added caching to call it once and reuse the result. This had been part of why I kept hitting API rate limits.</li>
+<li>I'd previously seen a local model wrongly judge real news published after its training cutoff as fabricated. Today, a model assigned to verify another model's output hit the exact same trap — it confidently ruled a genuine recent news item as "not real," and it turned out to be true. That showed this trap isn't unique to any one model, even a model whose job is verification — going forward, fact-checking won't rely on any model's word alone; I'll check it directly myself.</li>
+<li>Added another extension idea to the paper (simulated) track, still under verification with zero live-trading risk.</li>
+</ul>
+<hr />
+<p>Neither mistake today led to serious damage, but it felt ironic to fix a weeks-long mystery and immediately make two new mistakes the same day. The lesson to always check "what's currently running" before touching deploys or automation got relearned twice over today.</p>
+</article>
+</body>
+</html>

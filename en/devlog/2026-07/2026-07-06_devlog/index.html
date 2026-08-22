@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[Jul 6] Hidden Failure Patterns Found While Comparing Three Local LLMs · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-06_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>[Jul 6] Hidden Failure Patterns Found While Comparing Three Local LLMs</h1>
+<p class="subtitle">Two failure types that grade distributions alone couldn&#x27;t reveal, plus a structured-output problem fixed by migrating frameworks</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>It's still early days for this project, so a lot changes day to day. I probably won't post every day, but on days with a substantial change I'll leave a short note like this one. Today's work fell into three areas.</p>
+<h2>1. A formal comparison of three local LLMs</h2>
+<p>I needed to pick a local model for a multi-agent LLM research pipeline, so I ran three candidates through the same conditions — same ticker list, same dates — one after another.</p>
+<p>The comparison had two stages.</p>
+<ul>
+<li>Automated checks: failure rate, whether final grades skewed to one side, whether unrelated ticker names leaked in, and time spent.</li>
+<li>Manual spot checks: opening the actual generated reports one by one to see if the completeness held up and whether the grade actually matched the reasoning.</li>
+</ul>
+<p>This is where it got interesting. Two problems showed up that <strong>surface-level metrics alone couldn't catch.</strong></p>
+<ul>
+<li>One model had most of its final grades pile up on "Hold" — but not because it was cautious. The step that generates the final judgment sentence was <strong>failing outright at a fairly high rate</strong>, and the empty result was defaulting to that grade. Looking only at the grade-distribution table would have led to "this model is just conservative" and nothing more.</li>
+<li>Another model looked clean on every metric, but cross-checking the ticker names revealed a low-probability hallucination where it <strong>analyzed a completely different company and drew a conclusion from that.</strong> I judged this far quieter and far more dangerous than a skewed grade distribution, and dropped the model.</li>
+</ul>
+<p>Both candidates ended up rejected, and I kept the existing model. It was a good reminder that metrics alone aren't enough — you have to open up the actual output.</p>
+<h2>2. Migrating the LLM framework itself to upstream</h2>
+<p>I moved the framework used for multi-agent research off a custom fork and onto the original open-source project. The trigger was a problem I hit while testing with a lighter model: structured output (JSON, etc.) kept failing to parse at the final-judgment step.</p>
+<p>Tracing the cause, I found a known issue where the local LLM server's (Ollama) OpenAI-compatible API effectively ignores "please answer only in this format" requests. The framework was calling the model through that path, so whenever the model answered in free text instead of the required format, it failed outright.</p>
+<p>The workaround was to use the same server's <strong>native API</strong> instead, which can enforce the output format at the grammar level. Running the same test, structured output had failed every time before the migration and only barely passed by falling back to free text — after the migration, it passed reliably.</p>
+<h2>3. Polishing the auto-invest feature, and catching a bug before deploy</h2>
+<p>I refined the feature that automatically splits an amount of money across AI-recommended tickers. I made the allocation method a bit more precise, and added a safety check that automatically holds off on a buy — and flags it separately — if the real-time bid-ask spread looks abnormally wide right before the purchase (a sign of a liquidity problem).</p>
+<p>I also touched up some of the rebalancing-alert logic, and in the process <strong>caught a potential bug before deploying it.</strong> While changing the alert conditions, I nearly missed that the actual order-placement code was still referencing the old calculation method. I caught it during review and fixed it before it ever hit the live account.</p>
+<h2>4. Two infrastructure bugs</h2>
+<ul>
+<li>The logic that checks whether a heavy computation job is using the GPU had a gap: in one specific situation (a temporary benchmark run), it missed the check entirely and caused an actual crash from GPU memory exhaustion. There was already a general-purpose check function elsewhere in the codebase; this particular script just wasn't using it. Applying it there closed the gap.</li>
+<li>One local LLM kept holding onto GPU memory even after finishing a report. It was already making an explicit cache-clearing call, but the memory still didn't release. The root cause is still unclear, but I confirmed that restarting the process reliably reclaims it, and added a safeguard that checks available memory before starting new work and restarts the process if needed.</li>
+</ul>
+<h2>Also today</h2>
+<p>Tightened the file permissions on <code>.env</code> and other sensitive config files.</p>
+<hr />
+<p>That's it for today. I'll keep leaving these short notes whenever something notable comes up.</p>
+</article>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I Started Running Fully Automated Trading on a Fake $400K Account First · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/06_paper_trading_validation/index.html">한국어로 보기</a></p>
+<article>
+<h1>I Started Running Fully Automated Trading on a Fake $400K Account First</h1>
+<p class="subtitle">Testing one real order was a different story. Now I&#x27;m watching how long fully automated trading — deciding and placing orders on its own, no human approval — holds up on fake money before it ever touches real money</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>In my last post (<a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">Going Live</a>(new tab)) I mentioned placing one real order. That was really just a check that the pipes were connected — one single trade, with a human watching the whole time.</p>
+<p>The real test is something else entirely. <strong>Can the system keep deciding and trading on its own, with no human approval, without breaking down over time?</strong> No single order can ever answer that question.</p>
+<h2>A different track from the trading bot</h2>
+<p>The trading bot I've described so far still needs a human in the loop every time. When a position drifts from its target weight, I get a Telegram proposal, and nothing goes out until I tap approve.</p>
+<p>What I started this time is a different animal. It decides and places orders several times a day, entirely on its own, with no human approval anywhere in the loop. The goal is to eventually find out whether this fully automated judgment can be trusted with real money.</p>
+<h2>A fake $400K account, no approval required</h2>
+<p>So I opened a new paper trading account at my broker — virtual money, no real risk. I started it around $400K equivalent.</p>
+<p>Inside this account, everything from decision to order to fill confirmation runs automatically, several times a day, with zero human intervention. All I do is watch the Telegram notifications and keep the kill switch within reach.</p>
+<h2>Why skip straight to fully automatic, even on paper</h2>
+<p>My original plan was more cautious. I was going to open up unapproved automatic trading gradually, in stages.</p>
+<p>But for the paper account specifically, I decided to skip the staged rollout and go fully automatic from day one. The reason is simple — <strong>the entire point of this account is to check whether the fully automated path actually holds up</strong>, and if a human steps in here too, I'd never get to observe what I actually need to observe. Since it's fake money with no real risk, testing it exactly the way it would run in production, from the start, made the most sense.</p>
+<h2>The safety layer stays intact</h2>
+<p>Going fully automatic doesn't mean stripping out the safety layer. Everything I described in the previous post — the kill switch that halts trading past a loss threshold, duplicate-order prevention, and splitting fill results into success/failure/unknown — applies equally to this account.</p>
+<p>If anything, those mechanisms matter even more now, precisely because no human is checking every trade.</p>
+<h2>Early P&amp;L doesn't mean anything yet</h2>
+<p>It's only been a few days, and I'm deliberately not paying attention to the P&amp;L at this stage. The point of this track isn't to see whether it's making money right now — it's to see <strong>whether the system holds up without breaking over the long run</strong>.</p>
+<p>There have already been a few small discrepancies in calculations and fills in these first few days, which I actually see as a good thing — this is exactly the stage where those need to surface and get caught. It's far too early to talk about returns.</p>
+<h2>What it takes to get to real money</h2>
+<p>If this paper track runs cleanly for a while without major issues, the next step under consideration is testing with a very small amount of real money. Even after that, I expect it will take at least several months, maybe close to half a year, of live track record before fully automated trading gets handed real money at scale.</p>
+<p>I'm not in a hurry. If this project has taught me anything, it's that doubting the safety mechanisms and watching them long enough before moving to the next stage ends up being the faster path in the end.</p>
+<hr />
+<p>Placing one real order and letting the system keep deciding for itself, continuously, turn out to be completely different things. Right now I'm working through that difference on fake money first.</p>
+</article>
+</body>
+</html>

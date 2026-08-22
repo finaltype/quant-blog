@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 13] Watching AI Be Confidently Wrong&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-13_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 13] Watching AI Be Confidently Wrong&quot;</h1>
+<p class="subtitle">An AI reviewing a report flagged real earnings as an &quot;impossible number&quot; and called it data contamination — it turned out to be genuine</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Today happened to fall on a loose homeschooling day, so I had more time to work than a typical weekday. Maybe that's why so much came out of it.</p>
+<h2>Watching AI be confidently wrong</h2>
+<p>An AI helping review a report saw one company's financial figures come in unusually high on a certain metric and declared, very confidently, that "a number like this has never appeared at any point in this industry or company size" — flagging it as contaminated data.</p>
+<p>Checking it myself, that wasn't the case. The earnings really were that good — a recent boom in the relevant industry meant a figure that would have been "impossible" by old standards was now real.</p>
+<p>Asking the AI why it had judged this way, it turned out its whole basis for "this has never happened" was just world knowledge frozen at its training cutoff. It had no idea a real change had happened since then.</p>
+<p>Thinking back, something similar happened recently too — another AI tasked with checking whether a report's content was real or fabricated wrongly judged an actual, recent event as "never happened." Today's incident was the same trap.</p>
+<p>A judgment like "this number is too big to make sense" sounds logically solid on the surface, but it only holds within the range of past data that AI happens to know. The claims worth trusting are the ones that hold regardless of world knowledge, like "these two numbers inside the document contradict each other." A claim of the form "this doesn't exist in the world" — however confidently an AI states it — I've decided not to take at face value without checking it myself.</p>
+<h2>A bug that had the wrong company name attached</h2>
+<p>Looking closely at one report, I found that the section handling financial analysis was pulling the correct ticker but attaching a completely different company's name to it. The numbers themselves belonged to the right company; only the label on top was wrong.</p>
+<p>The cause was simple — the part that looks up financial data by ticker and the part that attaches a human-readable company name were running independently, and the naming logic silently failed to recognize the domestic ticker format. Because the numbers were correct, it looked fine at a glance, but the report was actually going out with the right data under the wrong label — which made it tricky to catch. I fixed the name injection and, as a safeguard, added a rule that defaults to neutral whenever a company name can't be resolved but the report still reaches an extreme verdict.</p>
+<h2>A dilemma that came with switching to a smarter model</h2>
+<p>I swapped the local model used for writing reports for a bigger, smarter one. On clean input, it was clearly better — the older model tended to retreat into "hold" whenever things were ambiguous, while the new one reaches firm conclusions backed by stated reasoning.</p>
+<p>But that created a dilemma. When fed input that contained the mislabeled-name bug above, the old model's vague "hold" verdict caused relatively little harm, while <strong>the new model confidently used the wrong information as grounds for an extreme verdict, including a strong sell.</strong></p>
+<p>A smarter model can be more dangerous — as judgment improves, so does its ability to package a mistake in more convincing form when the input is wrong. So I only rolled the new model out live after fixing the naming bug first, and for now I've also turned on a monitor that automatically pulls any unusually extreme verdict out of the report until a human reviews it.</p>
+<h2>Also today</h2>
+<ul>
+<li>I removed some of the multiple daily scheduled reports and moved that role (watching for anomalous price spikes) to real-time monitoring instead. Rather than sweeping at fixed times, it now catches anomalies the moment they happen.</li>
+<li>I added a freshness indicator at the bottom of reports, showing how current the data is. There had been a few past incidents where data quietly ran several days stale; now that's visible at a glance.</li>
+</ul>
+<hr />
+<p>The biggest lesson from today: the more confident an AI's "that doesn't make sense" answer sounds when verifying something, the more it deserves a second look. That confidence isn't necessarily from actually checking — it can just be logic that only holds together inside the AI's own outdated view of the world.</p>
+</article>
+</body>
+</html>

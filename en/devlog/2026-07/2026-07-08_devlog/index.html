@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[Jul 8] Trusted a Summarizer&#x27;s Answer, and an Uncancelled Order Sat on a Live Account · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-08_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>[Jul 8] Trusted a Summarizer&#x27;s Answer, and an Uncancelled Order Sat on a Live Account</h1>
+<p class="subtitle">Building a track to safely verify a new auto-invest feature, plus an incident from guessing at an API</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Today's main task was building a framework to safely verify a new feature, and two incidents happened along the way.</p>
+<h2>Verifying a new auto-invest feature at zero live-trading risk</h2>
+<p>I had an idea for extending the existing signal-strength-based auto-invest feature, and before putting real money behind it, I first built a structure to verify it for a long stretch on a <strong>paper (simulated) track.</strong></p>
+<ul>
+<li>Built a ledger completely separate from the real account, running two tracks side by side that pick the same candidate tickers but differ only in allocation method — an A/B comparison to see which one actually performs better.</li>
+<li>Set the judgment criteria up front: only if it <strong>beats the benchmark with statistical significance over a sufficiently long period (months' worth of trading days)</strong> does expanding real capital get considered; otherwise it's automatically discarded. Rather than "build it now, decide later," the judgment button gets defined first and runs from day one.</li>
+<li>While building this I found something interesting: one of the inputs the current allocation method relies on <strong>had never actually been recorded</strong>, so there was no way to backtest it against historical data. I started logging it as of today — another reminder that even a good idea is just a feeling without data to verify it.</li>
+<li>Also attached a dashboard that continuously measures execution slippage (the gap between the price at decision time and the price actually filled).</li>
+</ul>
+<h2>Incident 1: A test wrote fake data into the real paper-tracking ledger</h2>
+<p>While testing the ledger code above, I ran into a classic Python trap. A function's default save-path value gets <strong>fixed at the moment the function is defined</strong>, so what I thought was a "swap in a temp path" during testing wasn't actually taking effect. As a result, the test wrote fake data into the real paper-tracking ledger. Fortunately the live-trading ledger was never touched, so real trading data was safe — I just cleaned up the fake entries that got written in.</p>
+<h2>Incident 2: Guessed at an API, and an uncancelled order sat on a live account</h2>
+<p>This happened while building and verifying a safeguard that auto-cancels orders that stay unfilled too long. When checking what the brokerage API's "cancel order" endpoint was, a summarization tool confidently answered with a specific approach based on common REST API conventions. I trusted that and implemented it, then placed a small test order at a price safe enough that it could never fill and tried to cancel it — and got an <strong>"API not found" error.</strong> Wrong endpoint.</p>
+<p>In the meantime, an uncancelled order sat on the live account for a few minutes. Because I'd already designed the test as "a price that can never fill, plus a same-day auto-expiring order," there was no actual damage, but trusting a summarization tool's plausible-sounding answer was a hard lesson. Only after parsing the real API spec document directly did I get the correct endpoint and a working cancel.</p>
+<p><strong>Lesson</strong>: For any API that touches a live account, never trust a summarization tool's word — always check the original spec directly. Same lesson as yesterday's "can't trust model documentation," but one step further this time: summarization tools can also confidently get things wrong.</p>
+<h2>Also today</h2>
+<ul>
+<li>The safeguard above (auto-cancel for long-unfilled orders) was turned on for real after enough verification.</li>
+<li>After a recent computer restart, I found that some core background processes had been running as child processes of the dev-environment (editor) process, so they'd quietly die whenever the editor died. That day, the morning report nearly got delayed. All four core processes have now been promoted to OS-level services, so they keep running independently even if the editor dies.</li>
+</ul>
+<hr />
+<p>Neither incident today led to real damage, but both were "saved by a safeguard already in place," which was unsettling. The verification track for the new feature has now started its day-one clock — from here it's just watching the results.</p>
+</article>
+</body>
+</html>

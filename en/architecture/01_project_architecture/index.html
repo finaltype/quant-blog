@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01_project_architecture.en.md · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/01_project_architecture/index.html">한국어로 보기</a></p>
+<article>
+<h1>01_project_architecture.en.md</h1>
+<h1>Building a Korean Stock Quant Bot Solo - Project Architecture (Updated)</h1>
+<p><em>This is the English version of a post originally written in Korean. <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">See the Korean original and other posts</a>(new tab).</em></p>
+<p>This is a personal quant trading system that runs on a single desktop at home. There's no separate server — one CPU (Ryzen 7 7700) and two GPUs (RTX 4070 Ti SUPER 16GB, split across layers) handle everything.</p>
+<p>A lot has changed since I first wrote about this project, so here I'm just re-summarizing the big picture. The details of each piece have been moved out to their own posts, linked below.</p>
+<h2>Three axes</h2>
+<p>This project splits into three parts that differ in character.</p>
+<ol>
+<li><strong>The trading bot</strong> — connected to a real account, where actual money moves. When the price drifts past a certain band from the target weight, it proposes a trade over Telegram, and once I approve it, the order goes out.</li>
+<li><strong>The fully automated verification track</strong> — separate from the trading bot, this verifies a track that keeps trading on AI judgment alone, without human approval, on a paper trading account.</li>
+<li><strong>The AI recommendation pipeline</strong> — several models analyze stocks and send reference-only reports. It doesn't auto-trade with real money; it just keeps a running record of whether the recommendations turned out right.</li>
+</ol>
+<p>I kept these separate because I didn't want to treat logic backed by real capital, logic verifying full automation without capital at risk, and still-experimental reference-only logic with the same level of trust.</p>
+<h2>Architecture diagram</h2>
+<pre><code>User (Telegram)
+│
+├─ Trading bot (real account, approval-based auto-investing)
+│   ├─ Broker Open API integration
+│   ├─ Price-band monitoring + AI signal-strength-based auto-investing
+│   ├─ Auto-cancel safeguard for orders unfilled too long
+│   └─ Public-disclosure-based risk-stock monitoring overlay (observation stage)
+│
+├─ Fully automated verification track (paper account, always-on auto-trading without approval)
+│   └─ Executes the AI recommendation pipeline's judgments with fake money, continuously verifying it
+│
+└─ AI recommendation pipeline (reference only, no auto-trading)
+    │
+    ├─ Ranking engine (every 2 hours during market hours + deep research nightly)
+    │   ├─ Quant desk (LightGBM)        — statistical patterns in structured data like price/volume
+    │   ├─ Flow desk (Transformer)      — trends and regime shifts over time
+    │   ├─ Research desk (TradingAgents) — multi-agent LLM that reads news/disclosures/fundamentals like a human and writes reports
+    │   └─ A consensus engine that combines the rankings from the three &quot;desks&quot; above (see below)
+    │
+    ├─ Real-time monitoring (every 5 minutes)
+    │   └─ Urgent alerts for sharp moves/disclosures + anomaly scanning across all tickers
+    │
+    └─ Report generation
+        ├─ Regular model reports (internal/shareable split + data-freshness indicator)
+        └─ Performance tracker — matches recommendations against actual returns and keeps a running record
+
+(The core processes are all registered as OS services, so they keep running even if my dev environment is off or crashes)
+</code></pre>
+<h2>Component breakdown</h2>
+<h3>Trading bot</h3>
+<p>I set target portfolio weights, and when the actual weight drifts past a certain band, I get a Telegram notification. Once I approve it, the order goes out as-is.</p>
+<p>There have been some changes here recently. The polling that constantly checked bands was too frequent, so I turned it off. Alongside a broker migration, I've fully locked the old broker's scheduled rebalancing. Instead, on the new broker's path, I've walked through every situation that matters for real trading with real money, one at a time — normal orders, rejection handling, the recovery path for ambiguous failures, partial fills, and settlement.</p>
+<p>I've written up the design of these safeguards <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">in a separate post</a>(new tab).</p>
+<p>I recently added one more safeguard. It's a monitor that automatically detects risk signals — like an audit opinion issue or a stock being flagged for administrative designation — based on publicly disclosed facts, and sends an alert and flags it in the report. It's still observation-only for now, not blocking trades automatically; I plan to decide whether to actually filter on it once I've accumulated enough grounds for that judgment.</p>
+<p>There's also something I tried and dropped. I tested an idea for extending the allocation approach on a paper ledger, but concluded that at this account's size the judgment itself isn't even measurable, so I dropped it the same day I started.</p>
+<h3>Fully automated verification track</h3>
+<p>Separate from the trading bot, I'm also running a track on a paper trading account that keeps trading on AI judgment alone, without human approval. The goal is to confirm — without any real loss risk — whether this judgment could someday be fully entrusted with real money too.</p>
+<p>While running this track, I found a problem where a meaningful chunk of cash kept sitting unbought. The cause was a calculation that would abandon a buy proposal entirely if it slightly exceeded the limit; I fixed it by keeping the limit itself unchanged but switching from "reject if over" to "just buy up to the limit."</p>
+<p>I've written up the details <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">in a separate post</a>(new tab).</p>
+<h3>The AI ensemble — how consensus gets built</h3>
+<p>The core of this pipeline isn't any single model — it's how the judgments of three desks with different perspectives (quant/flow/research) get collected into a ranked table and turned into consensus. Why it combines by rank rather than by score, and why I've deliberately kept the method simple, I've written up as a narrative <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">in a separate post</a>(new tab).</p>
+<h3>Making it run reliably</h3>
+<p>I split what used to be one script doing everything into separate processes registered as OS services, split the report into internal/shareable versions, and separated recommendation performance from execution losses — all written up <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">in a separate post</a>(new tab).</p>
+<h2>Side project: data archive</h2>
+<p>A side project that started as archiving old stock news has grown into an umbrella project that now also collects stock-discussion-board sentiment, intraday minute-level prices, investor-type trading flow, and order-book data.</p>
+<p>I recently added a stream that collects public statements from figures who can move the market. This isn't meant to become a trading signal — it's purely for observation and record-keeping, to later verify whether these statements actually preceded price moves.</p>
+<p>The common thread across all of it is that it's perishable data — if I don't capture it now, I won't be able to get it later at all. Most of it is still just being collected for now; I've covered the details <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">in a separate post</a>(new tab).</p>
+<h2>Side project: network watcher</h2>
+<p>I once had an incident where the home Wi-Fi sat in a half-broken state for over half a day, unnoticed. That prompted me to build a small monitoring program that notices network problems instead of me, and even attempts self-recovery — kept completely separate from the main system, in both code and runtime environment.</p>
+<p>It's now armed for automatic recovery, not just observation, but fortunately nothing that severe has happened again, so it hasn't actually triggered in production yet. I've covered the details <a href="https://finaltype.github.io/quant-blog/en/architecture/03_netwatcher/" target="_blank" rel="noopener noreferrer">in a separate post</a>(new tab).</p>
+<h2>Side project: backups</h2>
+<p>Separate from the core logic, I found a dangerous hole in the infrastructure — all the code and data I'd built up were sitting on a single disk with no backup at all. If the data itself were lost, every judgment built on top of it would become meaningless too, so I fixed it.</p>
+<p>Now code and configuration are kept in version control, and data that can't be recreated gets backed up automatically to a separate disk every day. I also added monitoring that catches not just "the backup failed" but "the backup silently stopped altogether." As a hedge against the worst case — the same disk becoming entirely unusable — I also upload an encrypted copy to the cloud.</p>
+<p>I've covered the details in <a href="https://finaltype.github.io/quant-blog/en/" target="_blank" rel="noopener noreferrer">today's devlog</a>(new tab).</p>
+<h2>Wrapping up</h2>
+<p>Right now I'm carefully widening the trading bot's live-trading scope from a very small starting point, while verifying the same judgment fully automatically on a paper account. The AI recommendation pipeline itself remains reference-only.</p>
+<p>I'll post updates here occasionally as things change.</p>
+</article>
+</body>
+</html>

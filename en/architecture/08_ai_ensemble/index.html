@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Three Models Reach Consensus in an AI Recommendation Pipeline · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/08_ai_ensemble/index.html">한국어로 보기</a></p>
+<article>
+<h1>How Three Models Reach Consensus in an AI Recommendation Pipeline</h1>
+<p class="subtitle">What matters most in an AI pipeline that recommends stocks isn&#x27;t any single model&#x27;s performance — it&#x27;s how three models with different perspectives arrive at consensus</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Separate from the trading bot connected to my real account, my quant bot has a pipeline that analyzes stocks with several AI models and sends out a reference report. It doesn't trade real money automatically yet — it just keeps a running record of whether the recommendations turned out to be right.</p>
+<p>What matters most in this pipeline isn't any individual model. It's the way multiple models' judgments get bundled into consensus. Let me walk through that.</p>
+<h2>Who's sitting at the table</h2>
+<p>I'll start with something familiar to anyone who's spent time around markets — <strong>good judgment more often comes from consensus among several experts with different perspectives than from a single genius.</strong></p>
+<p>I seated three AI models at the table, each looking at the market through a completely different lens.</p>
+<ul>
+<li><strong>The quant seat (LightGBM)</strong> — reads statistical regularities out of years of price, volume, and financial data.</li>
+<li><strong>The trend seat (Transformer)</strong> — reads trends and regime shifts as the market moves through time.</li>
+<li><strong>The research seat (TradingAgents)</strong> — reads news, disclosures, and fundamentals the way a person would, and writes a reasoned report. It's a multi-agent setup running open-source models on local GPU hardware.</li>
+</ul>
+<p>For a rough sense of scale on that GPU hardware: one card, in practice, feels roughly on par with the old free tier of ChatGPT (GPT-3.5). Split across two cards, it gets closer to each company's lighter free tier — something like GPT-4o mini or Gemini Flash.</p>
+<p>(There used to be a fourth seat that trained a trading policy directly via reinforcement learning, but it never beat the benchmark, so I retired it without much regret.)</p>
+<h2>Why combine them at all</h2>
+<p>The quant seat misses the narrative behind a sudden news event. The research seat misses subtle order-flow signals. Combine independent perspectives, and their individual errors tend to cancel out.</p>
+<p>There's a mathematical result called <strong>Condorcet's Jury Theorem</strong>. It says that if you pool enough independent judges who are each, on average, even slightly better than random, the group's accuracy surpasses any individual judge's. The key isn't "more opinions" — it's <strong>"opinions that actually differ."</strong> I checked, and the three seats' judgments turn out to diverge fairly independently in practice.</p>
+<p>Recently I revisited this independence question, prompted by a natural follow-up: "isn't the trend the trend-seat reads just momentum?" It's still an early check, but the conclusion held, and I wrote it up separately <a href="https://finaltype.github.io/quant-blog/en/architecture/07_quant_vs_momentum/" target="_blank" rel="noopener noreferrer">in this post</a>(new tab).</p>
+<h2>How the consensus works — order, not volume</h2>
+<p>This part is surprisingly more humanities than math. I don't naively average scores. Do that, and one seat shouting "100% sure!" about a stock would dominate the whole board.</p>
+<p>Instead, each seat only submits a <strong>ranking</strong>. What gets counted isn't confidence, it's ordering — who each seat put on top. It respects the order of judgment, not the loudest voice (the same principle behind rank aggregation in preferential voting).</p>
+<ul>
+<li>Weight is kept nearly equal across all three seats, so no single one gets over-trusted. It's the same insight well known in asset allocation — beating simple equal weighting is harder than it sounds.</li>
+<li>If a seat stays silent on a given stock (say, it lacks the data to form a view), that counts as a neutral <strong>abstention</strong>, not a vote against.</li>
+</ul>
+<h2>The design philosophy — humility</h2>
+<p>This is the part I think matters most. The consensus mechanism is <strong>deliberately kept simple</strong>.</p>
+<p>The edge here isn't in some clever aggregation formula — it's in actually having seats with genuinely different, independent perspectives. There's always a temptation to make the aggregation logic more sophisticated, but I've repeatedly seen that temptation lead straight into overfitting historical data.</p>
+<p>So when I want to improve things, I put the effort into diversifying the seats at the table or sharpening each seat's individual skill, rather than the consensus mechanism itself. It boils down to one line: <strong>diverse inputs, and a robust, simple consensus.</strong></p>
+<h2>The models are still a work in progress</h2>
+<p>I've also run a formal head-to-head comparison of several local LLMs under identical conditions. More than once I had to dig straight into the raw logs to catch problems that surface-level grade distributions couldn't reveal — final-answer generation quietly failing and falling back to a default, low-probability hallucinations where a completely different stock got analyzed, and a stretch where tool calls simply weren't going through so reports came out with no real grounding at all.</p>
+<p>That was a comparison among local models. It also raised a separate question afterward — between models running locally for free and paid external API models, which actually performs better by real trading outcomes. I built a separate simulator to answer that question, and wrote it up <a href="https://finaltype.github.io/quant-blog/en/architecture/04_sim_harness/" target="_blank" rel="noopener noreferrer">in its own post</a>(new tab).</p>
+<p>More recently I also reworked the serving engine running this framework and how material gets handed to each seat, which cut the time it takes to run through a single stock quite a bit.</p>
+<hr />
+<p>Looking back, the thing I put the most effort into in this pipeline wasn't which model to use — it was how to respect and combine different opinions. If you're curious about the overall project structure, check out the <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">project architecture post</a>(new tab) too.</p>
+</article>
+</body>
+</html>

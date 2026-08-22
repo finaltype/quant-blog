@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Outage Was 15 Seconds, the Damage Was 4 Hours 45 Minutes · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-16_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>The Outage Was 15 Seconds, the Damage Was 4 Hours 45 Minutes</h1>
+<p class="subtitle">WiFi dropped briefly and quietly settled into a half-broken connection, which brought back an old principle — don&#x27;t make the cheapest thing depend on the riskiest one</p><p>This is the incident I flagged yesterday. Tracking down the full cause took an entire day, and it turned out to be worth it.</p>
+<h2>15 seconds of outage, 4 hours 45 minutes of damage</h2>
+<p>Home WiFi dropped briefly overnight — about 15 seconds. But digging through the logs, the actual damage window was 4 hours 45 minutes.</p>
+<p>The connection reattached to the same router and reported "connected," but never actually got real internet access back. It looked connected on the surface while zero data actually moved, and it stayed that way for hours.</p>
+<p>It only fully recovered when it happened to switch to a different wireless channel later that night.</p>
+<p>What was more surprising: the OS had correctly known within 4 minutes that the internet wasn't actually working. It kept showing a degraded status — nobody was watching that signal.</p>
+<p>That led to a new conclusion: whether a problem "existed" isn't about whether a signal was present, it's about whether anyone actually read it.</p>
+<p>Several overnight automated jobs spun their wheels for hours because of this. Most of the jobs that missed data could just re-fetch it later, so they recovered fine. One job had no way to recover at all, and that day's run for it had to be written off.</p>
+<p>There was an interesting twist too. Trusting the "disconnected" signal too much creates the opposite failure. A different piece of automation, built that way, once misread a temporary drop as a full disconnect and got stuck in an infinite retry loop.</p>
+<p>The lesson running through the whole incident: don't judge from a single signal — go verify, then decide.</p>
+<h2>Don't make the cheapest task depend on the riskiest one succeeding</h2>
+<p>The same night, a bigger incident overlapped: the overnight automated analysis stalled less than halfway through.</p>
+<p>The cause was three problems hitting at once, and the network issue above was one of them.</p>
+<p>This incident forced a decision on a design principle I'd been putting off. The idea had been around for a while — freeze all the input data for an analysis before starting the heavy computation. I'd previously judged that freezing partway through the computation was good enough. This incident proved that judgment wrong.</p>
+<p>In hindsight it's obvious. Preparing the input data is light work that finishes in minutes. The heavy computation after it takes hours and is exposed to things like network failures.</p>
+<p>But the structure had the light task's result only finalize once the heavy task fully succeeded. The thing that should have been safest — the input record — depended on the thing that was riskiest: a multi-hour computation.</p>
+<p>I reversed the order this time. Input gets saved securely first, and only then does the heavy computation start.</p>
+<p>A more general principle came out of this: stale data and wrong data need to be treated differently.</p>
+<p>Making a decision today off data that's a few days old isn't very risky. But data from different points in time getting mixed together — producing numbers that look fine on the surface but are internally inconsistent — is much more dangerous. The first case can keep running; the second must stop unconditionally.</p>
+<p>I also reset the principle for when to alert someone: "is there something the recipient of this alert can actually do right now?" If not, it's not urgent — it can be batched and reviewed later.</p>
+<h2>Also this week</h2>
+<ul>
+<li>Locked in something important on the live-account order logic: order results aren't just "success" or "failure" — there needs to be a third state, "unknown." If a request that never got a response is just collapsed into "failure," a human might trust that and manually resubmit an order that had actually already gone through — risking a double order. This third state is now handled explicitly.</li>
+<li>Kept refining the earlier news-sentiment signal experiment.</li>
+</ul>
+<hr />
+<p>My favorite principle from today: don't tie something safe to something risky. Obvious in hindsight, but I didn't see that coupling as a problem until it actually caused an incident.</p>
+</article>
+</body>
+</html>

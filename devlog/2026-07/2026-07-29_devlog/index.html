@@ -23,7 +23,7 @@
 </head>
 <body>
 <header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-
+<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-29_devlog/index.html">Read in English</a></p>
 <article>
 <h1>[260727~29] 조용한 크래시, 기록 누락, 27시간 신호 침묵</h1>
 <p class="subtitle">사흘 내내 &quot;돈이 잘못 나간&quot; 사고가 아니라 &quot;아무 일도 안 일어난&quot; 사고들을 쫓아다녔습니다 — 월요일 새벽의 조용한 크래시, 독자 제보로 찾은 성과 기록 누락, 그리고 서킷브레이커 상황에서 하루 넘게 이어진 신호 침묵까지</p><p>며칠 정신없이 사고 대응만 하다 보니 글 쓸 틈을 못 냈습니다. 27일, 28일, 29일 사흘을 한 번에 정리합니다.</p>
@@ -40,9 +40,9 @@
 <p>이번 사흘 중 가장 무거운 사고였습니다. 돈이 잘못 나가는 실패보다, "아무것도 안 하고 있다는 사실 자체를 아무도 모르는" 실패가 알아채기 훨씬 어렵다는 걸 다시 확인했습니다.</p>
 <h2>알림 체계를 다시 짰다</h2>
 <p>이 흐름을 계기로 알림 체계를 손봤습니다. 매매 관련 알림과 시스템 상태 알림을 서로 다른 채널로 분리하고, 감시 프로세스에는 하트비트와 정지 감지 장치를 붙여서 같은 종류의 침묵 사고가 재발하면 바로 알아채도록 했습니다.</p>
-<p>증권사 쪽 요청 제한에 걸렸을 때도 그냥 실패 처리하지 않고, 재시도할 수 있는 경우와 아닌 경우를 구분해서 재시도하도록 고쳤습니다. 안전장치를 겹겹이 쌓아가는 방향은 <a href="https://finaltype.tistory.com/43" target="_blank" rel="noopener noreferrer">예전에 정리한 실거래 안전장치 이야기</a>(새 창)와 같은 결입니다.</p>
+<p>증권사 쪽 요청 제한에 걸렸을 때도 그냥 실패 처리하지 않고, 재시도할 수 있는 경우와 아닌 경우를 구분해서 재시도하도록 고쳤습니다. 안전장치를 겹겹이 쌓아가는 방향은 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">예전에 정리한 실거래 안전장치 이야기</a>(새 창)와 같은 결입니다.</p>
 <p>이 과정에서 알림 범위를 좁히다가 실수로, 매일 아침 가족과도 공유하던 리포트까지 같이 꺼버린 적이 있었습니다. 바로 알아채서 그날 안에 되돌렸습니다.</p>
-<p>프로세스를 나누고 상태를 감시하는 이야기는 <a href="https://finaltype.tistory.com/48" target="_blank" rel="noopener noreferrer">운영 구조를 다룬 글</a>(새 창)에서 이어집니다.</p>
+<p>프로세스를 나누고 상태를 감시하는 이야기는 <a href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">운영 구조를 다룬 글</a>(새 창)에서 이어집니다.</p>
 <h2>그 밖에</h2>
 <ul>
 <li>예전에 "특정 종목군을 매매하지 않고 있다"고 판단했던 게 스냅샷을 잘못 읽은 착오였음을 확인했습니다. 실제로는 매수 후 정리까지 정상적으로 진행되고 있었습니다.</li>

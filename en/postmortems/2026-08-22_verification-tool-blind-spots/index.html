@@ -26,7 +26,7 @@
 <p class="lang-switch"><a href="../../../postmortems/2026-08-22_verification-tool-blind-spots/index.html">한국어로 보기</a></p>
 <article>
 <h1>3 Reasons Automated Trading Verification Tools Miss Errors</h1>
-<p class="subtitle">Every new verification tool I added this week failed in a different way — a bug in the tool itself, a blind spot nobody had wired a check for, and a gauge that lied about the moment it was reading</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.tistory.com/23" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p class="subtitle">Every new verification tool I added this week failed in a different way — a bug in the tool itself, a blind spot nobody had wired a check for, and a gauge that lied about the moment it was reading</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>I've been adding several verification tools to my automated trading system lately. Each one broke in a different way when it actually got used.</p>
 <p>One turned out to be wrong itself. One didn't exist yet, so I had no idea anything was off. One existed but read its target at the wrong moment. Here are the three cases.</p>
 <h2>1. The verification tool can have its own bug</h2>

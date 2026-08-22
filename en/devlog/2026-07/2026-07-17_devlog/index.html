@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asked in Korean, Got an Answer in English — Then Came Audit Season · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-17_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>Asked in Korean, Got an Answer in English — Then Came Audit Season</h1>
+<p class="subtitle">Changing how data was passed in made reports suddenly come back in English, and auditing several parts of the system turned up a real bug and a real blind spot</p><p>Yesterday was less about building something new and more about checking what already existed. The checking turned up an unexpected bug and an unexpected blind spot.</p>
+<h2>Asked in Korean, started getting answers in English</h2>
+<p>I reworked how data gets passed to the AI roles. It used to fetch data on demand by calling tools as needed; I switched it to gathering everything needed up front and passing it in as one batch. Processing speed improved noticeably.</p>
+<p>But there was a side effect: reports suddenly started coming back in English. Tracing it down, the Korean data was getting embedded inside English-language system instructions, and the model apparently inferred "this conversation is happening in English."</p>
+<p>The fix was simple: explicitly state that the narration must always be in Korean regardless of the language of the source material.</p>
+<p>It was a good reminder that when you change how data is passed in, the format itself is a signal to the model, not just the content.</p>
+<h2>Data archive audit — one bug, one blind spot</h2>
+<p>The <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">data archive</a>(new tab) umbrella project got another audit pass. Two useful findings came out of it this time.</p>
+<p>One was a real bug. There was a mechanism meant to double-record board data so a later observation at the same point in time wouldn't overwrite an earlier one — but a defect let late-arriving backfilled historical data overwrite the newest observed value instead. Fixed by reordering so the newest value always wins.</p>
+<p>The other was a blind spot. It turned out that the job linking historical news to tickers was actually only covering a subset of top tickers, not the full universe.</p>
+<p>Articles existed for the rest of the tickers, they just weren't being linked. The fix is known; whether to actually apply it is still an open decision.</p>
+<h2>Second piece of the network watchdog fell into place</h2>
+<p>Following up on the <a href="https://finaltype.github.io/quant-blog/en/architecture/03_netwatcher/" target="_blank" rel="noopener noreferrer">network watchdog program</a>(new tab) from yesterday's post. WiFi recovery was already built; I added monitoring for remote-access disconnects as well.</p>
+<p>The two failure modes carry different risk. If the network itself is down, everything else is stalled anyway, so an aggressive response (even a reboot) is fine. But if only the remote-access program dies while the network is fine, the machine itself may still be running — a reboot is off the table, and recovery has to be limited to gently restarting just that program.</p>
+<p>I also verified the permissions in practice: set up the needed permission grants and actually confirmed the service could be restarted under them. All that's left now is deciding to actually flip the switch.</p>
+<h2>Also this week</h2>
+<ul>
+<li>Reviewing the live-trading safety documentation, I found that code the docs described as "not built yet" had actually already been implemented — the docs just hadn't kept up with reality. Since this is the only path that touches real account funds, I started a careful code audit before actually using it.</li>
+<li>Caught my own mistake during that audit: the logic that judged whether data was stale used "today's date" as the reference and didn't account for market holidays, which could trigger false positives even on normal trading days. Rewrote it to use "most recent trading day" instead.</li>
+<li>Cleaned up the logic that used to attempt direct recovery on network failure. The main process no longer tries to recover — it retries a few times and then just skips. Recovery is now entirely the network watchdog's job.</li>
+</ul>
+<hr />
+<p>Looking back, yesterday wasn't a day of building something new — it was a day of doubting things that already existed. Three separate places turned out to be hiding things I wouldn't have found otherwise.</p>
+</article>
+</body>
+</html>

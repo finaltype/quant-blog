@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battery Sector Check — ESS Shortage, Earnings Rebound, and a Stock Price Gap · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../themes/2026-07-31_secondary-battery-outlook/index.html">한국어로 보기</a></p>
+<article>
+<h1>Battery Sector Check — ESS Shortage, Earnings Rebound, and a Stock Price Gap</h1>
+<p class="subtitle">All three cell makers turned profitable together for the first time and the ESS supply-shortage story gained traction, so why haven&#x27;t stock prices followed</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>The narrative around Korea's battery sector has been fairly optimistic in the second half of this year. Brokerages have been forecasting an ESS (energy storage system) battery shortage tied to US data-center and power-infrastructure buildout, and cell makers' earnings have actually confirmed a swing from losses to profit. And yet, the related stocks haven't followed that optimism. This post looks at why that gap opened, and whether now is a time to buy in or wait.</p>
+<h2>All three cell makers turned profitable together for the first time</h2>
+<p>In Q2 2026 earnings (announced July 30), all three of Korea's major battery cell makers swung to profit. It's the first time all three posted profit in the same quarter together.</p>
+<table>
+<thead>
+<tr>
+<th>Company</th>
+<th>Q2 revenue</th>
+<th>Q2 operating profit</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LG Energy Solution</td>
+<td>₩7.56 trillion (+24.8% YoY)</td>
+<td>+₩113.3 billion (swung from prior-quarter loss)</td>
+<td>Higher ESS shipments were the main driver. Still a loss excluding ₩241 billion in IRA subsidies</td>
+</tr>
+<tr>
+<td>Samsung SDI</td>
+<td>₩3.77 trillion (+18.5% YoY)</td>
+<td>+₩203.8 billion (first profit in 7 quarters)</td>
+<td>Turnaround came faster than expected; the battery segment itself also turned profitable</td>
+</tr>
+<tr>
+<td>SK On (SK Innovation's battery unit)</td>
+<td>—</td>
+<td>+₩821.8 billion (largest since spin-off)</td>
+<td>Parent SK Innovation's operating profit also swung to +₩3.49 trillion</td>
+</tr>
+</tbody>
+</table>
+<p>The materials makers show a bigger spread. POSCO Future M posted Q2 operating profit of ₩26.7 billion (+3,351% YoY), swinging to profit, though its battery-materials segment alone still only earned about ₩2.5 billion. Ecopro BM stayed profitable but saw both revenue and profit decline year over year, while L&amp;F is going through the sector's hardest stretch as large supply contracts have been repeatedly cut back or scrapped.</p>
+<h2>The ESS shortage story has real backing</h2>
+<p>Domestic brokerage outlook reports for the second half consistently point to ESS, not EVs, as the axis of recovery. The reasoning: 2026 EV battery market growth is expected to stay in the low double digits, while the ESS battery market is growing much faster.</p>
+<p>The structural backdrop is a US policy shift. Most US ESS batteries are Chinese-made, but tariffs keep rising and there have even been legislative attempts to block Chinese ESS imports outright. The core logic is that Korea's three cell makers, which already have local US production, are positioned to fill that gap.</p>
+<p>There are actual orders backing this up. Samsung SDI signed an ESS supply contract worth hundreds of billions of won with a US utility, and LG Energy Solution started mass-producing ESS batteries at its US plant, pushing Q2 ESS shipments up more than 30% quarter over quarter. Domestically, all three are also splitting volume in the government-run ESS central contract market, with the next bidding round scheduled for September.</p>
+<h2>So why has the stock price stayed stuck?</h2>
+<p>The biggest cause is the "contract evaporation" shock from late last year into early this year. An automaker canceled a large long-term supply contract, and other contracts were cut back one after another — tens of trillions of won worth of contracts across the domestic battery industry disappeared at once. Brokerages slashed price targets across the board at the time, and stock prices dropped sharply along with it.</p>
+<p>On top of that, US EV demand itself has weakened. After the US EV tax credit was eliminated, Q1 US EV sales fell nearly 30% year over year. The ESS tailwind is offsetting this headwind, but hasn't fully overtaken it yet — because EVs still make up the bulk of the three cell makers' revenue.</p>
+<p>The market is also questioning the "quality" of the earnings. LG Energy Solution's profit is still a loss once US subsidies are excluded, and some in the market believe a genuinely meaningful earnings recovery is still one to two years out. On top of that, Ecopro BM announced a ₩1.2 trillion rights offering in early July that sent its stock sharply lower immediately, and dilution risk like this has repeatedly capped rallies across the sector.</p>
+<h2>Retail sentiment, as seen in stock forums</h2>
+<p>This gap shows up clearly in the retail investor forums where individual investors gather. As part of a personal <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">side project</a>(new tab) that archives otherwise-ephemeral market data, I keep dated snapshots of forum posts for major tickers, and referenced that data for this analysis.</p>
+<p>During the two days when the broader KOSPI dropped sharply in late July, forum sentiment for these tickers was near-capitulation — pessimism across the board. Posts asking about stop-losses and criticizing regulators drew the most engagement, which reads more as broad market panic and margin-call worries than sector-specific bad news.</p>
+<p>What's interesting is how sharply reactions diverged by ticker on earnings day (July 30). LG Energy Solution's forum turned optimistic quickly, while Samsung SDI's forum acknowledged the earnings beat but was still largely skeptical about why the stock wasn't moving. Ecopro BM's forum carried the most cynicism, still reeling from the rights offering. The order in which sentiment recovered — cell leaders first, materials makers lagging — roughly tracks the order of fundamental recovery.</p>
+<h2>Where each stock stands (as of July 30 close)</h2>
+<table>
+<thead>
+<tr>
+<th>Ticker</th>
+<th>vs. yearly peak</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LG Energy Solution</td>
+<td>about -40%</td>
+<td>Profitability confirmed alongside rising ESS shipments; reacted first, jumping on earnings day</td>
+</tr>
+<tr>
+<td>Samsung SDI</td>
+<td>about -50%</td>
+<td>Best ESS order backlog of the three, but stock closed lower despite the earnings beat</td>
+</tr>
+<tr>
+<td>SK Innovation (SK On)</td>
+<td>about -25%</td>
+<td>Smallest drawdown of the three; refining segment strength acts as a cushion</td>
+</tr>
+<tr>
+<td>POSCO Future M</td>
+<td>about -55%</td>
+<td>Market immediately priced in the materials segment's swing to profit, jumping on earnings day</td>
+</tr>
+<tr>
+<td>Ecopro BM</td>
+<td>about -60%</td>
+<td>Rights-offering overhang is the biggest variable; Q2 confirmed results due around this post's publication</td>
+</tr>
+<tr>
+<td>L&amp;F</td>
+<td>about -70%, weakest in the sector</td>
+<td>Fallout from large contract cuts and cancellations still ongoing</td>
+</tr>
+</tbody>
+</table>
+<h2>Bottom line — buy now, or wait?</h2>
+<p>The honest read is "the bottom looks confirmed, but not yet a clear trend reversal." Earnings gave the market its first real reason to start pricing in the swing to profit, and the ESS order pipeline and government bidding are still live catalysts. But three obstacles remain — earnings quality tied to subsidies, a delayed EV demand recovery, and rights-offering overhang — so a selective approach focused on names with high ESS exposure and lighter balance-sheet risk looks more reasonable than buying the sector broadly.</p>
+<p>It's worth setting signals in advance for when this view would be wrong: if several of the three cell makers swing back to losses next quarter, if the September domestic ESS bidding round fails or clears below cost, if US policy eases restrictions on Chinese ESS imports, or if cell or materials makers announce another large rights offering — any of these would call for revisiting the rebound thesis itself.</p>
+<hr />
+<p><em>This post is a personal analysis based on publicly available market data, media coverage, and brokerage reports, not investment advice recommending the purchase or sale of any specific stock. Investment decisions and their outcomes are the sole responsibility of the investor.</em></p>
+</article>
+</body>
+</html>

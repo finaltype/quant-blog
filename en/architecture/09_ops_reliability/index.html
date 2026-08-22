@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quant Bot Operations - Process Separation, Reporting, and Performance Tracking · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../architecture/09_ops_reliability/index.html">한국어로 보기</a></p>
+<article>
+<h1>Quant Bot Operations - Process Separation, Reporting, and Performance Tracking</h1>
+<p class="subtitle">The story of splitting a single monolithic script into several processes, and refining how reporting and performance tracking work along the way</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>There's something I care about almost as much as the quant bot's visible features — trade proposals, recommendation reports. Whether the system keeps running reliably when nobody's watching, and how I confirm it's actually running well. Here's where that stands.</p>
+<h2>Why I split it into multiple processes</h2>
+<p>At first, a single script did everything — computation, monitoring, reporting. The heavy ensemble computation kept fighting the five-minute-interval real-time monitor over resources.</p>
+<p>So I split it into dedicated computation, monitoring, and reporting processes, with monitoring and reporting reading the computation results only through a disk cache.</p>
+<p>On top of that, my dev environment crashed once a while back, and those processes quietly died along with it. So now the core processes are registered as OS-level services. Turning the dev environment off and on, or having it crash, no longer touches the actual trading and analysis processes.</p>
+<p>Going a step further, I also pulled the trading-related background work that a single Telegram bot used to carry — cleaning up unfilled orders, logging start/end-of-day balances, checking safety mechanisms — out into its own separate process. The bot is now just a thin front door that receives and routes commands.</p>
+<p>I learned a similar lesson on the networking side. After my home Wi-Fi sat half-broken for over half a day without anyone noticing, I built a separate monitoring program to detect and recover from network issues, as its own side project. I wrote that up in <a href="https://finaltype.github.io/quant-blog/en/architecture/03_netwatcher/" target="_blank" rel="noopener noreferrer">a separate post</a>(new tab).</p>
+<h2>Splitting the reporting too</h2>
+<p>There used to be a separate scheduled report that scanned every stock at fixed times a few times a day, looking for unusual moves. I moved that responsibility over to the real-time monitor instead — catching anomalies the moment they happen beats waiting for a fixed check-in time.</p>
+<p>I also split reporting itself into two tracks. The internal version I read myself carries everything needed to judge market conditions. The version meant for sharing with acquaintances is kept separate so that sensitive numbers like absolute amounts never appear in it at all.</p>
+<p>I added a freshness indicator at the bottom of every report, showing how current the underlying data actually is. Data has quietly run stale for days at a time before without anyone noticing, so now a glance at the report is enough to catch that.</p>
+<h2>Keeping a running record of whether recommendations were right</h2>
+<p>I keep calculating and logging what the return would have been if I'd followed the AI's recommendations exactly. The principle is to refine features based on this record, not on a vague "feeling" after building something.</p>
+<p>Recently I also added a separate gauge that measures the gap between the price at decision time and the actual fill price. The point is to separate the strategy's own performance from the losses that leak out during execution.</p>
+<hr />
+<p>None of this is flashy, but it feels like these details are what eventually let you trust a system to run on its own. If you're curious about the overall project structure, check out the <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">project architecture post</a>(new tab) too.</p>
+</article>
+</body>
+</html>

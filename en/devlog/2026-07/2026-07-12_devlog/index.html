@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 12] Yesterday&#x27;s &#x27;Flip&#x27;, Dug Into Further, Turned Out More Complicated&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-12_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 12] Yesterday&#x27;s &#x27;Flip&#x27;, Dug Into Further, Turned Out More Complicated&quot;</h1>
+<p class="subtitle">Speed really did improve, but I found out consistency was shaky — and in the middle of it all, a loose power cable knocked the machine into a reboot</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>The day isn't over yet, but here's where things stand so far. This one was very much a sequel to yesterday's story.</p>
+<h2>Yesterday's "flip", dug into further, turned out more complicated</h2>
+<p>Yesterday I wrote that pulling an old parallel-processing setup back out had made things noticeably faster. Digging deeper today, the picture turned out more complicated. The speed gain was real — I re-measured it and confirmed it.</p>
+<p>But I also found that running the same input with the same settings repeatedly produced slightly different results each time. My first guess was interference between concurrent requests.</p>
+<p>Setting up a control group ruled that out: <strong>running a single request repeatedly, with no concurrency at all, still produced slightly different results each time.</strong> The culprit wasn't concurrency — it was something more fundamental underneath.</p>
+<p>It turned out to be a preexisting property: running the same computation on a GPU repeatedly doesn't reproduce the exact same floating-point operation order every time. Concurrency only amplified that wobble slightly; it wasn't the main cause.</p>
+<p>So I decided not to use this parallel setup in the pipeline that actually does scoring, at least for now. If results wobble, there's no way to tell whether a difference between yesterday's judgment and today's reflects a real market change or just computational noise.</p>
+<p>Instead, I pivoted to using the newly added second GPU to run two fully independent computations side by side — gaining speed without the wobble. It was a good example of how "a conclusion reached yesterday" can get flipped again within a day or two.</p>
+<h2>An overnight power cable accident, and the bug the reboot surfaced</h2>
+<p>Overnight there was also a purely physical accident — a loose GPU power cable caused the machine to reboot unexpectedly. Fortunately the services meant to run in the background came back up on their own after the reboot, and the database was intact with no damage.</p>
+<p>Right after the reboot, though, I found a subtle bug. In the brief window after boot before the network had reconnected, yesterday's new archiving job (a background crawler that collects old news) happened to run in that exact window, and misread "network connection failed" as "no news to collect today."</p>
+<p>Left alone, it would have marked several days' worth of not-yet-collected data as "fully collected." The root cause was failing to distinguish "the network briefly dropped" from "there's genuinely no data." I added a retry mechanism, plus a safeguard that waits for the network to reconnect before starting right after a reboot.</p>
+<h2>Also today</h2>
+<ul>
+<li>I finally decided to fully retire a reinforcement-learning-based model that had sat for a long time in "not yet verified for live use" status. It never beat the benchmark across several tuning attempts, and re-examining it from a design standpoint this time confirmed the approach was never a good fit for this role to begin with, so I let it go without regret.</li>
+<li>I also found that several core prediction models were trained long enough ago that they were falling behind recent market changes. They've only been retrained manually so far; I decided to add a system for periodic automatic retraining going forward.</li>
+</ul>
+<hr />
+<p>Today was about doubting "what I concluded was better yesterday" and digging deeper into it. On the surface it looks like confirming the same conclusion twice, but something new turns up every time I dig in.</p>
+</article>
+</body>
+</html>

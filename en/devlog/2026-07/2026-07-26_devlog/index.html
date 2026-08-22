@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Jul 26] Building a Backup System for the Project&#x27;s Assets&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-26_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Jul 26] Building a Backup System for the Project&#x27;s Assets&quot;</h1>
+<p class="subtitle">Found that all the data accumulated since day one was sitting on a single disk with no backup, and rebuilt off-site backup and version control from scratch</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Discovering that everything I'd accumulated had been sitting without backup</h2>
+<p>Today wasn't about new features — all the energy went into <strong>infrastructure</strong>. A recent system review turned up a critical problem.</p>
+<p>All the data accumulated since the project started — the incident-free ledger, market records, execution logs, analysis archives — turned out to be sitting on a <strong>single disk, with zero backups and zero version control</strong>.</p>
+<p>Public exchanges don't provide free intraday data, which means the data I generate myself is the <strong>only original copy</strong>. If that disk fails once, everything up to that point goes to zero.</p>
+<h2>Building off-site backup on Google Drive</h2>
+<p>To fix this, I set up a daily automated backup system using Google Drive as off-site storage.</p>
+<h3>Deciding what to back up and what to exclude</h3>
+<p>Scoped the backup to four projects: the trading system and three related data/infrastructure projects. Left out the personal hobby blog and other unrelated side projects.</p>
+<p>Decided to exclude sensitive items like tokens and passwords from the backup entirely. Those can be reissued after they expire, but data that's gone for good once lost absolutely has to be backed up.</p>
+<p>Everything that passed the security screen — logs and record data — got included in the backup.</p>
+<h3>Backup runs right after market close, every day</h3>
+<p>Set the backup to run daily at market-close wrap-up time, before the evening compute-heavy jobs start, so there's no resource contention.</p>
+<p>A successful backup is silent. Only a failure sends an alert.</p>
+<p>Silence is normal, but if <strong>the monitoring system itself dies</strong>, that also means success notifications stop arriving — silently. So I added a weekly liveness ping from the monitor, sent once every Monday. If that message doesn't arrive, the monitor itself is down.</p>
+<h2>Rebuilding version control from scratch</h2>
+<p>Bundled the whole project into a single git repository and built a pre-commit hook that runs automatic checks.</p>
+<p>It automatically blocks staging of sensitive filenames, personally identifying data, oversized files, and hardcoded secret values. Tested it with a fake sensitive file, and it caught it correctly.</p>
+<h2>A couple of small incidents after reboot</h2>
+<p>Hit two small issues after a recent reboot.</p>
+<p>One was the system clock briefly drifting and throwing off scheduled automated jobs; the other was that the backup timer had a startup delay configured but the monitoring timer didn't, causing a false alarm right after boot. Fixed both.</p>
+<p>Also changed remote-lookup failures to fall back to local cache instead of alerting immediately, added a weekly integrity check on the backups themselves, and limited heavy cleanup jobs to run only on Sundays.</p>
+<hr />
+<p>No new features today. No lines of code added, no new model run.</p>
+<p>But if the data I've built up goes to sleep every night without a backup, everything I analyze today is a castle built on nothing.</p>
+<p><strong>Foundations come first.</strong> That's the kind of thing that keeps needing to be relearned.</p>
+</article>
+</body>
+</html>

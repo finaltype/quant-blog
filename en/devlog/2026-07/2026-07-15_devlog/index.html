@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caught the Same Kind of Bug Again, So This Time I Closed Off the Whole Class · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-15_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>Caught the Same Kind of Bug Again, So This Time I Closed Off the Whole Class</h1>
+<p class="subtitle">Found another case of a major ticker&#x27;s name slipping through recognition — this time, instead of just patching it, I restructured things so this class of bug can&#x27;t come back</p><p>Yesterday's devlog covered a bug where the most important ticker was falling out of results because of a name-recognition failure. Today there was another case of the same thing. This time the response was different.</p>
+<h2>Instead of fixing it, I made sure it can't happen again</h2>
+<p>I noticed that news for one large-cap ticker was barely showing up at all. The cause: a common abbreviation for that ticker wasn't registered in the recognition list.</p>
+<p>Different specific bug from yesterday's, but the exact same pattern.</p>
+<p>Seeing the same class of bug repeat for what felt like the umpteenth time, I decided not to just patch it and move on. The name/abbreviation recognition logic was scattered across several places in the project, each implemented separately.</p>
+<p>Fixing one spot left the others stale — which is exactly how this bug had leaked through in the first place.</p>
+<p>So I pulled the logic out into a single shared module that every relevant part of the project now imports. There's exactly one place left to update the recognition list.</p>
+<p>After the change, I diffed all existing outputs against the old behavior to make sure nothing shifted, and they matched exactly.</p>
+<p>I also fixed a related issue where one company's abbreviation was accidentally swallowing a different company's name. A large holding company's short name happened to be a substring of one of its subsidiaries' names, which mixed up news between the two. I added it to an exception list to split them apart.</p>
+<h2>Started a new side project</h2>
+<p>Up to now I'd only been using news as a sentiment signal. It occurred to me that stock discussion board data could be another useful signal for retail sentiment, so I started collecting it separately.</p>
+<p>I applied the same principles as the news archive. Board posts are a decaying kind of data too — view counts and reaction counts keep changing over time — so I record both the post time and the collection time, so it can be sliced accurately as-of any point later.</p>
+<p>I decided not to feed this signal into the actual analysis yet, though. There's an important comparison experiment already running, and mixing in a new signal now could contaminate it.</p>
+<p>So for now I'm just collecting and holding off on using it. The data decays, so collect it now; the decision isn't urgent, so make it later.</p>
+<h2>Also this week</h2>
+<ul>
+<li>Went through the live-trading safety layer again. Found a gap in how the system handles a request that never gets a response at all and ends ambiguously — planned out a sequence of fixes for that.</li>
+<li>Retired an experimental intraday response feature that had been running for a while. Not because the direction was wrong, but because there was no way to actually measure whether it worked. It's an admission that the current tooling can't judge it either way, not that the idea itself was bad.</li>
+</ul>
+<hr />
+<p>Overnight, the automated analysis ran into a fairly serious problem, and it took another full day to track down the cause. More on that in the next devlog.</p>
+</article>
+</body>
+</html>
