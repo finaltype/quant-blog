@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Aug 17-23] Rebuilding the Publishing Pipeline, Then Catching Signals That Fail Silently&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-23_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Aug 17-23] Rebuilding the Publishing Pipeline, Then Catching Signals That Fail Silently&quot;</h1>
+<p class="subtitle">While I was at it changing how this blog gets published, I also worked on judgment that resists misleading samples and instrumentation that catches pipelines dying without a sound</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Most of this week's work landed on Saturday and Sunday. The days before had been quiet on the devlog front, and it turned out the reason for that silence was itself this week's first topic.</p>
+<h2>Rebuilding the publishing pipeline</h2>
+<p>On Saturday I finally found why the devlog had gone quiet for over ten days. The automation had been running fine every night, but the final save step was stuck waiting on a permission prompt, so it kept ending silently with nobody around to notice.</p>
+<p>While fixing the root cause, I decided to rebuild the publishing setup itself. Tistory's post-writing API had been dead for a long time, so publishing had always been a manual step; I moved new posts to GitHub Pages and Dev.to and kept Tistory only as an archive of old posts.</p>
+<p>I also decided that incidents or misjudgments worth a real root-cause writeup would get their own postmortem post from now on, instead of being buried as a short section inside the daily devlog. Chasing down why things had gone quiet naturally became the theme for the rest of the week: catching silent failures faster.</p>
+<h2>Judgment that resists misleading samples</h2>
+<p>On Sunday I evaluated the results of a weekend A/B test on a change to how financial data gets processed. The full-universe sample met the adoption bar, while a separate sample built only from historically error-prone tickers showed an even bigger improvement.</p>
+<p>It was tempting to shift the adoption bar toward the better-looking number, but I asked another AI to check my reasoning, and it confirmed the two samples weren't different conditions at all — just the same change measured twice under different sampling. So I kept the reported figure fixed to the full-universe sample and treated the error-prone-ticker result as a secondary confirmation only.</p>
+<p>While running that same test, a safety check blocked one report. Investigating it turned up a real bug: a fragment of the internal instruction text used to assemble the report had leaked verbatim into the final output. It turned out to be an unrelated, pre-existing bug that happened to trigger during this test, but I still rewrote the instruction text and updated the leak detector's pattern to match.</p>
+<h2>Making silent failures make noise</h2>
+<p>The order-execution unit of the <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">paper-trading validation track</a>(new tab) had died twice in the past month from hitting a processing-time limit, and both times I only found out after the fact. Instead of just raising the limit, I added instrumentation that logs elapsed time and external API call counts per round, with an early warning that fires before the limit is actually hit.</p>
+<p>Around the same time, a different safety check had a recurring problem: a "zero detections" reading was impossible to tell apart from the detector itself being dead. I added a separate observability layer that records how many inputs the detector actually looked at, so "zero" and "nothing to look at in the first place" are now distinguishable from the logs alone.</p>
+<h2>Trading-side infrastructure got some care too</h2>
+<p>A benchmark comparing local large-model performance had stalled mid-run after sharing GPU resources with another job. I wrote up a resume procedure so it can pick back up the moment the GPU frees, without anyone watching it, and added an input-fingerprint check at startup so a resume can't accidentally continue with different input data.</p>
+<hr />
+<p>What ran through this week wasn't a single new feature — it was finding places that fail silently and making them make noise instead. Publishing automation, A/B test judgment, the execution pipeline, and the detector all had the same kind of hole: something goes wrong and no signal comes out. Each one got patched this week.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
