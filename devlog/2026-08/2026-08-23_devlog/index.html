@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260823] 주말 A/B 테스트 결과 판정 + 실행 파이프라인 안정성 보강&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-23_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260823] 주말 A/B 테스트 결과 판정 + 실행 파이프라인 안정성 보강&quot;</h1>
+<p class="subtitle">성과가 더 좋아 보이는 표본에 속지 않게 결과를 정리하고, 실행 계측을 함께 보강했습니다</p><h2>주말 A/B 테스트, 두 결과를 어떻게 읽을 것인가</h2>
+<p>주말에 재무 데이터 처리 방식을 바꾼 개입 하나를 A/B로 검증했습니다.</p>
+<p>전체 종목을 대상으로 한 1차 라운드에서는 오류가 뚜렷하게 줄어 채택 기준을 충족했습니다. 이어서 "이 개입이 실제로 작동하는지" 다시 확인하려고 돌린 2차 라운드(과거에 오류가 잦았던 종목만 모은 표본)에서는 개선폭이 더 커 보이는 숫자가 나왔습니다.</p>
+<p>여기서 "그럼 2차 라운드 기준으로 채택하자"는 판단이 나올 뻔했는데, 다른 AI에게 자문을 구해 봤습니다. 결론은 명확했습니다.</p>
+<p>두 라운드는 다른 설정을 비교한 게 아니라, 같은 개입을 표본만 바꿔 두 번 잰 것이었습니다. 2차 라운드의 표본은 원래 오류가 잦은 종목들로만 구성돼 있어서 개선폭이 부풀어 보이는 게 통계적으로 당연한 결과였습니다. 그래서 대외적으로 보고할 수치는 전체 표본인 1차 라운드 것 하나로 정리하고, 2차 라운드는 "어려운 조건에서도 개입이 작동한다"는 보조 확인 정도로만 남겼습니다.</p>
+<h2>그 과정에서 발견한 진짜 결함</h2>
+<p>2차 라운드를 돌리던 중, 안전장치 하나가 종목 리포트 한 건을 차단했습니다. 리포트를 조립하는 내부 코드의 지시문 문구 일부가 최종 리포트에 그대로 노출된 사고였습니다.</p>
+<p>이게 재무 데이터 개입 때문에 생긴 부작용인지도 함께 확인했습니다. 같은 종목·같은 설정을 1차 라운드에서 이미 돌렸을 때는 문제가 없었고, 같은 2차 라운드 안에서 개입을 끄고 돌린 쪽에서도 재현되지 않았습니다. 개입과 무관하게 원래 있던 결함이 우연히 한 번 걸린 것으로 판단했습니다.</p>
+<p>다만 "우연이니 넘어간다"로 끝내지는 않았습니다. 실제로 사용자에게 나갈 리포트에 내부 지시문이 노출된 건 그 자체로 진짜 결함이라, 지시문 문구를 모델이 그대로 베끼기 어려운 형태로 바꾸고, 이런 유출을 잡아내는 검사기의 탐지 패턴도 새 문구에 맞춰 함께 갱신했습니다.</p>
+<h2>실행 파이프라인이 죽기 전에 울게 만들었다</h2>
+<p><a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">모의계좌 완전자동 검증 트랙</a>(새 창)의 주문 실행 유닛이 최근 한 달 사이 같은 원인으로 두 번 죽었습니다. 처리 시간이 정해진 제한선을 넘겨 강제 종료된 사고였는데, 두 번 다 사후에야 알았습니다.</p>
+<p>제한선을 올리는 것만으로는 같은 일이 또 반복될 뿐이라, 이번엔 라운드마다 걸린 시간과 외부 API 호출 통계를 함께 남기도록 계측을 추가했습니다. 소요 시간이 제한선의 일정 비율을 넘으면 종료되기 전에 미리 경고가 뜨게 만들어서, 다음에는 사후 부검이 아니라 사전 경보로 알아챌 수 있게 됐습니다.</p>
+<h2>계기가 실제로 도는지도 따로 센다</h2>
+<p>최근 안전장치 관련 코드에서, 검출 건수가 "0건"으로 나온 게 문제가 없어서인지 검출기 자체가 죽어서인지 구별하기 어려운 사고가 며칠 사이 반복됐습니다.</p>
+<p>같은 문제가 다시 생기지 않도록, 검출기가 실제로 몇 건의 입력을 봤는지까지 함께 기록하는 별도 관측 장치를 새로 만들었습니다. 앞으로는 "검출 0건"과 "애초에 볼 게 없었음"을 로그만 보고도 구별할 수 있습니다.</p>
+<hr />
+<p>오늘은 새 기능보다 판정을 신중하게 내리는 일과, 문제가 소리 없이 지나가지 않게 만드는 일에 시간을 더 썼습니다. 둘 다 화려하진 않지만, 나중에 같은 실수를 반복하지 않게 해주는 종류의 작업입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

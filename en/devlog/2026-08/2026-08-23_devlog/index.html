@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260823] Weekend A/B Verdict and Execution Pipeline Hardening&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-23_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260823] Weekend A/B Verdict and Execution Pipeline Hardening&quot;</h1>
+<p class="subtitle">I made sure not to be fooled by a sample that looked better than it was, and hardened execution instrumentation along the way</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Reading two results from a weekend A/B test correctly</h2>
+<p>Over the weekend I ran an A/B test on a change to how financial data gets processed before feeding into the pipeline.</p>
+<p>The first round, run across the full stock universe, showed a clear drop in errors and cleared the bar for adoption. A second round followed, meant only to double-check that the change was actually doing something — this one ran on a narrower sample of stocks that had historically been error-prone, and it came back showing an even bigger improvement.</p>
+<p>That's exactly the kind of number that tempts you to say "let's go with the second round's numbers instead." Before doing that, I ran it by another AI for a second opinion. The verdict was clear-cut.</p>
+<p>The two rounds weren't different configurations to compare — they were the same change, measured twice on different samples. The second round's sample was drawn specifically from stocks that already had more errors, so a bigger-looking improvement there was the statistically expected outcome, not evidence of anything better. So the number I report externally is the first round's, from the full sample. The second round stays on record only as supporting evidence that the change holds up even on harder cases.</p>
+<h2>The real bug that surfaced along the way</h2>
+<p>While the second round was running, a safeguard flagged and blocked one stock's report. It turned out a fragment of internal instruction text — from the code that assembles the report — had leaked verbatim into the final output.</p>
+<p>I checked whether this was a side effect of the financial-data change itself. The same stock under the same settings had run clean in the first round, and the same second-round sample with the change turned off didn't reproduce it either. I concluded it was a pre-existing defect, unrelated to the change, that happened to surface once.</p>
+<p>I didn't just write it off as a fluke, though. Internal instruction text leaking into a report a user actually sees is a real defect regardless of the A/B result, so I reworded the instruction text so a model can't as easily copy it verbatim, and updated the detector's trigger pattern to match the new wording.</p>
+<h2>Making the execution pipeline cry out before it dies</h2>
+<p>The order-execution unit for the <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">paper-trading validation track</a>(new tab) had died twice in the past month from the same root cause — it kept blowing past its time budget and getting force-killed. Both times I only found out after the fact.</p>
+<p>Just raising the time limit would only buy time until it happened again. Instead, I added instrumentation that logs how long each round took and how many external API calls it made, and set it to fire a warning once elapsed time crosses a fraction of the budget — before the unit gets killed, not after. Next time this happens, I'll get an early warning instead of a postmortem.</p>
+<h2>Counting whether the instruments are even running</h2>
+<p>A few incidents this past week shared the same pattern: a detector reporting "zero findings," with no way to tell whether that meant everything was clean or the detector itself had quietly died.</p>
+<p>To close that gap, I built a small registry that also records how many inputs a detector actually saw, not just how many findings it flagged. Going forward, "zero findings" and "nothing to check in the first place" are distinguishable just from the log.</p>
+<hr />
+<p>Today was less about shipping a new feature and more about being careful with a verdict and making sure problems don't slip by silently. Neither is flashy, but both are the kind of work that keeps the same mistake from happening twice.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
