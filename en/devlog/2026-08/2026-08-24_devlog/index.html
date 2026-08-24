@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260824] Tidying Up a Double-Layered Safeguard, and Un-Returning a GPU&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-24_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260824] Tidying Up a Double-Layered Safeguard, and Un-Returning a GPU&quot;</h1>
+<p class="subtitle">I collapsed two overlapping defenses into one, and reversed last week&#x27;s decision to return a new card</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Why the morning report went silent</h2>
+<p>A few days ago, while an experiment was running, the daily morning report failed to go out once.</p>
+<p>Digging into it, I found two safeguards stacked on top of each other. One was an old rule that blocked the report whenever an experiment was using the GPU. The other, already living inside the report-generation code itself, silently fell back to CPU whenever GPU access was needed.</p>
+<p>The second safeguard was already doing the job, which left the first rule guarding against something that could no longer happen. Worse, it didn't distinguish a manual experiment from actual production — running one experiment could block a production report that had nothing to do with it.</p>
+<p>I removed the stale rule and moved the point where GPU access gets blocked further upstream — from the moment data actually loads to a step before that — so the same problem can't resurface even if the compute environment changes later.</p>
+<p>While I was in there, I also added a watchdog for a related failure mode: a cache going stale while the code kept trusting a fixed schedule instead of checking freshness. A scheduling drift right after a restart was the actual root cause behind this incident, so now the fix ignores the schedule and refreshes immediately whenever the cache crosses its staleness threshold, regardless of what caused the drift.</p>
+<h2>Moving report commentary to an AI subscription, for real this time</h2>
+<p>I formally adopted something I'd only trial-run last week.</p>
+<p>The short commentary that accompanies the daily KOSDAQ report now gets generated through an AI subscription service I already pay for, instead of a local GPU. The biggest reason: it doesn't touch the GPU at all, so it can never collide with other experiments again.</p>
+<p>I kept the old local path as an instant rollback option. If commentary generation fails for one stock, that stock just ships without commentary while the rest of the report still goes out — the report itself is never allowed to be blocked by this.</p>
+<p>I also made the call on the usage-budget question I'd left open last week: this subscription's usage limit is shared with other work. Even in the worst case, the only thing lost is a few lines of commentary — the ranking table itself is unaffected — so I decided the risk was worth accepting. Whether this use case is actually within the service's terms is still unresolved, but since I can roll back to the local model instantly if it becomes a problem, I'm leaving it as a watch item for now.</p>
+<h2>Un-returning the GPU I'd decided to send back</h2>
+<p>Last week's recap ended with a decision to return a new graphics card. Today I reversed that.</p>
+<p>It came out of a tangent while investigating something else entirely. I drifted toward "why keep agonizing over this — just try it, and eat the price difference if it doesn't work out," and this time I framed the goal differently than before.</p>
+<p>Last time, the question was whether this one card could fully replace the existing one. This time it's "keep it as a second card dedicated to experiments, running alongside the existing one."</p>
+<p>Splitting work across two cards from different vendor ecosystems means one can run a heavy experiment while the other keeps production running uninterrupted — cutting into the bottleneck that comes from cramming both onto a single card.</p>
+<p>The open question — whether this card actually performs better than the existing one — is still unresolved. This decision doesn't settle that; a separate goal (parallelizing experiments) simply took priority, and I want to keep those two threads separate going forward.</p>
+<p>The first thing to do after installing it is cap its power draw. Last week's measurements already showed that running two cards flat-out simultaneously, uncapped, leaves very little headroom on the power supply, so I found a cap that costs almost no speed and wired it into the boot scripts so it applies automatically.</p>
+<h2>A leak risk I found while reviewing this blog's own automation</h2>
+<p>While having another AI review this blog's automated publishing code, I found something I didn't expect.</p>
+<p>The schema exposed raw position quantity for each stock. Since the stock ticker is already public and its market price is queryable by anyone, quantity times price reconstructs the exact position size — and combined with weight-change data, even total portfolio size becomes estimable.</p>
+<p>I already had a rule against disclosing absolute amounts, but that rule had been quietly defeated at the schema-design level. Fortunately this publishing path hadn't been wired up yet, so nothing actually leaked.</p>
+<p>I dropped the quantity field entirely, keeping only weight percentage, weight change, and entry/exit labels in the public schema, and added a test to keep fields like this from sneaking back in.</p>
+<hr />
+<p>Today I ran into two overlapping defenses creating a gap instead of covering it, and a value that looked safe to publish on its own turning risky once combined with another. Neither was a case of code being outright wrong — the trouble showed up at the seams where multiple safeguards met.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
