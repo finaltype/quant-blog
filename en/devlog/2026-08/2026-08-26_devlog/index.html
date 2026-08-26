@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260826] A Sequential-Execution Bug from Moving Production Earlier, and Verifying a New Broker Connection&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-26_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260826] A Sequential-Execution Bug from Moving Production Earlier, and Verifying a New Broker Connection&quot;</h1>
+<p class="subtitle">I fixed a sequential-execution bug uncovered by pulling production earlier, with a batching switch, and verified a new broker&#x27;s API against a real account</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A sequential-execution bug uncovered by moving the start time earlier</h2>
+<p>Earlier today, I pulled the production pipeline's start time much earlier than before.</p>
+<p>The justification was a measurement: the new GPU could process all 100 stocks in under an hour.</p>
+<p>By evening I found that justification was wrong. That number came from an experiment that split the work into chunks and ran them concurrently — the actual production code processed stocks one at a time, in sequence.</p>
+<p>Sequential processing takes close to eight hours for 100 stocks. With the earlier start time, there was no way to finish before the pre-market cutoff.</p>
+<p>Digging further, production had never actually run once at the new earlier start time before that day. What looked like a completed run from that morning was leftover from the old schedule.</p>
+<p>The fix was to introduce batching within a single GPU — processing several stocks concurrently instead of one at a time. I reused an approach already validated as safe in other experiments rather than building something new.</p>
+<p>Switching to batching surfaced a few side bugs along the way.</p>
+<p>The most important one was in the watchdog that monitored progress. It assumed the log file got updated every time a single stock finished — but under batching, it only updates once the entire chunk completes.</p>
+<p>That meant the watchdog would have no signal to tell "stuck" from "still running" for hours at a stretch. I built a new mechanism that merges partial results from in-progress chunks periodically, closing that blind spot.</p>
+<p>I ended up reverting the start time back to its original value. The other reason for pulling it earlier — racing a separate model run to completion — had already resolved itself overnight, so the reason to keep it early was gone.</p>
+<p>I also pinned the handful of derived timers that used to move along with the start time, so they'd stay fixed this time. Their original formulas assumed the earlier start time, and leaving them tied to it after reverting would have produced the wrong times.</p>
+<p>The first run at the reverted time crashed once while the inference server was coming up. It was a minor environment issue — the resident service couldn't find something on its execution path — but since the server restarts fresh every night, it would have recurred every night if left unfixed.</p>
+<p>I restarted it manually right away and fixed the root environment setting. That night, all 100 stocks finished in 46 minutes — almost exactly matching the estimate from earlier in the day.</p>
+<p>During this, I had another AI review the code and it caught two more serious bugs: one where leftover chunks from the previous day could get merged in as today's, and another where the watchdog's own signal would go dead in the worst-case scenario — a fully stalled server. Both were fixed immediately and verified against reproduced scenarios.</p>
+<p>Since that night was the first real-world test of all this, I watched it run live rather than leaving it unattended.</p>
+<h2>A new broker connection, verified end-to-end on a real account</h2>
+<p>Up to now, automated trading has only been wired to one broker. Today I started connecting a second one.</p>
+<p>The eventual goal is to move live order execution to the new broker too, but I'm following the same promotion process this project has always used — paper-trade verification has to pass before moving to the next stage. It's the same principle covered in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety architecture</a>(new tab).</p>
+<p>There's no official developer documentation for this broker's API, so I started by pulling public backend endpoints one by one and documenting them myself. I built the new client with exactly the same interface as the existing broker client, so nothing above it needs to change later when the swap happens.</p>
+<p>I ran smoke tests against a paper account first, and found a bug in the success/failure judgment logic itself — it was misclassifying a perfectly normal response as a failure. I fixed it by switching to a more reliable field for the judgment.</p>
+<p>In the afternoon, I verified the full buy-sell-cancel round trip on the real account, within a very small limit. Both the buy and sell filled immediately and completely, and canceling an unfilled order worked as expected.</p>
+<p>I caught one more bug along the way. This broker logs a cancellation as a separate new event, and without filtering that out, a just-canceled order would get mistaken for a fresh unfilled one.</p>
+<p>I had another AI review the code, and its verdict was that it wasn't ready to be dropped in as-is — it pointed out several places where the wiring would actually break, plus the fact that the cancellation-event bug I'd found hadn't been applied to the fill-history lookup yet.</p>
+<p>I fixed nearly everything it flagged and reverified against the real account: matched the fill-history response format exactly to the existing broker, switched to a more accurate source for available buying power, and tightened account-number masking that had been over-exposing it in logs.</p>
+<p>This new client isn't wired into live operations yet. One risk remains: since this account is shared between automated trading and manual orders I place myself, the system could mistake my own manual order for something to react to. That has to get resolved before the next stage.</p>
+<hr />
+<p>Today I ran into the same kind of mistake twice: carrying over a number or behavior validated in an experimental setup without checking whether production's actual conditions differed. Whether processing ran sequentially or concurrently, and whether a cancellation showed up as a new event — both only became clear once I checked directly instead of assuming.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
