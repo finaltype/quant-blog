@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gigabyte RTX 5090 AORUS MASTER ICE Purchase Review - Consolidating Two GPUs Into One · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-27_gpu-purchase-rtx5090/index.html">한국어로 보기</a></p>
+<article>
+<h1>Gigabyte RTX 5090 AORUS MASTER ICE Purchase Review - Consolidating Two GPUs Into One</h1>
+<p class="subtitle">What changed after replacing two split GPUs with a single card</p><p>I recently bought a new graphics card: the Gigabyte RTX 5090 AORUS MASTER ICE.</p>
+<p><img alt="Gigabyte RTX 5090 AORUS MASTER ICE installed inside the case, blue RGB lighting" src="https://finaltype.github.io/quant-blog/images/2026-08-27_rtx5090-aorus-master-ice.jpg" /></p>
+<h2>The original setup was two cards</h2>
+<p>Until recently, I ran this bot locally on two RTX 4070 Ti Super cards side by side, combining their memory. The <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI recommendation pipeline</a>(new tab) leans on a local model for part of its judgment, and memory capacity for that model was always tight.</p>
+<p>One card alone wasn't enough, so combining two was the only option. I also briefly experimented with a different brand's card (a 7900 XTX), and the results themselves weren't bad.</p>
+<p>The problem was operations. Splitting computation across two cards means balancing two cards running at different speeds, and mixing cards from different manufacturers means the compute backend differs too — one more thing to keep track of. Power, heat, and case space were also much tighter with two cards than with one.</p>
+<h2>Why consolidate into one card</h2>
+<p>A single 5090 gives me memory capacity similar to or larger than what I used to barely scrape together by combining two cards. That means there's no longer any need to split computation across cards at all.</p>
+<p>After the swap, operations got noticeably simpler. I no longer have to balance speed between two cards, or deal with the noise that came from mixing different compute backends. The inside of the case is also far less cramped with just one card.</p>
+<p>Speed felt better too. The back-and-forth data transfer between two cards is simply gone now, so the same job finishing faster is an expected result.</p>
+<h2>What became possible</h2>
+<p>With the extra headroom, I can now directly try running a larger local model that memory constraints used to rule out. I'm currently in the process of deciding whether to actually adopt that model — I'll write up the results separately once that's settled.</p>
+<p>For now, just swapping the card alone has made the nightly jobs noticeably lighter. I'm curious to see what else this new setup makes possible.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

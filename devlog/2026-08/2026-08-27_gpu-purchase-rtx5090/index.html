@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기가바이트 RTX 5090 AORUS MASTER ICE 구매 후기 - 그래픽카드 두 장을 한 장으로 정리했습니다 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-27_gpu-purchase-rtx5090/index.html">Read in English</a></p>
+<article>
+<h1>기가바이트 RTX 5090 AORUS MASTER ICE 구매 후기 - 그래픽카드 두 장을 한 장으로 정리했습니다</h1>
+<p class="subtitle">나눠 쓰던 그래픽카드 두 장을 한 장으로 합치면서 달라진 것들을 정리했습니다</p><p>최근 그래픽카드를 새로 샀습니다. 기가바이트 RTX 5090 AORUS MASTER ICE입니다.</p>
+<p><img alt="기가바이트 RTX 5090 AORUS MASTER ICE를 장착한 케이스 내부, 블루 RGB 조명" src="https://finaltype.github.io/quant-blog/images/2026-08-27_rtx5090-aorus-master-ice.jpg" /></p>
+<h2>원래 구성은 카드 두 장이었다</h2>
+<p>이 봇을 로컬에서 돌리려고 얼마 전까지는 4070 Ti Super 두 장을 나란히 꽂아서 메모리 용량을 합쳐 쓰고 있었습니다. <a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI 추천 파이프라인</a>(새 창)이 로컬 모델로 판단을 거드는 구조라, 모델을 올릴 메모리 용량이 항상 아쉬웠습니다.</p>
+<p>한 장으로는 부족해서 어쩔 수 없이 두 장을 붙인 거였습니다. 최근엔 다른 브랜드(7900 XTX)로도 잠깐 실험을 해봤는데, 계산 결과 자체는 나쁘지 않았습니다.</p>
+<p>문제는 운영이었습니다. 카드 두 장에 계산을 나눠 맡기면 속도가 서로 다른 두 카드의 균형을 맞춰야 하고, 제조사가 다른 카드를 같이 쓰면 계산 방식(백엔드)까지 달라져서 신경 쓸 지점이 계속 늘어났습니다. 전력·발열·케이스 공간도 카드 한 장일 때보다 훨씬 빡빡했습니다.</p>
+<h2>한 장으로 합친 이유</h2>
+<p>5090 한 장이면 이전에 두 장을 합쳐서 겨우 확보하던 것과 비슷하거나 더 큰 메모리 용량을 혼자 갖습니다. 그래서 계산을 나눠 맡길 필요 자체가 없어집니다.</p>
+<p>바꾸고 나니 운영이 확실히 단순해졌습니다. 카드 간 속도 균형을 맞추는 것도, 서로 다른 계산 방식이 섞여서 생기던 잡음도 더는 신경 쓸 일이 없습니다. 케이스 안쪽도 카드 한 장만 있으니 훨씬 여유롭습니다.</p>
+<p>속도도 체감상 나아졌습니다. 카드 두 장 사이를 오가며 데이터를 주고받는 과정 자체가 없어졌으니, 같은 일을 시켜도 더 빨리 끝나는 게 당연한 결과이긴 합니다.</p>
+<h2>새로 할 수 있게 된 것</h2>
+<p>용량 여유가 생기니, 예전엔 메모리가 모자라 엄두를 못 내던 더 큰 규모의 로컬 모델을 바로 시험해볼 수 있게 됐습니다. 지금은 그 모델을 실제로 채택할지 판정하는 작업을 진행 중인데, 이 얘기는 결과가 나오면 따로 정리하겠습니다.</p>
+<p>당장은 카드를 바꾼 것만으로도 매일 밤 도는 작업들이 한결 홀가분해졌습니다. 앞으로 이 새 구성으로 뭘 더 해볼 수 있을지 계속 지켜볼 생각입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
