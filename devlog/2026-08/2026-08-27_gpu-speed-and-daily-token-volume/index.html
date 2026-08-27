@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>그래픽카드 세대별 로컬 LLM 속도와, 우리 프로덕션이 매일 처리하는 토큰량 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/index.html">Read in English</a></p>
+<article>
+<h1>그래픽카드 세대별 로컬 LLM 속도와, 우리 프로덕션이 매일 처리하는 토큰량</h1>
+<p class="subtitle">체감이 아니라 실제 로그로 확인해봤습니다</p><p><a href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-27_gpu-purchase-rtx5090/" target="_blank" rel="noopener noreferrer">지난 글</a>(새 창)에서 그래픽카드를 5090으로 바꾼 얘기를 했습니다. 이번엔 조금 더 정량적으로 들어가서, 하드웨어가 바뀔 때마다 속도가 실제로 얼마나 달라졌는지, 그리고 이 프로젝트가 매일 로컬 LLM으로 얼마나 많은 토큰을 처리하는지 실제 로그로 정리해봅니다.</p>
+<h2>거쳐온 하드웨어와 실측 시간</h2>
+<p>이 봇은 그동안 4070 Ti Super 한 장 → 두 장 → 7900 XTX 한 장 → RTX 5090 한 장 순으로 로컬 LLM 카드가 바뀌어 왔습니다.</p>
+<p>한 장(16GB)으로는 당시 쓰던 모델이 아예 메모리에 안 올라갔습니다. 두 장을 합쳐서(32GB, tensor-split) 올렸더니 매일 밤 정해진 종목 전체를 분석하는 배치가 <strong>5.81시간</strong>에 끝났습니다.</p>
+<p>이후 XTX 한 장(24GB)으로 바꿨는데, 같은 배치가 <strong>6.15시간</strong>으로 거의 비슷했습니다. 카드 한 장이 두 장 몫을 대체한 셈이라, 그때는 이 결과를 그대로 채택했습니다.</p>
+<h2>카드별 로컬 LLM 속도, 참고할 만한 공개 자료</h2>
+<p>우리끼리 여러 카드를 동시에 갖다 놓고 재본 적은 없어서, 대신 웹에 공개된 크로스-GPU 벤치마크 스레드를 참고자료로 남깁니다. 같은 체급의 오픈소스 dense 모델 기준 토큰 생성 속도입니다(출처: <a href="https://arca.live/b/alpaca/179988851" target="_blank" rel="noopener noreferrer">arca.live 크로스-GPU 스레드</a>(새 창), 컨텍스트 깊이가 통제되지 않은 실측이라 참고용으로만 보시면 됩니다).</p>
+<table>
+<thead>
+<tr>
+<th>카드</th>
+<th>초당 생성 토큰(대략)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTX 3090</td>
+<td>40~45</td>
+</tr>
+<tr>
+<td>AMD R9700</td>
+<td>56</td>
+</tr>
+<tr>
+<td>RTX PRO 6000 Max-Q</td>
+<td>70</td>
+</tr>
+<tr>
+<td>RX 7900 XTX</td>
+<td>71</td>
+</tr>
+<tr>
+<td>RTX 5090</td>
+<td>80</td>
+</tr>
+</tbody>
+</table>
+<p>카드마다 1.1~2배 정도 차이가 나는 걸 볼 수 있습니다. 다만 실제 운영에서는 이 배수가 그대로 배치 전체 시간 단축으로 이어지지는 않았다는 게 위 실측(XTX 6.15시간)에서 드러난 부분입니다 — 디코드 속도 말고도 병렬 처리, 대기시간 같은 다른 요인이 섞여 있기 때문입니다.</p>
+<h2>매일 처리하는 토큰량</h2>
+<p>이 프로젝트에는 <a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">로컬 LLM으로 종목을 분석하는 AI 파이프라인</a>(새 창)이 있습니다. 여러 에이전트 노드가 뉴스·공시·펀더멘털을 읽고 근거를 세우는 구조라, 노드 하나하나가 LLM을 호출합니다.</p>
+<p>최근 며칠(평일 기준) 실제 로그를 평균 내보니, 하루에 로컬 LLM 호출이 약 <strong>5,200회</strong>, 입력 토큰 합계가 약 <strong>5,500만 개</strong>, 출력 토큰 합계가 약 <strong>750만 개</strong> 나옵니다. 하루치 리포트 생성만으로 이 정도 규모가 오간다는 게, 직접 로그를 까보기 전까지는 저도 감이 잘 안 왔습니다.</p>
+<h2>지금 하는 것</h2>
+<p>지금은 더 큰 규모의 로컬 모델을 실제로 채택할지 판정하는 작업을 진행 중입니다. 판정이 끝나면 그 결과도 따로 정리하겠습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
