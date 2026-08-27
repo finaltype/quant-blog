@@ -86,13 +86,13 @@
 </tr>
 <tr>
 <td>RTX 5090, 27B dense</td>
-<td>124 t/s (aggregate throughput)</td>
-<td>~6.3h (extrapolated from 91 stocks in 5h41m)</td>
-<td>averaged over up to 3 concurrent requests, not a single-stream figure — see the "MoE vs dense on the 5090" section above</td>
+<td>50.8 t/s (aggregate throughput)</td>
+<td>~23.4h</td>
+<td>based on the full 101-stock run actually used for today's ranking — see "Today's real ranking run" below</td>
 </tr>
 </tbody>
 </table>
-<p>These two numbers are measured differently (single-stream vs. averaged-over-concurrent-requests), so a straight "N times faster" division isn't quite fair. But just looking at the 100-stock runtime, it clearly dropped — from 21.7 hours on the XTX to about 6.3 hours on the 5090.</p>
+<p>These two numbers are measured differently (single-stream vs. aggregate), so a straight "N times faster" division isn't quite fair. Either way, the dense candidate is currently even slower than MoE was on the old XTX (21.7h). The section below, which pits MoE against dense directly on the same 5090, makes the reason a bit clearer.</p>
 <h2>Raw decode speed by card — public cross-GPU benchmark</h2>
 <p>Decode speed by card for the same 27B-dense-class model with MTP on (source: <a href="https://arca.live/b/alpaca/179988851" target="_blank" rel="noopener noreferrer">arca.live cross-GPU thread</a>(new tab); context depth uncontrolled, reference only):</p>
 <table>
@@ -149,14 +149,15 @@
 </tr>
 </tbody>
 </table>
-<p>For the 5090, instead of a "normal nightly batch" figure, here's a <strong>direct MoE-vs-dense matchup actually run on the 5090 under the same conditions</strong> — this comparison is much cleaner.</p>
-<h3>MoE vs dense, head-to-head on the 5090</h3>
-<p>Both happened to have a window running at <strong>exactly 17 calls per stock</strong> (same pipeline depth), so I isolated just that window for a fair comparison:</p>
+<p>For the 5090, instead of a "normal nightly batch" figure, here's <strong>exactly what actually produced today's ranking</strong> — this is the most accurate one.</p>
+<h3>Today's real ranking run — MoE vs dense on the 5090</h3>
+<p>Today I ran MoE and dense side by side for comparison, and <strong>the ranking that actually went out today used the dense results.</strong> Here's what it actually took for each model to complete one full pass over today's ~101-102 stocks:</p>
 <table>
 <thead>
 <tr>
 <th>Model</th>
 <th>Stocks</th>
+<th>Calls/stock</th>
 <th>Input tokens</th>
 <th>Output tokens</th>
 <th>Wall-clock time</th>
@@ -165,27 +166,29 @@
 </thead>
 <tbody>
 <tr>
-<td>MoE (existing, yesterday 20:41-21:27)</td>
-<td>100</td>
-<td>18,315,222</td>
-<td>2,497,437</td>
-<td><strong>46 min</strong></td>
-<td><strong>911 t/s</strong></td>
+<td>MoE (existing)</td>
+<td>102</td>
+<td>71.2</td>
+<td>78,677,907</td>
+<td>10,780,257</td>
+<td><strong>10h 56m</strong></td>
+<td><strong>274 t/s</strong></td>
 </tr>
 <tr>
-<td>27B dense (candidate, today 00:02-05:41)</td>
-<td>91</td>
-<td>18,074,826</td>
-<td>2,547,231</td>
-<td><strong>5h 41m</strong></td>
-<td><strong>124 t/s</strong></td>
+<td>27B dense (used for today's ranking)</td>
+<td>101</td>
+<td>25.9</td>
+<td>30,701,653</td>
+<td>4,318,841</td>
+<td><strong>23h 36m</strong></td>
+<td><strong>51 t/s</strong></td>
 </tr>
 </tbody>
 </table>
-<p>Nearly the same stock count, same call depth, nearly the same token volume — and <strong>MoE is about 7.3x faster than dense.</strong> Even on the same 5090 hardware, the model architecture (MoE vs dense) makes this much difference. Dense being slow isn't a hardware problem — it's a characteristic of the model itself.</p>
+<p>Normalized to 100 stocks: about 10.7h for MoE, about 23.4h for dense. <strong>On the same 5090, MoE is about 5.4x faster than dense by aggregate throughput.</strong> Dense being slower isn't a hardware issue — it's inherent to the model architecture (MoE only computes its active parameters; dense computes all of them every time). That said, calls-per-stock also differs (71 vs 26), and that difference feeds into the total wall-clock time too — both the "5.4x throughput" and "2.2x total time" numbers matter for the full picture.</p>
 <h2>The model-adoption decision, in progress</h2>
-<p>Whether to go with dense or MoE isn't decided yet. One method I'm using is <strong>self-QWK</strong> — running the same input repeatedly and measuring how consistent the resulting grades are (quadratic weighted kappa).</p>
-<p>Running MoE three times on the same 99 stocks, same date:</p>
+<p>Which model gets formally adopted isn't decided yet. Running today's ranking with dense for comparison doesn't mean it's formally adopted — one of the ongoing verification methods is <strong>self-QWK</strong>, running the same input repeatedly and measuring how consistent the resulting grades are (quadratic weighted kappa).</p>
+<p>Separately from "today's real ranking run" above, I also ran a lighter pass (17 calls per stock instead of the normal depth) purely to check reproducibility, repeating the same 99 stocks three times:</p>
 <table>
 <thead>
 <tr>
@@ -222,12 +225,11 @@
 <h2>Daily token volume</h2>
 <p>This project has an <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI pipeline that analyzes stocks with a local LLM</a>(new tab).</p>
 <p><strong>Normal weekday average (MoE only, no side-by-side comparison running)</strong>: about 5,200 calls, roughly 55 million input tokens, roughly 7.5 million output tokens.</p>
-<p>Rather than forcing both onto the same calendar day, it's more accurate to pick <strong>one normal full-100-stock day for each model separately</strong> — MoE has run daily for weeks, so any weekday works (8/24), while dense is still a candidate and <strong>today (8/27) is effectively its first full-scale, ~100-stock run</strong>:</p>
+<p><strong>Today (same numbers as "Today's real ranking run" above — the day both models ran side by side)</strong>:</p>
 <table>
 <thead>
 <tr>
 <th>Model</th>
-<th>Date</th>
 <th>Stocks covered</th>
 <th>Calls</th>
 <th>Calls/stock</th>
@@ -237,27 +239,25 @@
 </thead>
 <tbody>
 <tr>
-<td>MoE (existing, running normally for weeks)</td>
-<td>8/24</td>
-<td>99</td>
-<td>5,476</td>
-<td><strong>55.3</strong></td>
-<td>57,779,342</td>
-<td>7,857,674</td>
+<td>MoE (existing)</td>
+<td>102</td>
+<td>7,263</td>
+<td><strong>71.2</strong></td>
+<td>78,677,907</td>
+<td>10,780,257</td>
 </tr>
 <tr>
-<td>27B dense (candidate, first full run)</td>
-<td>8/27</td>
+<td>27B dense (used for today's ranking)</td>
 <td>101</td>
-<td>2,575</td>
-<td><strong>25.5</strong></td>
-<td>30,269,037</td>
-<td>4,260,612</td>
+<td>2,613</td>
+<td><strong>25.9</strong></td>
+<td>30,701,653</td>
+<td>4,318,841</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Normalized to 100 stocks</strong>: MoE is about 58.4M input / 7.94M output tokens; the dense candidate is about 30.0M input / 4.22M output tokens.</p>
-<p>The gap in call count isn't about stock coverage (both are near 100) — it's that <strong>the two pipelines call the LLM a different number of times per stock</strong>. MoE averages 55 calls per stock, dense averages 25. Same pipeline, but the number of agent-node/debate rounds is configured differently depending on which model is running.</p>
+<p><strong>Normalized to 100 stocks</strong>: MoE is about 77.1M input / 10.6M output tokens; dense is about 30.4M input / 4.28M output tokens.</p>
+<p>The gap in call count isn't about stock coverage (both are near 100) — it's that <strong>the two pipelines call the LLM a different number of times per stock</strong>. MoE averages 71 calls per stock, dense averages 26. Same pipeline, but the number of agent-node/debate rounds is configured differently depending on which model is running.</p>
 <h2>What's next</h2>
 <p>Once forward RankIC is measured, I'll write up which model actually got adopted as a separate post.</p>
 </article>
