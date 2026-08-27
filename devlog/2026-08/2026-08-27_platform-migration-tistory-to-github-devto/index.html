@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>블로그를 옮겼습니다 - 티스토리에서 깃허브 페이지·Dev.to로 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-27_platform-migration-tistory-to-github-devto/index.html">Read in English</a></p>
+<article>
+<h1>블로그를 옮겼습니다 - 티스토리에서 깃허브 페이지·Dev.to로</h1>
+<p class="subtitle">글 쓰는 과정을 자동화하려다 보니, 결국 플랫폼 자체를 옮기게 됐습니다</p><p>그동안 이 티스토리 블로그에 개발일지를 올려왔는데, 최근에 깃허브 페이지와 Dev.to로 플랫폼을 옮겼습니다. 이 글에서 옮긴 이유와 그 과정에서 얻은 것들을 정리합니다.</p>
+<p>혹시 이 글을 티스토리에서 보고 계신다면, 앞으로 새 글은 아래 새 주소에서 확인하실 수 있습니다.</p>
+<h2>왜 옮기게 됐나</h2>
+<p>원래는 하루 작업을 마치면 개발일지를 직접 써서 티스토리 편집기에 붙여넣는 식이었습니다. 이 과정 자체를 자동화하고 싶었습니다.</p>
+<p>Git 커밋 로그와 그날 진행 상황을 모아 초안을 만들고, 번역하고, 발행까지 한 번에 끝내는 구조를 만들려 했습니다. 그런데 티스토리는 사람이 직접 편집기에 붙여넣는 걸 전제로 하고 있어서, 이런 자동화 파이프라인에 넣기가 어려웠습니다.</p>
+<p>처음엔 다른 블로그 플랫폼 하나를 대안으로 검토했습니다. 그런데 막상 연동하려고 보니 얼마 전에 정책이 바뀌어서 글쓰기 기능을 유료로만 열어주고 있었습니다.</p>
+<p>그래서 방향을 바꿔서, 깃허브 페이지에 직접 정적 사이트를 만들고 Dev.to에 같은 글을 함께 올리는 조합으로 정리했습니다. 둘 다 무료이고, 둘 다 API로 자동 발행이 가능하다는 게 결정적이었습니다.</p>
+<h2>옮기면서 얻은 것들</h2>
+<p><strong>완전 자동화</strong> — 매일/매주/매달 일정에 맞춰 글 작성부터 번역, 발행까지 사람 손을 거치지 않고 돌아갑니다. 컴퓨터가 꺼져 있어서 예정된 시각을 놓치더라도, 나중에 켜지면 그 몫을 자동으로 만회하도록 만들어뒀습니다.</p>
+<p><strong>한국어/영어 동시 지원</strong> — 글마다 한국어판과 영어판을 같이 두게 됐습니다. 예전엔 한국어로만 썼는데, 이제는 번역까지 같은 파이프라인 안에서 처리됩니다.</p>
+<p><strong>검색 노출 준비</strong> — 구글과 네이버 검색에 사이트가 잡히도록 사이트맵을 만들고 소유 확인도 등록했습니다. 정적 사이트라 이런 작업을 직접 원하는 대로 손볼 수 있다는 게 티스토리보다 편했습니다.</p>
+<p><strong>과거 글 전체 이전</strong> — 티스토리에 있던 예전 글도 전부 새 플랫폼으로 옮기고 번역했습니다. 글 안에서 다른 글을 가리키던 링크도 전부 새 주소로 바꿔뒀습니다.</p>
+<h2>앞으로는 여기서 씁니다</h2>
+<p>이제부터 새 글은 아래 두 곳에만 올립니다. 이 글이 티스토리에 올라가는 사실상 마지막 안내 글입니다.</p>
+<ul>
+<li>새 블로그(원문·정본): <a href="https://finaltype.github.io/quant-blog/" target="_blank" rel="noopener noreferrer">Quant Trading Bot Devlog</a>(새 창)</li>
+<li>Dev.to(같은 글, 개발자 커뮤니티용): <a href="https://dev.to/finaltype" target="_blank" rel="noopener noreferrer">dev.to/finaltype</a>(새 창)</li>
+</ul>
+<p>이 프로젝트가 어떤 구조로 돌아가는지 궁금하시면, 전체 그림을 정리해둔 <a href="https://finaltype.github.io/quant-blog/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">프로젝트 개관 글</a>(새 창)부터 보시는 걸 추천합니다.</p>
+<p>그동안 이 블로그를 봐주셔서 감사했습니다. 앞으로도 새 주소에서 계속 뵙겠습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
