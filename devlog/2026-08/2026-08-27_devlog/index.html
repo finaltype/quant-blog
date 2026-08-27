@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260827] 백로그 전수분류로 찾아낸 며칠째 조용히 죽어있던 버그들&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-27_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260827] 백로그 전수분류로 찾아낸 며칠째 조용히 죽어있던 버그들&quot;</h1>
+<p class="subtitle">작업 목록을 처음부터 끝까지 다시 훑다가 여러 날 동안 티 안 나게 실패하던 기능 두 개를 발견했고, 두 번째 증권사 모의투자 병행운영도 시작했습니다</p><h2>4909줄짜리 작업 목록을 처음부터 다시 훑었다</h2>
+<p>이 프로젝트는 할 일을 하나의 마스터 문서에 계속 누적해서 관리하는데, 시간이 지나면서 이 문서가 4909줄까지 불어나 있었습니다.</p>
+<p>오늘은 이 문서를 처음부터 끝까지 다시 검토하기로 했습니다. 항목이 너무 많아서 다른 AI 여러 개를 동시에 붙여 구간을 나눠 맡기고, 각자 맡은 구간을 완료/폐기/보류로 재분류하게 했습니다.</p>
+<p>이 과정에서 예상 밖의 수확이 있었습니다. 오래된 항목들을 하나씩 다시 들여다보다가, 실제로는 여러 날째 조용히 고장 나 있던 기능 두 개를 발견한 것입니다.</p>
+<p>하나는 특정 값을 조회하는 기능이었는데, 이 기능이 의존하는 라이브러리가 실행 환경에 설치돼 있지 않아서 8일 내내 항상 빈 값만 돌려주고 있었습니다. 에러가 나지 않고 그냥 빈 값을 반환하는 방식이라 아무도 눈치채지 못했습니다.</p>
+<p>다른 하나는 특정 캐시 데이터였는데, 서로 다른 두 실행 환경(가상환경)이 쓰는 라이브러리 버전이 어긋나면서 사흘째 깨진 상태로 돌고 있었습니다. 역시 겉보기엔 정상 동작처럼 보여서 발견이 늦어졌습니다.</p>
+<p>둘 다 원인을 확인하자마자 바로 고쳤습니다. 근본 원인은 서로 다르지만 패턴은 같았습니다 — 실패가 예외를 던지는 대신 조용히 빈 값이나 낡은 값으로 넘어가는 구조라, 겉으로는 정상처럼 보이는 채로 며칠씩 방치됐다는 점입니다.</p>
+<p>이번 전수 재분류 작업 자체도 그동안 쌓인 항목들을 정리하는 계기가 됐습니다. 이미 끝났거나 더 이상 의미 없어진 항목 여러 개를 폐기 처리하고, 우선순위가 바뀐 항목들의 상태도 다시 정리했습니다.</p>
+<h2>두 번째 증권사, 모의투자 병행운영을 시작했다</h2>
+<p>어제 이어서 진행하던 두 번째 증권사 연동을, 오늘은 <a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">완전자동매매 모의검증 트랙</a>(새 창) 위에서 실제로 병행 가동하기 시작했습니다.</p>
+<p>기존 증권사는 그대로 주력으로 유지하고, 새 증권사는 별도 슬리브로 얹어 나란히 돌리는 구조입니다.</p>
+<p>어제 devlog에서 남은 리스크로 짚었던 부분, 즉 이 계좌를 사람과 자동매매가 함께 쓰다 보니 사람이 직접 넣은 주문을 시스템이 오작동으로 오인할 위험도 오늘 한 걸음 나아갔습니다.</p>
+<p>먼저 이 위험에 대한 방향이 정해졌습니다. 봇 전용 계좌를 새로 만드는 안은 기각됐고, 기존 계좌를 사람과 안전하게 공유하는 방식으로 다시 설계하기로 확정됐습니다. 다만 지금 당장 급한 일이 아니라서 상세 설계 착수는 뒤로 미뤘습니다.</p>
+<p>그리고 이 방향과 별개로, 사람이 넣은 주문을 "이건 내가 직접 넣은 거다"라고 표시해두는 선언 도구 자체가 새 증권사 슬리브에서는 아예 동작하지 않고 있었다는 걸 오늘 발견해서 바로 고쳤습니다. 방향이 정해지기 전에도 최소한의 안전장치는 살아있어야 하는 부분이라 먼저 처리했습니다.</p>
+<p>이 밖에 새 증권사의 요청 제한(레이트리밋) 처리 정책도 정리해서 문서로 남겼습니다. 요청이 몰릴 때 무리하게 재시도하지 않고 깔끔하게 실패로 처리하도록 하는 쪽으로 방향을 잡았습니다.</p>
+<hr />
+<p>오늘 겪은 두 조용한 버그는 같은 교훈을 줬습니다. 실패가 눈에 띄는 형태(에러, 크래시)로 나지 않고 조용히 빈 값이나 낡은 값으로 넘어가면, 정기적으로 되짚어보지 않는 이상 며칠이고 그대로 방치될 수 있다는 것입니다.</p>
+<p>밀린 작업 목록을 미루지 않고 처음부터 다시 훑는 지루한 작업이, 결국 이런 종류의 사각지대를 걷어내는 유일한 방법이었습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Aug 27] Re-Sorting a 5,000-Line Backlog Turned Up Bugs That Had Been Failing Silently for Days&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-27_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Aug 27] Re-Sorting a 5,000-Line Backlog Turned Up Bugs That Had Been Failing Silently for Days&quot;</h1>
+<p class="subtitle">Going through the whole backlog from scratch surfaced two features that had been quietly broken for days, and I started running the second brokerage side by side in paper trading</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>This project keeps a single master document where every task gets piled up over time. It had grown to nearly 5,000 lines.</p>
+<p>Today I decided to go through the whole thing from the top. There were too many items for one pass, so I split it into chunks and handed each chunk to a different AI running in parallel, asking each one to re-classify its section as done, obsolete, or still pending.</p>
+<p>That process turned up something unexpected. While re-reading old items one by one, I found two features that had actually been silently broken for several days.</p>
+<p>One was a lookup function — it depended on a library that wasn't installed in the runtime environment, so it had been returning an empty value every single time for eight days straight. Since it failed by returning nothing rather than throwing an error, nobody noticed.</p>
+<p>The other was a cache — a version mismatch in a shared library between two different runtime environments had left it broken for three days. Same story: it looked like it was working fine from the outside, so it went unnoticed for a while.</p>
+<p>Both got fixed as soon as I confirmed the root cause. The causes were different, but the pattern was the same — instead of raising an error, each failure quietly fell through to an empty or stale value, so it stayed hidden behind a facade of normal operation for days.</p>
+<p>The full re-sort was useful on its own, too. I closed out several items that had already been finished or no longer mattered, and re-sorted the status of items whose priority had shifted.</p>
+<h2>Started running the second brokerage in parallel paper trading</h2>
+<p>Continuing from yesterday's work, I got the second brokerage integration actually running side by side today, on top of the <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">fully-automated paper trading validation track</a>(new tab).</p>
+<p>The existing brokerage stays as the main line; the new one runs as a separate sleeve alongside it.</p>
+<p>Yesterday's devlog flagged an open risk: since this account is shared between a human and the automated system, the system could mistake an order the human placed by hand for its own. That moved forward today too.</p>
+<p>The direction is now settled. A proposal to open a bot-only account was rejected, and instead the plan is to redesign how the existing account is shared safely with the human. The detailed design work isn't urgent, though, so it's parked for now.</p>
+<p>Separately from that decision, I found today that the tool meant to let a human tag "I placed this order myself" wasn't working at all on the new brokerage's sleeve — and fixed it immediately. Even before the bigger redesign lands, that minimal safeguard needs to be alive.</p>
+<p>I also wrote up the rate-limit handling policy for the new brokerage. When requests get throttled, the system now fails cleanly instead of retrying aggressively.</p>
+<hr />
+<p>Both quiet bugs today taught the same lesson: when a failure doesn't announce itself with an error or a crash, and instead quietly falls through to an empty or stale value, it can sit there for days unless something forces a fresh look.</p>
+<p>Going back through a backlog you've been putting off, tedious as it is, turned out to be the only real way to clear out that kind of blind spot.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
