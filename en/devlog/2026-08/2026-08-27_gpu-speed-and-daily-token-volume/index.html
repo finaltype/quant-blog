@@ -67,44 +67,32 @@
 <p>At the same time, I'm evaluating whether to adopt <strong>Qwen3.8-27B (dense)</strong>. Same conditions (fp8 KV cache, prefix caching off, temp 0.8, thinking off), but <code>max-num-seqs</code> is dropped to 3 — dense has different memory/compute characteristics than MoE, so concurrency has to be lower for stability.</p>
 <p>MTP (speculative decoding) is always on. Acceptance rate is <strong>50.1%</strong> for our MoE model, <strong>66.95%</strong> for the 27B dense model in an external measurement, and anywhere from 81-97% in other external measurements — it varies a lot by model and settings.</p>
 <h2>Prefill/decode measurements — 27B dense</h2>
-<p>Real measurements across cards/quantizations for the same 27B dense model, at roughly 12.7k prefill tokens per call:</p>
+<p>Same 27B dense model, roughly 12.7k prefill tokens per call, limited to cards I've actually run myself (I'm leaving out AMD R9700 — I've never tested one myself, so it only appears as a cited reference in the public-benchmark section below):</p>
 <table>
 <thead>
 <tr>
 <th>Setup</th>
-<th>decode (t/s)</th>
-<th>prefill (t/s)</th>
+<th>decode</th>
 <th>100-stock equivalent</th>
+<th>Note</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>RX 7900 XTX, Q4_K_M, MTP on (our measurement)</td>
-<td>62.5</td>
-<td>768</td>
+<td>RX 7900 XTX, Q4_K_M, MTP on</td>
+<td>62.5 t/s (single stream)</td>
 <td>21.7h</td>
+<td>prefill 768 t/s, our measurement</td>
 </tr>
 <tr>
-<td>AMD R9700, Q4_K_M, MTP on</td>
-<td>56</td>
-<td>823</td>
-<td>22.8h</td>
-</tr>
-<tr>
-<td>AMD R9700, Q5_K_M, MTP on</td>
-<td>50</td>
-<td>601</td>
-<td>27.3h</td>
-</tr>
-<tr>
-<td>AMD R9700, Q5_K_M, MTP off</td>
-<td>28.5</td>
-<td>601</td>
-<td>40.5h</td>
+<td>RTX 5090, 27B dense</td>
+<td>124 t/s (aggregate throughput)</td>
+<td>~6.3h (extrapolated from 91 stocks in 5h41m)</td>
+<td>averaged over up to 3 concurrent requests, not a single-stream figure — see the "MoE vs dense on the 5090" section above</td>
 </tr>
 </tbody>
 </table>
-<p>Bumping precision by one step (Q4→Q5) alone adds 26% to runtime. Toggling MTP off/on made an even bigger difference (28.5→50 t/s) — speculative decoding mattered more than quantization here.</p>
+<p>These two numbers are measured differently (single-stream vs. averaged-over-concurrent-requests), so a straight "N times faster" division isn't quite fair. But just looking at the 100-stock runtime, it clearly dropped — from 21.7 hours on the XTX to about 6.3 hours on the 5090.</p>
 <h2>Raw decode speed by card — public cross-GPU benchmark</h2>
 <p>Decode speed by card for the same 27B-dense-class model with MTP on (source: <a href="https://arca.live/b/alpaca/179988851" target="_blank" rel="noopener noreferrer">arca.live cross-GPU thread</a>(new tab); context depth uncontrolled, reference only):</p>
 <table>
