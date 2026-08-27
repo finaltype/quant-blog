@@ -28,18 +28,90 @@
 <p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/index.html">한국어로 보기</a></p>
 <article>
 <h1>Local LLM Speed by GPU Generation, and Our Production&#x27;s Daily Token Volume</h1>
-<p class="subtitle">Checked with real logs instead of gut feeling</p><p>In <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-purchase-rtx5090/" target="_blank" rel="noopener noreferrer">my last post</a>(new tab) I talked about switching to the RTX 5090. This time I'm going a bit more quantitative — how much did speed actually change with each hardware generation, and how many tokens does this project's local LLM actually process per day, based on real logs.</p>
-<h2>The hardware I've gone through, and measured runtimes</h2>
+<p class="subtitle">Model names, serving configs, and full prefill/decode measurements included</p><p>In <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-purchase-rtx5090/" target="_blank" rel="noopener noreferrer">my last post</a>(new tab) I talked about switching to the RTX 5090. This time I'm going much deeper — exactly which model I run and how it's configured, precise prefill/decode speeds by hardware, and even the interim results of the model-adoption decision I'm currently running.</p>
+<h2>The hardware I've gone through</h2>
 <p>This bot's local LLM card has gone through one RTX 4070 Ti Super → two → one RX 7900 XTX → one RTX 5090.</p>
-<p>With just one card (16GB), the model I was using back then simply didn't fit in memory at all. Combining two cards (32GB, tensor-split) got it running, and the nightly batch that analyzes the full stock universe finished in <strong>5.81 hours</strong>.</p>
-<p>I later switched to a single XTX (24GB), and the same batch took <strong>6.15 hours</strong> — nearly the same. Since one card was replacing what two used to do, I adopted that setup at the time.</p>
-<h2>Per-card local LLM speed — a public reference</h2>
-<p>I've never had multiple cards side by side to benchmark myself, so instead here's a public cross-GPU benchmark thread as reference. These are token generation speeds for a same-class open-source dense model (source: <a href="https://arca.live/b/alpaca/179988851" target="_blank" rel="noopener noreferrer">arca.live cross-GPU thread</a>(new tab); context depth wasn't controlled in this measurement, so treat it as a reference only).</p>
+<table>
+<thead>
+<tr>
+<th>Setup</th>
+<th>VRAM</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4070 Ti Super ×1</td>
+<td>16GB</td>
+<td>The model back then didn't fit in memory at all</td>
+</tr>
+<tr>
+<td>4070 Ti Super ×2 (tensor-split)</td>
+<td>32GB</td>
+<td>Nightly 100-stock batch: <strong>5.81 hours</strong></td>
+</tr>
+<tr>
+<td>RX 7900 XTX ×1</td>
+<td>24GB</td>
+<td>Same batch: <strong>6.15 hours</strong> (one card replaced two)</td>
+</tr>
+<tr>
+<td>RTX 5090 ×1</td>
+<td>32GB</td>
+<td>See below</td>
+</tr>
+</tbody>
+</table>
+<h2>The actual model and serving config</h2>
+<p>The model running in production every night is <strong>Qwen3.6-35B-A3B (MoE, 3B active)</strong>, GGUF <strong>Q4_K_M</strong> quantization. Weights are 20.75GiB + 1.16GiB of KV/compute buffer = 21.91GiB in actual use (91% of the XTX's 24GB). The vLLM server runs on port 8200 with <code>max-num-seqs 14</code>, fp8 KV cache, prefix caching off, temperature 0.8, thinking mode off — this is the frozen production command.</p>
+<p>At the same time, I'm evaluating whether to adopt <strong>Qwen3.8-27B (dense)</strong>. Same conditions (fp8 KV cache, prefix caching off, temp 0.8, thinking off), but <code>max-num-seqs</code> is dropped to 3 — dense has different memory/compute characteristics than MoE, so concurrency has to be lower for stability.</p>
+<p>MTP (speculative decoding) is always on. Acceptance rate is <strong>50.1%</strong> for our MoE model, <strong>66.95%</strong> for the 27B dense model in an external measurement, and anywhere from 81-97% in other external measurements — it varies a lot by model and settings.</p>
+<h2>Prefill/decode measurements — 27B dense</h2>
+<p>Real measurements across cards/quantizations for the same 27B dense model, at roughly 12.7k prefill tokens per call:</p>
+<table>
+<thead>
+<tr>
+<th>Setup</th>
+<th>decode (t/s)</th>
+<th>prefill (t/s)</th>
+<th>100-stock equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RX 7900 XTX, Q4_K_M, MTP on (our measurement)</td>
+<td>62.5</td>
+<td>768</td>
+<td>21.7h</td>
+</tr>
+<tr>
+<td>AMD R9700, Q4_K_M, MTP on</td>
+<td>56</td>
+<td>823</td>
+<td>22.8h</td>
+</tr>
+<tr>
+<td>AMD R9700, Q5_K_M, MTP on</td>
+<td>50</td>
+<td>601</td>
+<td>27.3h</td>
+</tr>
+<tr>
+<td>AMD R9700, Q5_K_M, MTP off</td>
+<td>28.5</td>
+<td>601</td>
+<td>40.5h</td>
+</tr>
+</tbody>
+</table>
+<p>Bumping precision by one step (Q4→Q5) alone adds 26% to runtime. Toggling MTP off/on made an even bigger difference (28.5→50 t/s) — speculative decoding mattered more than quantization here.</p>
+<h2>Raw decode speed by card — public cross-GPU benchmark</h2>
+<p>Decode speed by card for the same 27B-dense-class model with MTP on (source: <a href="https://arca.live/b/alpaca/179988851" target="_blank" rel="noopener noreferrer">arca.live cross-GPU thread</a>(new tab); context depth uncontrolled, reference only):</p>
 <table>
 <thead>
 <tr>
 <th>Card</th>
-<th>Tokens/sec (approx.)</th>
+<th>decode (t/s)</th>
 </tr>
 </thead>
 <tbody>
@@ -60,17 +132,119 @@
 <td>71</td>
 </tr>
 <tr>
-<td>RTX 5090</td>
-<td>80</td>
+<td><strong>RTX 5090</strong></td>
+<td><strong>80</strong></td>
 </tr>
 </tbody>
 </table>
-<p>You can see roughly a 1.1x to 2x spread across cards. In actual operation, though, that multiplier didn't translate directly into a shorter total batch time — as the XTX measurement above (6.15 hours) shows. Factors other than raw decode speed, like parallelism and wait time, are mixed in.</p>
+<p>The 5090 is about 1.13x faster than the XTX. I originally expected a much bigger gap based on the memory-bandwidth ratio (1.81x), but it turned out that conversion doesn't hold once MTP is on — speculative decoding frees decode from the bandwidth ceiling.</p>
+<h2>Decode speed from our own production logs, by hardware generation</h2>
+<p><code>ta_usage_tracker</code> logs input/output tokens and elapsed time for every LLM call, per stock. Averaging real decode speed (output_tokens ÷ elapsed_s) by hardware generation from that log:</p>
+<table>
+<thead>
+<tr>
+<th>Era</th>
+<th>Avg decode (t/s)</th>
+<th>Median</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4070 Ti Super ×2 (MoE)</td>
+<td>90.4</td>
+<td>107.1</td>
+</tr>
+<tr>
+<td>RX 7900 XTX (MoE)</td>
+<td>106.5</td>
+<td>102.1</td>
+</tr>
+<tr>
+<td>RTX 5090, MoE (existing model, shadow run)</td>
+<td>94.1</td>
+<td>78.1</td>
+</tr>
+<tr>
+<td>RTX 5090, 27B dense (candidate)</td>
+<td>44.3</td>
+<td>43.8</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ This isn't a clean isolated benchmark — it's raw production logs, mixing concurrency, per-stock prompt length, and contention from other overnight jobs. Don't compare it directly against the clean 27B dense table above. That said, the direction is consistent: the dense candidate is clearly slower than the current MoE model in production.</p>
+<h2>The model-adoption decision, in progress</h2>
+<p>Whether to go with dense or MoE isn't decided yet. One method I'm using is <strong>self-QWK</strong> — running the same input repeatedly and measuring how consistent the resulting grades are (quadratic weighted kappa).</p>
+<p>Running MoE three times on the same 99 stocks, same date:</p>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>QWK</th>
+<th>Raw agreement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>rep1 vs rep2</td>
+<td>0.0853</td>
+<td>59/99</td>
+</tr>
+<tr>
+<td>rep1 vs rep3</td>
+<td>0.1260</td>
+<td>56/99</td>
+</tr>
+<tr>
+<td>rep2 vs rep3</td>
+<td>0.1481</td>
+<td>61/99</td>
+</tr>
+<tr>
+<td><strong>Average</strong></td>
+<td><strong>0.1198</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The self-QWK band observed historically on the XTX was 0.08-0.21, so this value (0.1198) falls within it. The grade distribution skews toward "Hold" (71-80%), and QWK mechanically comes out lower when one grade dominates, so the raw agreement rate (56-61%) needs to be read alongside it.</p>
+<p>Self-QWK for dense hasn't been measured yet (planned for this weekend). <strong>The metric that actually decides adoption isn't self-QWK — it's forward RankIC</strong> (the correlation between predicted and actual return ranking), and there are zero measurements of that so far. In other words, right now there's only a qualitative expectation that dense will perform better; whether it actually does is still unverified.</p>
 <h2>Daily token volume</h2>
-<p>This project has an <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI pipeline that analyzes stocks with a local LLM</a>(new tab). Multiple agent nodes read news, filings, and fundamentals to build their reasoning, and each node makes its own LLM call.</p>
-<p>Averaging real logs from the past several weekdays, local LLM calls run about <strong>5,200 times a day</strong>, totaling roughly <strong>55 million input tokens</strong> and <strong>7.5 million output tokens</strong>. That scale, just from generating daily reports, wasn't something I had a real feel for until I actually looked at the logs.</p>
-<h2>What's happening now</h2>
-<p>I'm currently in the process of deciding whether to adopt a larger local model. I'll write up the results separately once that's settled.</p>
+<p>This project has an <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI pipeline that analyzes stocks with a local LLM</a>(new tab).</p>
+<p><strong>Normal weekday average (MoE only, no side-by-side comparison running)</strong>: about 5,200 calls, roughly 55 million input tokens, roughly 7.5 million output tokens.</p>
+<p><strong>Today (higher than usual since two models are running side by side)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Calls</th>
+<th>Input tokens</th>
+<th>Output tokens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MoE (existing)</td>
+<td>7,263</td>
+<td>78,677,907</td>
+<td>10,780,257</td>
+</tr>
+<tr>
+<td>27B dense (candidate)</td>
+<td>2,510</td>
+<td>29,453,936</td>
+<td>4,145,079</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>9,773</strong></td>
+<td><strong>108,131,843</strong></td>
+<td><strong>14,925,336</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The dense candidate has fewer calls because <code>max-num-seqs</code> is capped at 3, so fewer stocks get processed in the same time window.</p>
+<h2>What's next</h2>
+<p>Once forward RankIC is measured, I'll write up which model actually got adopted as a separate post.</p>
 </article>
 <footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
 </body>
