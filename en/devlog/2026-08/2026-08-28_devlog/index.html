@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Aug 28] GPU Job Time-Window Collisions - Turning Repeated Failures Into Infrastructure&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-28_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Aug 28] GPU Job Time-Window Collisions - Turning Repeated Failures Into Infrastructure&quot;</h1>
+<p class="subtitle">I moved the safety-window math I&#x27;d been doing by hand into code, and also fixed a live-account trade that got reversed right after it went through</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Today I kept getting stuck trying to run a GPU experiment to evaluate a new local model candidate.</p>
+<p>The first attempt died immediately because the runtime environment was missing a required program path. The second attempt died too, running under the wrong Python environment that didn't have a needed library.</p>
+<p>After fixing both bugs, I finally got the experiment running on the third try — and then a different problem showed up. Near the end of regular trading hours, the experiment's run window overlapped with the daily settlement window, and the experiment quietly stopped processing new tickers on its own.</p>
+<p>The stop itself was working as designed. A safeguard that blocks new work from starting during the settlement window did exactly what it was supposed to do.</p>
+<p>The problem was that I didn't notice for a while. The experiment logged itself as "done," so at first I thought it had finished — only to find, on closer inspection, that it had stopped after covering less than a third of the tickers.</p>
+<h2>Moving hand-calculated math into infrastructure</h2>
+<p>Looking at the failure pattern, there was a common thread. Every time, figuring out the safe run window meant manually calculating the start time and the time limit by hand.</p>
+<p>Miscalculating or forgetting that math accounted for more than half of today's failures. So I decided to move the calculation itself into code.</p>
+<p>I built a shared function that answers "how much time is left until the next risk window" and "would starting now finish safely," and wrote a new standard launch script that runs experiments through this function to compute the time limit automatically.</p>
+<p>I also settled on a format for recording how far an experiment got if it stops partway, so it can resume from there. Going forward, a time-window collision like today's shouldn't require anyone to do the math by hand to recover safely.</p>
+<h2>Fixed a live-account trade that reversed itself</h2>
+<p>Separately, another issue turned up on the live account today: a position that had just been topped up got sold back off again shortly after.</p>
+<p>At first it looked like a delayed order fill causing a temporary anomaly. But handing the investigation to another AI for a second opinion showed that diagnosis was wrong.</p>
+<p>The real cause was structural: in the band-based buy/sell logic, the top-up buy was landing too close to the boundary between bands. Even a tiny price move was enough to cross the boundary and immediately trigger a sell signal.</p>
+<p>Once I confirmed the cause, I widened the margin around that boundary check. It's the same kind of margin the regular buy side already had — now applied to the top-up side as well.</p>
+<p>The fix was in place before the next trading day started.</p>
+<hr />
+<p>The two problems today look unrelated, but they taught the same lesson. Whether it's a time window or a price band, logic that sits right up against a boundary breaks easily from the smallest error or fluctuation.</p>
+<p>Since the boundaries themselves can't go away, today's fix for both was simply to give them more margin.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
