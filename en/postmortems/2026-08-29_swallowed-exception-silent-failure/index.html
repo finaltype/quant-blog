@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-29_swallowed-exception-silent-failure/index.html">한국어로 보기</a></p>
+<article>
+<h1>The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days</h1>
+<p class="subtitle">A single except line meant to quietly skip cache corruption also swallowed the case where the dependency library wasn&#x27;t even installed</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>A few days ago I found out that a module I'd added eight days earlier had never worked correctly since it was created.</p>
+<p>There were no error logs. No crashes. It was just quietly returning empty values the whole time.</p>
+<h2>What happened</h2>
+<p>The module existed to fix a specific problem.</p>
+<p>For some tickers, the actual number of shares outstanding wasn't available, so the system fell back to a rough estimate based on face value. That estimate sometimes diverged sharply from the real number, which occasionally made a stock's valuation ratio come out far lower (looking cheaper) than it actually was.</p>
+<p>So I built a new module to cache and look up the real share count directly. Once it shipped, nothing looked wrong. No errors, and a separate hold condition meant there was no urgent reason to dig back into it right away.</p>
+<p>A few days later, while working on something unrelated, I happened to print out an actual lookup result. Out of 100 tickers queried, zero came back with a value. It had never returned a single value since it was created.</p>
+<h2>What I thought at first</h2>
+<p>My first suspicion was the data itself — that the cache file was empty or corrupted.</p>
+<p>It wasn't. The underlying data was fine. Thousands of tickers all had valid values, and reading the same file from a different execution environment worked without any issue.</p>
+<p>So this wasn't a data problem. It only failed to load "in this particular production environment."</p>
+<h2>The real cause</h2>
+<p>The cause was a single line inside the loading function: <code>except Exception: continue</code>.</p>
+<p>The original intent of that except clause was "if one cache file is corrupted, keep reading the rest." It was written to target one very specific failure: cache corruption.</p>
+<p>The problem was that this production environment didn't have the library needed to read the cache file's format installed at all. When that happens, opening the file doesn't raise "this file is corrupted" — it raises a completely different kind of exception: "the engine to even read this file doesn't exist."</p>
+<p><code>except Exception</code> doesn't discriminate. It catches both. Cache corruption and a missing engine were swallowed the same way, silently. As a result, the function always returned an empty mapping, and the lookup always returned nothing.</p>
+<p>What made it worse: the caller was also written to be lenient about failure. If it couldn't get a value, it silently fell back to the old face-value-based estimate — the exact problem the new module was supposed to fix. The module I built to fix that bug sat quietly useless for several nights running, while the system kept using the old, inaccurate estimate without a single warning.</p>
+<h2>How I fixed it</h2>
+<p>The first thing I did was split the exception by type.</p>
+<p>Exceptions caused by the missing library got classified as an "environment defect" — logged loudly and re-raised (fail-loud) instead of swallowed. I also made sure this particular failure wasn't cached, so that once the library got installed, the very next lookup would work correctly without needing to restart any process.</p>
+<p>The rest of the exceptions — the cache-corruption case this was originally written for — stayed silently skipped, as before. Making that path fail-loud too would mean one corrupted file could take down the whole thing, which would have broken the behavior it was meant to protect.</p>
+<p>Then I added tests to make sure this split doesn't quietly regress again — one simulating a missing library to confirm the exception propagates, and one simulating cache corruption to confirm it's still skipped silently.</p>
+<h2>The general lesson</h2>
+<p><strong><code>except Exception</code> doesn't catch the one failure you had in mind — it catches every failure that's possible at that point in the code.</strong> In this case, a broad except written to guard against "one corrupted cache file" ended up swallowing a completely different class of failure (a missing dependency) too. Whenever you catch an exception, it's worth double-checking that you're really only catching the type you intend to.</p>
+<p><strong>When the installed packages differ between dev and production, code that was only verified in dev can be silently dead in production.</strong> It worked fine locally, and only failed in the environment that actually mattered. If you add a new dependency, it's worth separately confirming it's actually present wherever the code will really run.</p>
+<p><strong>"It runs without errors" is not evidence that "it works."</strong> This is especially true when there's a safety fallback that quietly reverts to the old logic on failure — that fallback can trigger every single time and still look completely fine from the outside. After wiring in a new module, it's worth directly confirming, at least once, that the new path is actually the one being taken.</p>
+<p><strong>If you wrote new code to fix a bug, whether that code is actually running is a precondition for saying the bug is fixed.</strong> Shipping it is not evidence by itself.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

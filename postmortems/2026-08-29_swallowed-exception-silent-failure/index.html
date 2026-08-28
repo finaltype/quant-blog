@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>조용히 실패하는 except 문 - 새로 만든 모듈이 8일째 아무것도 안 하고 있었다 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-08-29_swallowed-exception-silent-failure/index.html">Read in English</a></p>
+<article>
+<h1>조용히 실패하는 except 문 - 새로 만든 모듈이 8일째 아무것도 안 하고 있었다</h1>
+<p class="subtitle">캐시 파손을 조용히 넘기려던 except 한 줄이, 의존 라이브러리 자체가 없는 상황까지 함께 삼켜버렸습니다</p><p>며칠 전, 새로 만든지 8일 된 모듈 하나가 신설 이후 단 한 번도 제대로 동작한 적이 없다는 걸 발견했습니다.</p>
+<p>에러 로그는 없었습니다. 크래시도 없었습니다. 그냥 조용히 빈 값만 계속 반환하고 있었습니다.</p>
+<h2>무슨 일이 있었는지</h2>
+<p>이 모듈은 원래 어떤 문제를 고치려고 만든 것이었습니다.</p>
+<p>일부 종목의 실제 발행주식수를 못 구해서, 액면가 기준으로 대략 추정한 값을 대신 쓰던 로직이 있었습니다. 이 추정값이 실제 값과 크게 어긋나는 경우가 있었고, 그 결과 그 종목의 밸류에이션 지표가 실제보다 훨씬 낮게(저평가로) 잘못 계산되는 사례가 나왔습니다.</p>
+<p>그래서 발행주식수를 정확히 캐시해두고 조회하는 모듈을 새로 만들었습니다. 만들고 나서 별문제 없어 보였습니다. 에러도 안 났고, 별도로 막아둔 대기 조건 때문에 당장 급하게 다시 들여다볼 일도 없었습니다.</p>
+<p>며칠 뒤 다른 작업을 하다가 우연히 실제 조회 결과를 찍어봤습니다. 100종목을 조회했는데 값이 나온 종목이 0개였습니다. 신설 이후 단 한 번도 값을 준 적이 없었던 겁니다.</p>
+<h2>처음엔 뭐라고 생각했는지</h2>
+<p>처음 의심한 건 데이터 자체였습니다. 캐시 파일이 비어 있거나 깨졌을 거라고 생각했습니다.</p>
+<p>확인해보니 아니었습니다. 원본 데이터는 멀쩡했습니다. 종목 수천 개가 전부 정상적인 값으로 들어 있었고, 다른 실행 환경에서 같은 파일을 읽으면 문제없이 읽혔습니다.</p>
+<p>즉 데이터 문제가 아니라 "이 프로덕션 환경에서만" 못 읽는 문제였습니다.</p>
+<h2>진짜 원인</h2>
+<p>원인은 로딩 함수 안에 있던 <code>except Exception: continue</code> 한 줄이었습니다.</p>
+<p>이 except 문의 원래 의도는 "캐시 파일 하나가 깨져 있어도 나머지는 계속 읽자"였습니다. 캐시 파손이라는 아주 구체적인 실패 상황 하나만 겨냥해서 쓴 코드였습니다.</p>
+<p>문제는 이 프로덕션 환경에 캐시 파일 포맷을 읽는 데 필요한 라이브러리 자체가 설치돼 있지 않았다는 겁니다. 그러면 파일을 여는 시점에 "이 파일이 깨졌다"는 예외가 아니라 "이 파일을 읽을 엔진 자체가 없다"는 전혀 다른 종류의 예외가 발생합니다.</p>
+<p>그런데 <code>except Exception</code>은 종류를 가리지 않고 둘 다 잡습니다. 캐시 파손이든 엔진 부재든 구분 없이 조용히 넘어가버린 겁니다. 결과적으로 이 함수는 항상 빈 매핑을 반환했고, 조회 함수는 항상 빈 값을 돌려줬습니다.</p>
+<p>더 나쁜 건 이걸 호출하는 쪽도 실패에 관대하게 짜여 있었다는 점입니다. 값을 못 받으면 예전의 액면가 추정 로직으로 자동으로 넘어가도록 되어 있었습니다. 새 모듈이 고치려던 바로 그 문제로, 아무 경고 없이 그대로 되돌아간 셈입니다. 고치려고 만든 모듈이 며칠 밤 동안 조용히 무용지물이었고, 시스템은 예전의 부정확한 추정치를 계속 쓰고 있었습니다.</p>
+<h2>어떻게 고쳤는지</h2>
+<p>가장 먼저 한 건 예외 종류를 나눈 것이었습니다.</p>
+<p>라이브러리가 아예 없어서 나는 예외는 "환경 결함"으로 분류해서, 로그를 크게 남기고 그대로 다시 던지도록(fail-loud) 바꿨습니다. 이 실패는 캐시하지 않도록 해서, 나중에 라이브러리를 설치하면 프로세스를 재시작하지 않아도 다음 조회부터 바로 정상 동작하게 했습니다.</p>
+<p>반면 원래 의도했던 캐시 파손 같은 나머지 예외는 그대로 조용히 건너뛰도록 남겨뒀습니다. 이 부분까지 fail-loud로 바꾸면 사소한 파일 하나 깨진 걸로 전체가 죽어버리니, 애초에 지키려던 동작은 지킨 겁니다.</p>
+<p>그리고 이 구분이 다시 깨지지 않도록 테스트를 추가했습니다. 라이브러리 부재 상황을 흉내 내면 예외가 그대로 전파되는지, 캐시 파손 상황을 흉내 내면 조용히 넘어가는지를 각각 확인하는 테스트입니다.</p>
+<h2>일반화하면</h2>
+<p><strong><code>except Exception</code>은 의도한 실패 하나만 잡는 코드가 아니라, 그 자리에서 발생 가능한 모든 실패를 잡는 코드입니다.</strong> 이번 경우처럼 "캐시 파손 하나"를 막으려고 넓은 예외를 썼다가, 전혀 다른 종류의 실패(의존성 부재)까지 같이 삼켜버릴 수 있습니다. 예외를 잡을 땐 정말 그 종류만 잡고 있는지 다시 확인해볼 만합니다.</p>
+<p><strong>개발 환경과 운영 환경의 설치 패키지가 다르면, 개발 환경에서만 확인하고 넘어간 코드가 운영에서 조용히 죽어 있을 수 있습니다.</strong> 이번에도 로컬에서는 잘 됐고, 실제로 값을 쓰는 환경에서만 안 됐습니다. 새 의존성을 추가했다면 그 의존성이 실제 배포 대상 환경에도 있는지 별도로 확인하는 게 안전합니다.</p>
+<p><strong>"에러 없이 돈다"는 "제대로 동작한다"의 증거가 아닙니다.</strong> 특히 실패했을 때 예전 로직으로 자연스럽게 넘어가도록 만든 안전장치가 있다면, 그 안전장치가 매번 조용히 발동하고 있어도 겉으로는 아무 이상 없어 보입니다. 새 모듈을 붙였다면, 정말 새 경로가 타고 있는지를 한 번은 직접 눈으로 확인해야 합니다.</p>
+<p><strong>어떤 버그를 고치려고 새 코드를 짰다면, 그 새 코드가 정말 동작 중인지가 "고쳤다"의 필요조건입니다.</strong> 배포했다는 사실 자체는 증거가 아닙니다.</p>
+</article>
+<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
