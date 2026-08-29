@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260829] Switching to a New Local Model, and Quietly Keeping the Old One Around&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-29_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260829] Switching to a New Local Model, and Quietly Keeping the Old One Around&quot;</h1>
+<p class="subtitle">I wrapped up weeks of model comparison and made the switch official, then caught a completion-detection bug in a separate experiment</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Weeks of model comparison, and today I made the switch official</h2>
+<p>This bot uses a locally hosted LLM to analyze stocks.</p>
+<p>For a while now I've been comparing the model currently in production against a candidate with a different architecture (a dense model in the 27B range).</p>
+<p>The overnight production batch has been running clean, and a consistency metric I track across repeated runs on the same stock set landed back in the normal range I'd already established.</p>
+<p>So today I made the switch to the new model official.</p>
+<p>While I was at it, I also fixed a piece of stale code.</p>
+<p>The alert message that reports which model is currently active had the old model's name hardcoded, so even after switching models it kept pointing at an already-retired model as "production."</p>
+<p>I changed it to read the currently active model dynamically, so the next model switch won't require touching this again.</p>
+<h2>Keeping the retired model around as a zero-weight shadow</h2>
+<p>Right after the switch, a new idea came up.</p>
+<p>Instead of dropping the retired model entirely, why not keep it running alongside the new one inside the <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI ensemble pipeline</a>(new tab) that both models feed into?</p>
+<p>Rolling this straight into production weighting felt risky, so I had another AI review the proposal.</p>
+<p>The verdict came back conditional.</p>
+<p>The model switch had only just landed, and other validation work was still in flight — too many changes overlapping at once, was the concern.</p>
+<p>So instead of applying it live, we started by adding the retired model back in at zero weight, purely to log its output.</p>
+<p>At zero weight it has no effect on actual rankings — it just quietly accumulates data on how closely the two models agree on the same stocks.</p>
+<p>GPU memory won't fit both models resident at once, so the setup scores the full set with the new model first each night, then re-scores the same stocks with the retired model right after.</p>
+<p>In case anything goes wrong along the way, I made sure the process always falls back to the production model at the end, so the live service can't end up silently stuck on the wrong one.</p>
+<p>Once a few weeks of data build up, I'll decide whether to actually use this pairing, and if so, how much weight to give it.</p>
+<h2>A completion-detection bug caught in a separate experiment</h2>
+<p>Around the same time, a repeated-run validation job I had going kept finishing suspiciously fast — just a few seconds.</p>
+<p>The log said "done," so at first I assumed it had actually finished.</p>
+<p>It turned out the previous run had stopped partway through, and on restart the job wrongly treated "some results already saved" as "fully done," so it exited immediately instead of resuming.</p>
+<p>The bug was checking whether results existed at all, not how many stocks had actually been covered.</p>
+<p>Once I added proper logic to check full completion, the job correctly picked up and finished the remaining stocks.</p>
+<h2>The blog's own publishing cadence changed too</h2>
+<p>I'd been setting up a feature to automatically post a recurring performance report on this blog, but decided that publishing it daily would expose the actual trading rhythm in too much detail, so I switched it to a much less frequent cadence.</p>
+<p>Since the cadence is dropping anyway, I also decided to publish the same report to the other channel where I share this project.</p>
+<hr />
+<p>The two things that stood out most today were the model switch and the shadow observation setup that followed it right away.</p>
+<p>The reason for keeping the old model alive at zero weight instead of shutting it off outright is simple.</p>
+<p>Watching with zero impact until the data builds up is a lot safer than deciding without any data at all.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

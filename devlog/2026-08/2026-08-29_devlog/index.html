@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260829] 새 로컬 모델로 정식 전환, 그 옆에 예전 모델을 조용히 얹었다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-29_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260829] 새 로컬 모델로 정식 전환, 그 옆에 예전 모델을 조용히 얹었다&quot;</h1>
+<p class="subtitle">몇 주 끌어온 모델 비교를 끝내고 전환을 확정한 날, 완주 판정 버그 하나도 함께 잡았다</p><h2>몇 주 끌어온 모델 비교, 오늘 전환을 확정했다</h2>
+<p>이 봇은 종목을 분석할 때 로컬에서 띄운 LLM을 씁니다.</p>
+<p>얼마 전부터 지금 쓰는 모델과 새 후보 모델(구조가 다른 27B급 dense 모델) 중 뭘 쓸지 계속 비교해왔습니다.</p>
+<p>야간 프로덕션 배치가 문제없이 끝났고, 같은 종목셋을 반복 실행했을 때 등급이 얼마나 일관되게 나오는지 보는 지표도 기존에 관측하던 정상 범위 안에 들어왔습니다.</p>
+<p>그래서 오늘 새 모델로 정식 전환을 확정했습니다.</p>
+<p>전환하면서 오래된 코드 한 군데도 같이 손봤습니다.</p>
+<p>지금 쓰는 모델이 뭔지 알려주는 경보 문구에 예전 모델 이름이 그대로 박혀 있어서, 모델을 바꾼 뒤에도 이미 은퇴한 모델을 "지금 프로덕션"이라고 가리키고 있었습니다.</p>
+<p>앞으로 모델을 또 바꾸더라도 이 문구를 따로 고칠 필요가 없도록, 지금 활성 모델을 그때그때 읽어오게 바꿨습니다.</p>
+<h2>예전 모델을 가중치 0으로 얹어서 지켜보기 시작했다</h2>
+<p>전환을 마치자마자 새 아이디어가 나왔습니다.</p>
+<p>방금 은퇴시킨 모델을 완전히 버리지 말고, 이 모델들이 참여하는 <a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI 추천 파이프라인</a>(새 창)에 새 모델과 함께 앙상블로 얹으면 어떨까 하는 제안이었습니다.</p>
+<p>바로 실전 가중치를 넣는 건 위험하다는 판단이 들어서, 다른 AI에게 검토를 맡겼습니다.</p>
+<p>검토 결과는 조건부였습니다.</p>
+<p>지금은 모델 전환 자체도 막 끝났고, 다른 검증도 아직 진행 중이라 여러 변화가 한꺼번에 겹치는 상황이라는 지적이었습니다.</p>
+<p>그래서 바로 실전에 반영하는 대신, 예전 모델을 가중치 0으로 얹어서 결과만 조용히 기록하는 쪽으로 먼저 시작하기로 했습니다.</p>
+<p>가중치가 0이니 실제 순위에는 아무 영향이 없고, 두 모델이 같은 종목을 얼마나 비슷하게 평가하는지만 데이터로 쌓입니다.</p>
+<p>그래픽카드 메모리 제약 때문에 두 모델을 동시에 올려둘 수는 없어서, 밤마다 새 모델로 정식 채점을 끝낸 뒤 같은 종목을 예전 모델로 한 번 더 채점하는 구조로 만들었습니다.</p>
+<p>혹시 이 과정에서 문제가 생기더라도 실제 서비스에 쓰는 모델이 조용히 바뀐 채로 남지 않도록, 마지막에는 반드시 원래 모델로 되돌아가게 만들어뒀습니다.</p>
+<p>몇 주 정도 데이터가 쌓이면 그때 가서 실제로 이 조합을 쓸지, 쓴다면 얼마나 반영할지 결정할 예정입니다.</p>
+<h2>다른 실험에서는 완주 판정 버그 하나를 잡았다</h2>
+<p>같은 시기에 돌리던 반복 실행 검증 작업 하나가 이상하게 몇 초 만에 끝나버리는 일이 있었습니다.</p>
+<p>로그에는 "완료"라고 찍혀 있어서 처음엔 진짜 다 끝난 줄 알았습니다.</p>
+<p>확인해보니 이전 실행이 중간에 멈춘 상태였는데, 그걸 다시 시작할 때 "이미 결과가 있으니 끝난 것"으로 잘못 판단해서 곧바로 종료해버리는 버그였습니다.</p>
+<p>결과가 저장돼 있는지만 보고 정작 몇 종목을 다뤘는지는 안 보고 있었던 게 원인이었습니다.</p>
+<p>전체를 다 처리했는지 제대로 확인하는 판정 로직을 새로 넣고 나서야, 나머지 종목을 이어서 정상적으로 처리했습니다.</p>
+<h2>블로그 발행 주기도 오늘 다시 손봤다</h2>
+<p>이 블로그에 성과를 보여주는 정기 리포트를 자동으로 올리는 기능을 준비하고 있었는데, 매일 발행하면 실제 매매 리듬이 너무 세세하게 드러난다는 판단이 들어서 훨씬 뜸한 주기로 바꿨습니다.</p>
+<p>발행 주기를 늘리기로 하면서, 이 프로젝트 얘기를 올리는 다른 채널에도 같은 리포트를 같이 올리기로 했습니다.</p>
+<hr />
+<p>오늘 가장 눈에 띄는 건 모델 전환과 그 뒤에 바로 이어진 이중 모델 관찰 구조였습니다.</p>
+<p>새 걸 켜자마자 예전 걸 완전히 끄지 않고 가중치 0으로 옆에 살려둔 이유는 간단합니다.</p>
+<p>데이터 없이 결정하는 것보다, 데이터가 쌓일 때까지 아무 영향 없이 지켜보는 쪽이 훨씬 안전하기 때문입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
