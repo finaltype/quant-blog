@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260830] A Gate That Wouldn&#x27;t Open for Months, So I Automated the Check&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-30_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260830] A Gate That Wouldn&#x27;t Open for Months, So I Automated the Check&quot;</h1>
+<p class="subtitle">An automated regime sensor, plus two overnight monitoring gaps a second AI review turned up</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A judgment condition had been stuck for months</h2>
+<p>A few weeks ago I pre-registered an experiment to check whether a newly added AI model actually adds value to the ensemble.</p>
+<p>The condition for reaching a verdict was that "normal" market conditions had to hold for a certain number of trading days. Checking back on it today, that condition itself hadn't been met in months.</p>
+<p>The market had simply stayed in a high-volatility state since February.</p>
+<p>When I originally pre-registered the experiment I optimistically assumed the condition would fill in within a few weeks — not realizing volatility was already climbing at that exact moment.</p>
+<p>The threshold and the condition itself weren't wrong. My timeline estimate was.</p>
+<h2>Turning a manual check into an automated sensor</h2>
+<p>Up to now I'd been checking this condition by running a script by hand whenever it came to mind, which meant I had to remember to keep doing it.</p>
+<p>So I had another AI design the implementation, and built an automated sensor around it exactly as designed.</p>
+<p>It re-evaluates market conditions on its own at a fixed time every day, and only sends an alert once the condition is fully met.</p>
+<p>There was already similar calculation logic elsewhere in the codebase, and reusing it directly ran into an existing safeguard — a test asserting that a research-only tool should never be called from a resident process.</p>
+<p>So I split out just the shared calculation logic into its own module instead. That avoided duplicating the code while keeping the original safeguard intact.</p>
+<p>I added 22 tests around the new logic, and re-running the full suite showed no impact on anything else.</p>
+<p>Now the only moment I need to step in is when the alert fires because the condition is fully satisfied.</p>
+<h2>A second AI review turned up two gaps that weren't in the original brief</h2>
+<p>This bot <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">runs as several separate processes</a>(new tab), and most of its monitoring was built on the assumption that "production only runs at night."</p>
+<p>With daytime batches becoming more common lately, I had another AI do a full review of whether that assumption still held.</p>
+<p>Most of the points I'd originally suspected turned out to be fine, but the review surfaced two gaps that weren't in the original brief.</p>
+<p>The first was a time-comparison check that spans midnight, where the date-boundary logic was off.</p>
+<p>As a result, the entire second half of every night was outside the monitoring window. This was the third recurrence of a monitoring-gap incident I'd already hit before, so I fixed it right away.</p>
+<p>The second was a process-kill rule that matched targets by model name instead of by port number.</p>
+<p>A separate experiment happened to be using the same model name as production, which meant the rule meant to clean up production could have killed the experiment's server instead.</p>
+<p>This was also the same class of incident as one I'd hit before, so I tightened the condition to also check the port number.</p>
+<p>While I was at it I caught a few smaller issues too, including a safety comment left over from an earlier generation of GPU hardware.</p>
+<p>It had been written under the assumption that a certain operation was "physically impossible" on that hardware — which was no longer true on the current setup.</p>
+<p>I updated the comment to state clearly that the only thing standing in the way now is a single detection check for running processes, and left a note to re-review comments like this every time the hardware changes.</p>
+<h2>Live verification had to wait a day</h2>
+<p>Once the fixes were in, the plan was to run them alongside tonight's actual production batch and confirm there were no conflicts.</p>
+<p>Then I realized today happened to be a non-trading day, so there was no overnight production run to test against in the first place.</p>
+<p>The fixes themselves were already done and still needed regardless, so I just pushed the live verification to the eve of the next trading day.</p>
+<hr />
+<p>Both pieces of work today share the same shape.</p>
+<p>Instead of manually re-checking, over and over, when a condition will be met or whether a monitor is actually watching when it should be, today was about moving that checking itself into automation — or handing it to a second AI review to catch what manual checks kept missing.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

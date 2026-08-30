@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260830] 판정 조건이 몇 달째 성립을 못 하길래, 수동 확인을 자동 센서로 바꿨다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-30_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260830] 판정 조건이 몇 달째 성립을 못 하길래, 수동 확인을 자동 센서로 바꿨다&quot;</h1>
+<p class="subtitle">시장 레짐 자동 감시와 AI 재검토로 찾아낸 야간 감시 공백 두 건</p><h2>판정 조건 자체가 몇 달째 시작을 못 하고 있었다</h2>
+<p>몇 주 전, 새로 붙인 AI 모델 하나가 앙상블에 실제로 값어치를 더하는지 확인하는 실험을 사전등록해뒀습니다.</p>
+<p>판정 조건은 "평상시 장세가 일정 일수 이상 이어져야 한다"는 것이었는데, 오늘 다시 확인해보니 그 조건 자체가 몇 달째 성립을 못 하고 있었습니다.</p>
+<p>시장이 2월부터 계속 변동성이 높은 상태로 이어지고 있었던 겁니다.</p>
+<p>원래는 사전등록 당시 "몇 주면 조건이 채워질 것"이라고 낙관적으로 잡았는데, 그 시점에 이미 변동성이 높아지는 중이었다는 걸 뒤늦게 알아차렸습니다.</p>
+<p>임계값이나 판정 조건 자체가 잘못된 건 아니었고, 예상 시간표만 틀렸던 셈입니다.</p>
+<h2>손으로 확인하던 걸 자동 센서로 바꿨다</h2>
+<p>이 조건을 그동안은 필요할 때마다 스크립트를 손으로 돌려서 확인해왔는데, 매번 사람이 챙겨야 한다는 게 번거로웠습니다.</p>
+<p>그래서 다른 AI에게 구현 설계를 맡기고, 그대로 자동 감시 센서를 새로 만들어 붙였습니다.</p>
+<p>매일 정해진 시각에 스스로 시장 상태를 재평가하고, 조건이 다 채워지는 순간에만 알림이 오는 구조입니다.</p>
+<p>기존에 비슷한 계산을 하던 코드가 이미 있었는데, 그걸 그대로 재사용하려니 다른 안전장치(아무도 안 부르는 리서치용 도구는 상주 프로세스에서 부르면 안 된다는 테스트)가 걸렸습니다.</p>
+<p>그래서 공용 계산 로직만 따로 떼어내는 방식으로 풀었습니다. 코드를 두 벌로 중복시키지 않으면서도 기존 안전장치는 그대로 지킨 겁니다.</p>
+<p>새로 만든 로직에 테스트 22건을 붙였고, 전체 테스트를 다시 돌려도 기존 기능에 영향은 없었습니다.</p>
+<p>이제 사람이 개입해야 하는 순간은 조건이 다 채워졌다는 알림이 왔을 때뿐입니다.</p>
+<h2>AI 재검토에서 브리핑에 없던 결함 두 건을 더 찾아냈다</h2>
+<p>이 봇은 <a href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">프로세스를 여러 개로 나눠 돌리고 있는데</a>(새 창), 그중 감시 장치들은 대부분 "프로덕션은 밤에만 돈다"는 전제로 짜여 있습니다.</p>
+<p>최근 낮 시간에도 배치를 돌리는 일이 생기면서, 이 전제가 여전히 맞는지 다른 AI에게 전체 재검토를 맡겼습니다.</p>
+<p>검토 결과 원래 의심했던 지점들은 대부분 실제로는 문제가 없다고 확인됐는데, 브리핑에 없던 결함 두 가지를 추가로 찾아냈습니다.</p>
+<p>하나는 자정을 넘어가는 시간대를 비교하는 로직이 날짜 경계에서 어긋나 있던 것이었습니다.</p>
+<p>그 결과 매일 밤 후반부 전체가 감시 범위 밖에 있었습니다. 예전에 이미 겪었던 감시 공백 사고와 같은 유형이 세 번째로 재발한 셈이라, 바로 수선했습니다.</p>
+<p>다른 하나는 프로세스를 강제 종료하는 규칙이 포트 번호가 아니라 모델 이름만으로 대상을 찾고 있었던 것이었습니다.</p>
+<p>마침 다른 실험이 프로덕션과 같은 모델 이름을 쓰고 있어서, 프로덕션을 정리하려던 규칙이 실험용 서버까지 잘못 종료시킬 수 있는 구조였습니다.</p>
+<p>역시 예전에 비슷한 사고가 있었던 유형이라, 포트 번호까지 함께 확인하도록 조건을 좁혀서 고쳤습니다.</p>
+<p>이 자리에서 자잘한 결함도 몇 가지 더 확인해 함께 반영했는데, 그중 하나는 몇 세대 전 그래픽카드를 쓰던 시절에 남겨둔 안전장치 주석이었습니다.</p>
+<p>당시엔 "이 하드웨어에서는 특정 작업 자체가 물리적으로 불가능하다"는 전제로 쓴 주석이었는데, 지금 쓰는 하드웨어에서는 더 이상 사실이 아니었습니다.</p>
+<p>지금은 실행 중인 프로세스를 감지하는 로직 한 겹으로만 막고 있다는 걸 명시해두고, 하드웨어를 바꿀 때마다 이런 주석도 같이 재검토하기로 메모를 남겼습니다.</p>
+<h2>실환경 검증은 하루 미뤄야 했다</h2>
+<p>수선을 다 마치고 나니, 오늘 밤 바로 실제 프로덕션 배치와 나란히 돌려서 충돌 없이 잘 지나가는지 확인할 계획이었습니다.</p>
+<p>그런데 오늘이 마침 휴장일이라 애초에 야간 프로덕션 자체가 돌지 않는다는 걸 뒤늦게 알아차렸습니다.</p>
+<p>수선 자체는 이미 끝났고 필요성도 그대로라, 실제 검증만 다음 거래일 전야로 미뤘습니다.</p>
+<hr />
+<p>오늘 두 가지 작업은 결이 비슷합니다.</p>
+<p>판정 조건이 언제 채워질지, 감시 장치가 실제로 언제 작동하는지를 사람이 매번 손으로 다시 확인하는 대신, 그 확인 자체를 자동화하거나 AI에게 재검토를 맡겨 놓친 지점을 찾아내는 쪽으로 옮긴 하루였습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
