@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Aug 24-30] Starting a Second Broker&#x27;s Parallel Run, and the Quiet Bugs Found Along the Way&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-30_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Aug 24-30] Starting a Second Broker&#x27;s Parallel Run, and the Quiet Bugs Found Along the Way&quot;</h1>
+<p class="subtitle">This week&#x27;s biggest step forward was verifying a second broker on a real account and starting its paper-trading parallel run, while several bugs that had been failing silently for days got caught along the way</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A second broker: from real-account verification to a parallel run</h2>
+<p>The biggest step forward early this week was integrating a second broker.</p>
+<p>I started by building a new client with the exact same interface as the existing broker client, so the code above it wouldn't need to change when the swap actually happens.</p>
+<p>After catching a bug in the pass/fail judgment logic during a paper-account smoke test, I verified the full buy → sell → cancel-unfilled-order cycle on the real account within a small limit. When I asked another AI to review the code, the verdict came back: "this can't be swapped in as-is." I fixed nearly everything it flagged and re-verified on the real account.</p>
+<p>This promotion process follows the same principle covered in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">the execution/safety layer post</a>(new tab).</p>
+<p>The very next day, I put this broker on top of the <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">fully-automated paper-trading validation track</a>(new tab) as a separate sleeve and started its parallel run. The existing broker stays the main one.</p>
+<p>Since this account is shared between me and the automated system, there was a risk the system could mistake an order I placed manually for a malfunction. I ruled out creating a bot-only account and decided instead to redesign how the shared account is used safely. The detailed design got pushed back, but I fixed one thing that day: a tool meant to flag manually-placed orders wasn't working at all on the new sleeve, and that minimum safeguard needed to be alive regardless.</p>
+<h2>Bugs that had been failing silently for days</h2>
+<p>This week I kept running into bugs that looked fine on the surface but had actually been dead for days.</p>
+<p>While re-triaging the backlog document from start to finish, I found a lookup feature that had been returning empty values for 8 straight days because a library it depended on wasn't installed in the runtime. A separate cache had been broken for three days because two different environments had mismatched library versions. Both failed silently instead of throwing errors, which is why they went unnoticed.</p>
+<p>A similar pattern showed up again later in the week. A repeated-run validation job logged "complete," but it had actually judged a previous run — one that had stopped midway — as finished just because results existed on disk, without checking how many tickers had actually been processed.</p>
+<p>On the last day of the week, an overnight-monitor review turned up a date-boundary bug in the logic comparing timestamps across midnight. The entire second half of every night had been outside the monitor's range — the third recurrence of the same class of monitoring gap I'd hit before.</p>
+<p>Earlier in the week, a safety check on report delivery turned out to be two overlapping guards where the second had already made the first pointless — and the first didn't even distinguish manual experiments from real production, so running one experiment could block a production report.</p>
+<p>While reviewing this blog's automation, I also found a leak risk: publishing raw position quantities would let anyone multiply by the market price and back out the absolute position size. I fixed the schema before it ever shipped.</p>
+<h2>Moving manual checks to automation and AI review</h2>
+<p>The second thread running through this week was replacing manual calculations and checks with infrastructure or AI review.</p>
+<p>After a GPU experiment kept getting cut off by overlapping with the daily settlement window, I built a shared function that answers "how long until the next risk window" and "can this finish safely if started now," plus a standard launcher script that uses it automatically. I also set up a format that lets an interrupted run resume where it left off.</p>
+<p>I also found that a pre-registered experiment checking whether a new AI model adds value to the ensemble had a precondition — a minimum number of consecutive normal-regime days — that hadn't been met for months, because the market had stayed volatile since February. I replaced the manual check with an automated sensor that only alerts once the condition is actually met.</p>
+<p>This project <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">runs several processes split apart</a>(new tab), and most of its monitors assume production only runs at night. Since daytime batches had started happening too, I asked another AI to review that assumption end to end. Beyond the date-boundary bug above, it found that a kill-switch rule was matching processes by model name alone instead of port number — meaning an unrelated experiment using the same model name as production could get killed by mistake. I tightened the condition to require the port number too.</p>
+<p>Handing code review to another AI came up repeatedly this week — in the broker integration, in the sequential-vs-batched production bug, and in the monitoring review. Each time, it caught something I'd missed.</p>
+<h2>GPU and local model changes</h2>
+<p>Earlier in the week I reversed a decision to return a new GPU. This time the goal wasn't to fully replace the existing card — it was to keep a second card for experiments so they'd stop queuing behind production work on the same card. I also measured power headroom for running both cards at once and capped them accordingly.</p>
+<p>Later in the week I closed out a weeks-long comparison between local models and confirmed the switch to the new candidate. Instead of discarding the retired model entirely, I added it to the <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI recommendation ensemble</a>(new tab) at zero weight, quietly logging how closely the two models agree on the same tickers. Whether to actually use the pairing will be decided once enough data accumulates over the next few weeks.</p>
+<p>The same day, I also fixed a real-account whipsaw trade caused by an additional-buy rule sitting too close to a band boundary, by widening the margin.</p>
+<hr />
+<p>Two things ran through this week. One was that the second broker integration moved from real-account verification all the way to a parallel run. The other was clearing out several places that had been failing silently for days, and moving manual checks over to automated monitors or AI review.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260824~0830] 두 번째 증권사 병행운영을 시작하며 잡아낸 조용한 버그들&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-30_weekly/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260824~0830] 두 번째 증권사 병행운영을 시작하며 잡아낸 조용한 버그들&quot;</h1>
+<p class="subtitle">이번 주 가장 큰 진전은 새 증권사 실계좌 검증과 모의투자 병행운영 개시였고, 그 사이사이에서 며칠씩 티 안 나게 실패하던 버그를 여럿 걷어냈습니다</p><h2>두 번째 증권사, 실계좌 검증에서 병행운영까지</h2>
+<p>주 초반의 가장 큰 진전은 새 증권사 연동이었습니다.</p>
+<p>기존 증권사 클라이언트와 완전히 동일한 인터페이스로 새 클라이언트를 만드는 것부터 시작했습니다. 나중에 갈아끼울 때 상위 코드는 손댈 필요가 없도록 하기 위해서입니다.</p>
+<p>모의 계좌 스모크 테스트에서 판정 기준 버그를 하나 잡은 뒤, 소액 한도 안에서 실계좌 매수→매도→미체결 취소 전 과정을 직접 검증했습니다. 다른 AI에게 검토를 맡겼더니 "지금 상태로는 바로 갈아끼울 수 없다"는 결론이 돌아왔고, 지적받은 항목을 거의 전부 고친 뒤 다시 실계좌로 검증했습니다.</p>
+<p>이 승격 절차는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행/안전장치 계층</a>(새 창)에서 다룬 원칙 그대로입니다.</p>
+<p>바로 다음 날, 이 증권사를 <a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">완전자동매매 모의검증 트랙</a>(새 창) 위에 별도 슬리브로 얹어 병행운영을 시작했습니다. 기존 증권사는 그대로 주력으로 유지합니다.</p>
+<p>이 계좌는 사람과 자동매매가 함께 쓰다 보니, 사람이 직접 넣은 주문을 시스템이 오작동으로 오인할 위험이 남아 있었습니다. 봇 전용 계좌를 새로 만드는 안은 기각하고 기존 계좌를 안전하게 공유하는 쪽으로 방향을 잡았습니다. 상세 설계는 뒤로 미뤘지만, 최소한의 안전장치(사람이 넣은 주문을 표시해두는 선언 도구)가 새 슬리브에서 아예 동작하지 않던 것은 그날 바로 고쳤습니다.</p>
+<h2>며칠씩 티 안 나게 실패하던 버그들</h2>
+<p>이번 주는 유독 "겉보기엔 정상인데 실제로는 며칠째 죽어있던" 버그를 자주 만났습니다.</p>
+<p>작업 목록 문서를 처음부터 끝까지 다시 훑는 전수 재분류 작업 중에, 특정 값 조회 기능이 필요한 라이브러리가 빠진 채로 8일 내내 항상 빈 값만 돌려주고 있던 걸 발견했습니다. 다른 캐시 하나는 서로 다른 실행 환경의 라이브러리 버전이 어긋나면서 사흘째 깨진 채로 돌고 있었습니다. 둘 다 에러 없이 조용히 넘어가는 구조라 발견이 늦었습니다.</p>
+<p>비슷한 패턴이 주 후반에도 반복됐습니다. 반복 실행 검증 작업 하나가 "완료"라고 찍혔는데, 실제로는 이전 실행이 중간에 멈춘 걸 잘못 판정해 곧바로 종료해버린 것이었습니다. 결과가 저장돼 있는지만 보고 정작 몇 종목을 처리했는지는 확인하지 않은 게 원인이었습니다.</p>
+<p>주 마지막 날에는 야간 감시 장치 재검토에서 자정을 넘어가는 시간대 비교 로직이 날짜 경계에서 어긋나 있던 걸 찾았습니다. 매일 밤 후반부 전체가 감시 범위 밖에 있었던 셈인데, 예전에 겪었던 감시 공백 사고와 같은 유형이 세 번째로 재발한 것이었습니다.</p>
+<p>주 초반에는 리포트 발송을 막던 안전장치가 두 겹으로 겹쳐서 오히려 방어가 무력화된 경우도 있었습니다. 뒤쪽 방어가 이미 제 역할을 하고 있어서 앞쪽 규칙은 목적을 잃은 채 남아 있었고, 심지어 수동 실험과 실제 운영을 구분하지 않아 실험 한 번에 운영 리포트까지 막히는 부작용까지 있었습니다.</p>
+<p>이 블로그 자동화를 점검하다가는 종목 보유 수량을 그대로 공개하면 시세와 곱해 포지션 절대 금액이 역산되는 유출 위험도 발견해 스키마를 고쳤습니다. 다행히 실제 배선 전이라 유출은 없었습니다.</p>
+<h2>손으로 하던 확인을 자동/AI로 옮겼다</h2>
+<p>이번 주 두 번째 축은, 매번 사람이 손으로 계산하거나 확인하던 걸 인프라나 AI 재검토로 옮긴 것입니다.</p>
+<p>GPU 실험이 정산 시간대와 겹쳐 스스로 멈추는 일이 반복되자, "다음 위험 시간대까지 얼마나 남았는지"와 "지금 시작하면 안전하게 끝날 수 있는지"를 판단하는 함수를 공용으로 만들고, 실험을 실행하는 표준 스크립트도 새로 만들어 이 계산을 자동화했습니다. 중간에 멈춰도 이어서 진행할 수 있는 형식도 함께 정리했습니다.</p>
+<p>새 AI 모델이 앙상블에 값어치를 더하는지 확인하는 사전등록 실험의 판정 조건이, 시장이 2월부터 계속 변동성 높은 상태라 몇 달째 성립을 못 하고 있던 것도 발견했습니다. 이 조건을 매번 손으로 확인하던 걸 자동 감시 센서로 바꿔, 조건이 다 채워지는 순간에만 알림이 오도록 만들었습니다.</p>
+<p>이 프로젝트는 <a href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">프로세스를 여러 개로 나눠 돌리고 있는데</a>(새 창), 낮 시간에도 배치를 돌리는 일이 생기면서 "프로덕션은 밤에만 돈다"는 전제가 여전히 맞는지 다른 AI에게 전체 재검토를 맡겼습니다. 위에서 언급한 날짜 경계 버그 외에, 프로세스 강제 종료 규칙이 포트 번호가 아니라 모델 이름만으로 대상을 찾던 것도 함께 찾아냈습니다. 다른 실험이 프로덕션과 같은 모델 이름을 쓰면 실험용 서버까지 잘못 종료시킬 수 있는 구조였는데, 포트 번호까지 함께 확인하도록 조건을 좁혀 고쳤습니다.</p>
+<p>다른 AI에게 코드 검토를 맡기는 방식은 이번 주 내내 반복해서 등장했습니다. 증권사 연동에서도, 프로덕션 배치 순차/병렬 처리 버그에서도, 감시 장치 재검토에서도, 사람이 놓친 지점을 AI가 대신 잡아내는 흐름이 여러 번 있었습니다.</p>
+<h2>GPU와 로컬 모델 쪽 변화</h2>
+<p>주 초반, 반품하기로 했던 새 그래픽카드를 다시 개봉하기로 결정을 번복했습니다. 이번엔 기존 카드를 완전히 대체하기 위해서가 아니라, 실험용 카드를 하나 더 두고 기존 카드와 나눠 써서 실험과 운영이 서로 순서를 기다리는 병목을 줄이려는 목적이었습니다. 두 장을 함께 돌릴 때의 전력 여유도 실측을 바탕으로 캡을 걸어 관리하기로 했습니다.</p>
+<p>주 후반에는 몇 주 끌어온 로컬 모델 비교를 마무리하고 새 후보 모델로 정식 전환을 확정했습니다. 방금 은퇴시킨 모델을 완전히 버리지 않고, <a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI 추천 파이프라인</a>(새 창)에 가중치 0으로 얹어 두 모델이 같은 종목을 얼마나 비슷하게 평가하는지 조용히 기록하기 시작했습니다. 실제 반영 여부는 몇 주 데이터가 쌓인 뒤 결정할 예정입니다.</p>
+<p>같은 날, 실계좌에서 발견한 매매 되돌림(구간 경계에 너무 가깝게 걸려 있던 추가 매수 로직)도 원인을 확인해 여유폭을 넓히는 방향으로 고쳤습니다.</p>
+<hr />
+<p>이번 주를 관통한 건 두 가지였습니다. 하나는 새 증권사 연동이 실계좌 검증을 지나 병행운영까지 실제로 나아갔다는 것이고, 다른 하나는 그 과정 곳곳에서 며칠씩 조용히 실패하고 있던 지점들을 걷어내고, 손으로 하던 확인을 자동 감시나 AI 재검토로 옮겼다는 것입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
