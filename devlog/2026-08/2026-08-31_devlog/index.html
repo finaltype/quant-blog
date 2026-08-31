@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260831] 상주 프로세스 재시작 누락과 모의계좌 원장 오염, 하루 새 겹친 두 장애&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-31_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260831] 상주 프로세스 재시작 누락과 모의계좌 원장 오염, 하루 새 겹친 두 장애&quot;</h1>
+<p class="subtitle">며칠째 조용히 멈춰 있던 갱신 프로세스와 증권사 API 스케일 오류가 만든 원장 오염 사고</p><h2>재시작을 놓친 프로세스 하나가 사흘 동안 갱신을 조용히 망가뜨리고 있었다</h2>
+<p>다른 모델 조합을 프로덕션에서 계속 유지할지 재검토하다가, 실제 운영 상태를 하나씩 실측으로 확인해봤습니다.</p>
+<p>그 과정에서 순위를 산출하는 상주 프로세스 하나가 최근 코드 수정 이후 재시작되지 않은 채 며칠째 구버전 그대로 돌고 있었다는 걸 발견했습니다.</p>
+<p>새로 붙인 모델 계열을 그 구버전 코드가 인식하지 못해서, 정기 갱신이 매번 조용히 실패하고 있었던 겁니다.</p>
+<p>같은 시스템의 다른 프로세스는 최근 한 번 더 재시작된 덕분에 우연히 최신 코드로 돌고 있어서, 전체가 며칠씩 묵은 캐시로 보이지는 않았습니다. 그래서 더 늦게 발견됐습니다.</p>
+<p>재시작 자체는 바로 반영했고, 회귀 테스트로 다른 부작용이 없는지도 확인했습니다.</p>
+<p>부수적으로 하나 더 확인한 게 있는데, 최근 배포해 둔 두 모델 계열 비교 실험도 같은 이유로 배포일 이후 한 번도 실제로 돌아본 적이 없었습니다.</p>
+<p>관측 시작 시점을 배포일이 아니라 이번 재시작 시점으로 다시 잡아야 했습니다.</p>
+<p>수정한 모듈을 실제로 쓰는 상주 프로세스를 함께 재시작하지 않으면 이런 일이 생긴다는 건 이 프로젝트에서 이미 몇 번 겪었던 유형인데, 이번엔 재시작 명령 자체가 세션 권한 밖이라 발견하고도 사람이 직접 눌러야 했습니다.</p>
+<h2>모의계좌 원장 오염 — 증권사 API 필드 하나가 값을 축소해서 보내고 있었다</h2>
+<p>같은 날 낮, <a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">모의계좌로 돌리는 완전자동 검증 트랙</a>(새 창)의 집행 감시 장치가 경보를 보냈습니다.</p>
+<p>예정돼 있던 낮 라운드 하나가 흔적도 없이 통째로 빠져 있었습니다.</p>
+<p>확인해보니 원인은 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실행 안전장치</a>(새 창) 중 하나인 자동 손절 킬스위치가 그날 아침 손실폭을 실제보다 훨씬 크게 계산해서 스스로 발동해버린 것이었습니다.</p>
+<p>더 파고드니 근본 원인은 증권사 API 쪽에 있었습니다.</p>
+<p>체결 결과를 돌려줄 때 평균 체결단가 필드 하나가 실제 값의 1000분의 1로 축소돼서 오고 있었던 겁니다.</p>
+<p>며칠 전에도 이 증상이 한 번 관측돼서 "원인 미상 사례 1건"으로만 기록해뒀는데, 이번에 다시 보니 실은 그날 이후의 모든 체결에 상시로 발생하고 있었습니다.</p>
+<p>이 축소된 값이 그대로 원장에 쌓이면서 평균 매입가가 왜곡됐고, 장 시작 때 기준값을 다시 잡는 로직이 이 왜곡된 값을 마치 외부에서 돈이 들어오거나 나간 것처럼 오판했습니다.</p>
+<p>그 결과 손익 기준점 자체가 오염됐고, 낮 동안의 드로다운이 실제보다 훨씬 크게 계산되면서 킬스위치가 허위로 발동한 것이었습니다.</p>
+<p>수선은 오염되지 않은 것으로 확인된 다른 필드(체결 금액)를 체결 수량으로 나눠 단가를 역산하는 방식으로 우회했고, 테스트를 추가했습니다.</p>
+<p>원장 정정은 되돌릴 수 없는 작업이라 다른 AI 모델에게 자문을 구해 정확한 정정 순서와 검증값을 미리 받아뒀습니다.</p>
+<p>받아본 자문은 처음 세웠던 3단계 정정 계획이 부족하다고 지적했습니다. 일별 요약 시계열에도 같은 오염이 이중으로 남아 있다는 것과, 며칠 전부터 이미 걸려 있던 별도의 정합성 차단 플래그를 놓쳤다는 것까지 짚어줬습니다.</p>
+<p>정정은 백업 → 원장 정정 → 시계열 정정 → 기준값 재생성 → 킬스위치 해제 순서로 진행했고, 정정 후 계산된 현금·자산 총액이 자문이 미리 예측한 값과 소수점까지 일치하는 걸로 검증을 마쳤습니다.</p>
+<p>재발 방지책 몇 가지(원장에 값을 기록하는 시점에 스케일 자체를 검증하는 가드 등)는 아직 손을 못 대서 다음 작업 목록에 남겨뒀습니다.</p>
+<hr />
+<p>오늘 두 장애는 공통점이 있습니다.</p>
+<p>둘 다 원인은 며칠 전부터 조용히 진행되고 있었는데, 겉으로는 별문제 없어 보이다가 다른 걸 확인하던 중이거나 감시 장치가 우연히 걸려서야 드러났습니다.</p>
+<p>당장 급한 불은 다 껐지만, 재발 방지책은 아직 절반만 처리된 상태로 하루가 끝났습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

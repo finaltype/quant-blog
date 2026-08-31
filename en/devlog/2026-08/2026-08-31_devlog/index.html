@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Aug 31] A Missed Process Restart and a Paper-Account Ledger Corruption, on the Same Day&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-31_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Aug 31] A Missed Process Restart and a Paper-Account Ledger Corruption, on the Same Day&quot;</h1>
+<p class="subtitle">A ranking process that silently sat idle for days, and a brokerage API field that quietly shrank order prices by a factor of 1000</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A missed restart quietly broke ranking updates for days</h2>
+<p>While reviewing whether to keep running a different model combination in production, I went through the actual live state of things instead of trusting assumptions.</p>
+<p>That's when I found that one of the resident processes responsible for computing rankings hadn't been restarted after a recent code change, and had been running the old version for days.</p>
+<p>The old code didn't recognize a model family added recently, so the regular ranking refresh had been silently failing every cycle.</p>
+<p>Another process in the same system happened to have been restarted more recently, so it was running the latest code — which made the overall staleness harder to spot at a glance.</p>
+<p>I restarted the stale process right away and ran the regression tests to confirm nothing else broke.</p>
+<p>As a side effect of the same investigation, I also found that a recently deployed comparison experiment between two model families had never actually run since the day it was deployed, for the exact same reason.</p>
+<p>I had to reset the experiment's observation start date to the restart time instead of the original deploy date.</p>
+<p>This is a failure mode the project has hit before — forgetting to restart a resident process after touching code it imports — but this time the restart command itself was outside the current session's permissions, so a human had to do it directly even after I'd already found and diagnosed the problem.</p>
+<h2>Paper-account ledger corruption from a shrunken API field</h2>
+<p>Later the same day, the execution watchdog for <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">the fully automated paper-trading validation track</a>(new tab) fired an alert.</p>
+<p>A scheduled midday round had gone missing entirely, with no trace of ever running.</p>
+<p>The trigger turned out to be one of the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">execution safety layers</a>(new tab) — an automatic drawdown kill switch had fired on its own after miscalculating that morning's loss as far larger than it actually was.</p>
+<p>Digging further, the root cause was on the brokerage API side.</p>
+<p>A field returning the average execution price on fills was coming back scaled down by a factor of 1000 from the real value.</p>
+<p>The same symptom had shown up once a few days earlier and had been logged as "one unexplained case," but it turned out to have been happening on every single fill since then.</p>
+<p>That shrunken value got written straight into the ledger, distorting the recorded average cost. The morning re-seeding logic that resets the daily baseline then misread this distortion as if money had actually moved in or out of the account.</p>
+<p>That corrupted the profit/loss baseline, which made the intraday drawdown look far worse than reality and triggered the kill switch on a false alarm.</p>
+<p>The fix routed around the bad field entirely — recomputing the price by dividing a different, verified-clean field (total fill amount) by the fill quantity — and added tests for it.</p>
+<p>Correcting the ledger itself is irreversible, so before touching anything I asked a separate AI model for a second opinion on the exact correction sequence and expected values.</p>
+<p>That review caught gaps in my original three-step plan: the daily summary time series had the same corruption baked in twice, and a separate reconciliation-block flag had already been active for days without my noticing.</p>
+<p>The correction ran backup → ledger fix → time-series fix → baseline regeneration → kill-switch release, and the resulting cash and asset totals matched the AI's pre-computed prediction down to the decimal.</p>
+<p>A few of the longer-term fixes (like validating the scale of a value at the moment it's written to the ledger) are still pending and went onto the task backlog.</p>
+<hr />
+<p>Both incidents today shared the same shape.</p>
+<p>Each cause had been quietly building for days, invisible until something else I was checking — or a monitor firing by chance — surfaced it.</p>
+<p>Both fires got put out, but the longer-term prevention work is only half done as the day wraps up.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
