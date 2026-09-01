@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 1] Four Stages of Refactoring, a Follow-Up Review, and Automated Restarts&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-01_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 1] Four Stages of Refactoring, a Follow-Up Review, and Automated Restarts&quot;</h1>
+<p class="subtitle">I asked an AI to review the whole project&#x27;s structure, and once the fixes were in, I asked it to check its own work</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>I asked an AI to review the whole project's structure</h2>
+<p>The project has grown enough over the past few days that I felt it needed a fresh, top-to-bottom structural review.</p>
+<p>So I asked an AI to look over the entire codebase and point out what needed improving.</p>
+<p>I took the advice it gave and worked through it stage by stage, all day.</p>
+<p>I pulled the serving-engine code into its own module, and unified an ensemble-combining formula that had been duplicated across several places into one.</p>
+<p>I built a shared library for reading execution records and migrated several consumers onto it, and I added a new registry to manage account sleeve (allocation compartment) information.</p>
+<p>I also added a generator that automatically documents the current state of the operational infrastructure.</p>
+<p>After each stage I ran the full test suite to check for regressions, and restarted the resident processes that used the changed code so the fixes actually took effect.</p>
+<h2>Once the fixes were in, I asked the AI to check its own work</h2>
+<p>I didn't stop there. I handed the whole day's changes back to the AI and asked for a code review — did it actually fix things correctly?</p>
+<p>I split the surface area into five parallel review tracks.</p>
+<p>Most of what came back was minor. One finding was a real bug.</p>
+<p>There's a check-only mode that inspects operational state without changing anything, and its freshness check wasn't properly excluding a timestamp column from comparison.</p>
+<p>So it would pass right after generation, then start throwing false "needs regeneration" alarms after just a minute.</p>
+<p>Luckily this check wasn't wired into any enforced pipeline yet, so there was no real damage — but left alone, it would have kept raising false alarms once it was.</p>
+<p>I fixed everything that turned up and reran the regression suite to confirm.</p>
+<p>The same day, while re-verifying <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">execution safety mechanisms</a>(new tab) separately, one more bug surfaced: the code that finds and kills a process by name was using a regex construct that failed to compile in the first place.</p>
+<p>I fixed it as soon as I found it.</p>
+<h2>The fixes needed a restart, and it happened to be a blackout window</h2>
+<p>The problem was that applying these fixes required restarting five resident processes.</p>
+<p>And the moment I checked, it happened to fall inside a restart-blocked window while overnight production runs were underway.</p>
+<p>Instead of forcing it through right then, I set up a scheduled job that would fire the restart automatically once the conditions cleared.</p>
+<p>I widened the condition beyond just the time window — it also waits if other overnight verification jobs are still running, even after the window technically opens.</p>
+<h2>Wrapping up yesterday's ledger-corruption follow-up</h2>
+<p>Yesterday's post covered a brokerage API field returning a scaled-down value that corrupted the <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">paper-trading ledger</a>(new tab). Today I finished the recurrence-prevention work for that incident.</p>
+<p>Of the four measures the AI proposed, I'd finished two yesterday and implemented the remaining two today.</p>
+<p>One guard compares the fill price against a live quote at the moment it's recorded to the ledger and rejects it if it looks abnormally scaled down. The other automatically escalates the alert level if a reconciliation block stays unresolved across multiple trading days.</p>
+<p>That closes out all four recurrence-prevention measures.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

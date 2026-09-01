@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260901] 구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-01_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260901] 구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화&quot;</h1>
+<p class="subtitle">AI에게 프로젝트 구조를 통째로 봐달라고 했고, 고친 뒤엔 다시 검증까지 맡겼다</p><h2>프로젝트 구조를 AI에게 통째로 봐달라고 했다</h2>
+<p>며칠 전부터 이 프로젝트가 꽤 커져서, 코드 구조 전체를 다시 한번 점검받아야겠다고 생각했습니다.</p>
+<p>그래서 AI에게 프로젝트 전체 구조를 훑어보고 개선할 부분을 짚어달라고 요청했습니다.</p>
+<p>받은 자문을 단계별로 나눠서 하루 종일 순서대로 실행에 옮겼습니다.</p>
+<p>서빙 엔진 관련 코드를 별도 모듈로 분리했고, 여러 곳에 흩어져 있던 앙상블 결합 공식을 하나로 통합했습니다.</p>
+<p>체결 기록을 읽는 공용 라이브러리를 새로 만들어 여러 소비 코드가 이걸 쓰도록 옮겼고, 계좌 슬리브(운용 구획) 정보를 관리하는 레지스트리도 새로 만들었습니다.</p>
+<p>운영 인프라 현황을 자동으로 문서화해주는 생성기도 하나 추가했습니다.</p>
+<p>각 단계가 끝날 때마다 전체 테스트를 돌려 회귀가 없는지 확인했고, 수정한 코드를 쓰는 상주 프로세스도 그때그때 재시작해서 실제로 반영되게 했습니다.</p>
+<h2>다 고친 뒤엔 다시 AI에게 검증을 맡겼다</h2>
+<p>여기서 끝내지 않고, 하루 동안 고친 내용을 다시 AI에게 통째로 넘겨서 "제대로 고쳤는지" 코드리뷰를 받았습니다.</p>
+<p>영역을 다섯 갈래로 나눠 병렬로 검증을 맡겼습니다.</p>
+<p>대부분은 사소한 지적이었는데, 하나는 실제 결함이었습니다.</p>
+<p>운영 상태를 점검만 하고 바꾸지는 않는 모드 하나가 있는데, 정상성 판정 로직이 시각이 찍힌 칸을 비교 대상에서 제대로 빼지 못하고 있었습니다.</p>
+<p>그래서 만든 직후엔 통과하다가, 1분만 지나면 "다시 만들어야 한다"는 거짓 경보를 내는 문제였습니다.</p>
+<p>다행히 아직 이 점검이 자동화 파이프라인에 강제로 물려 있지 않아서 실제 피해는 없었지만, 방치하면 나중에 물렸을 때 계속 헛경보를 낼 뻔했습니다.</p>
+<p>찾은 문제를 전부 고치고 회귀 테스트를 다시 돌려 확인했습니다.</p>
+<p>같은 날 다른 쪽에서 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실행 안전장치</a>(새 창) 재검증을 하다가도 부수적으로 하나 더 발견했는데, 특정 프로세스를 이름으로 찾아 종료하는 코드가 정규식 문법 하나를 잘못 써서 애초에 컴파일이 안 되고 있었습니다.</p>
+<p>찾자마자 바로 고쳤습니다.</p>
+<h2>고친 코드를 반영하려면 재시작이 필요한데, 마침 금지 시간대였다</h2>
+<p>문제는 이 수정분들을 실제로 반영하려면 관련 상주 프로세스 다섯 개를 재시작해야 한다는 점이었습니다.</p>
+<p>그런데 확인한 시각이 마침 야간 프로덕션이 한창 돌아가는 재시작 금지 시간대였습니다.</p>
+<p>무리하게 지금 누르는 대신, 조건이 풀리면 자동으로 재시작을 실행하는 예약 작업을 새로 만들어 등록했습니다.</p>
+<p>단순히 시각 창만 보는 게 아니라, 다른 야간 검증 작업이 아직 진행 중이면 창이 열려도 계속 대기하도록 조건을 넓혀뒀습니다.</p>
+<h2>어제 겪은 원장 오염 사고, 재발방지 조치를 오늘 마저 끝냈다</h2>
+<p>어제 글에서 다뤘던 증권사 API 필드 축소값이 <a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">모의계좌 원장</a>(새 창)을 오염시킨 사고, 그 재발방지 조치를 오늘 마저 마쳤습니다.</p>
+<p>AI가 제안한 재발방지책 4가지 중 어제 2개를 끝냈고, 오늘 나머지 2개를 구현했습니다.</p>
+<p>체결가를 원장에 기록하는 시점에 조회한 값이 비정상적으로 축소돼 있지 않은지 미리 비교해서 걸러내는 가드 하나, 그리고 원장 정합성 차단이 여러 거래일 연속으로 풀리지 않으면 자동으로 경보 수위를 올리는 규율 하나였습니다.</p>
+<p>이걸로 재발방지책 4건이 전부 끝났습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

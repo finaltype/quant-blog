@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Aug 2026] Going Live and Onboarding a Second Broker, With Quiet Bugs Along the Way&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08_monthly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Aug 2026] Going Live and Onboarding a Second Broker, With Quiet Bugs Along the Way&quot;</h1>
+<p class="subtitle">This month&#x27;s biggest progress was starting live trading and running a second broker in parallel, while I kept turning up bugs that had been failing quietly for days</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A quiet regression, then a full audit right before going live</h2>
+<p>August started with wrapping up the alert system work carried over from the previous month.</p>
+<p>Along the way I found that the paper-trading performance report didn't quite match the real account balance.</p>
+<p>The cause was a calculation that didn't properly account for fees and taxes, and the very next day a cache-timing side effect from that fix combined with an old race condition into a small regression.</p>
+<p>Trading halted safely and no bad orders went out, but it was a reminder of a lesson I'd already learned once: when you fix a module, restart every resident process that uses it.</p>
+<p>Over the weekend I revisited three long-deferred strategy questions — changing the trading cadence, trading continuously through the day, and switching to the US market — and dropped all three.</p>
+<p>It confirmed that doubling down on the current three-round batch execution and domestic-market focus was the right call, rather than starting something new.</p>
+<p>While polishing the offline replay tool, though, I found and reversed three of my own earlier conclusions. One of them turned out to be a budget-calculation bug that happened to skip crash-day trades, making results look better than they actually were.</p>
+<p>The core of that weekend was a full pre-launch audit.</p>
+<p>The live order-routing path, which the docs said was already connected, was actually still pointing at paper trading. A safety test showed green, but the safety switch it was supposed to be checking was actually disabled.</p>
+<p>Both were the kind of problem where "it runs, but nothing is actually being verified" — I wouldn't have caught either without this audit.</p>
+<h2>Went live, and dropped the approval step</h2>
+<p>After that audit, live trading began.</p>
+<p>The first round went through Telegram approval as usual, but once the order was filled someone asked "why do we still approve every single one?" — and the approval step was removed on the spot.</p>
+<p>Trades now proceed automatically once mechanically checkable conditions are met, with a notification always sent after the fact.</p>
+<p>That same afternoon, a manual trade made to free up cash was misread by the system as an unauthorized fill, and the safety switch force-halted trading twice.</p>
+<p>I built a formal procedure to declare manual trades to the system so the same thing wouldn't happen again.</p>
+<p>Background on <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and the safety layer</a>(new tab) is covered in an earlier post.</p>
+<p>A few days later I found the drawdown baseline had been wrongly set: the balance at the moment live trading started got stored as the "all-time high," which broke the intended rule that drawdown limits could be manually reset within the same day. I fixed it and set a policy so kill switches and circuit breakers auto-release on the next trading day.</p>
+<p>That had to be settled before moving to unattended overnight operation.</p>
+<h2>The GPU verdict flipped twice, and verification tools exposed hidden gaps</h2>
+<p>In week three I swapped the graphics card for a different brand — a big change.</p>
+<p>After the production rollout, the conclusion was "one new card does the work of two old ones," but while re-examining whether to buy yet another card, the verdict flipped twice in a single day.</p>
+<p>I ended up buying nothing, then later reversed that too, deciding to add one card for experiments alongside the existing one instead.</p>
+<p>That same week, wiring a newly built report-figure verification tool into production revealed formatting errors in more than half the tickers in every daily report.</p>
+<p>Looking back 45 days, the same error had been there every single day — nobody knew until the tool existed.</p>
+<p>A daily reproducibility gauge also died two nights running, because it judged "GPU is free" from a single instantaneous read while another overnight job was actually holding it. Switching to a direct occupancy check removed the failure point.</p>
+<p>The safety layer on the live account caused two incidents of its own this week.</p>
+<p>A daily trading-budget allocation rule kept pushing a small sell order to the back of the queue for days, which I fixed; and a drawdown guard reacting to momentary intraday dips wrongly blocked two legitimate buys, which I redesigned to react only on a close-to-close basis. In both cases the blocked orders were executed manually.</p>
+<p>The blog's publishing infrastructure also changed significantly this week.</p>
+<p>The reason devlogs had gone quiet for over ten days turned out to be a save step silently stuck waiting on a permission prompt, and I used the opportunity to move publishing off Tistory — whose write API had been broken for a long time — to GitHub Pages and Dev.to.</p>
+<p>The theme of "finding quiet failure points and making them loud" repeated all week.</p>
+<p>I resisted the temptation to shift an A/B test's adoption threshold toward a better-looking subsample and kept the full-sample criterion instead, added pre-limit timing alerts to the <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">paper-trading auto-validation track</a>(new tab)'s execution unit after two timeouts I'd only noticed after the fact, and added observation logging to a safety layer that couldn't distinguish "zero detections because nothing was wrong" from "the detector itself died."</p>
+<h2>The second broker went from live verification to parallel operation</h2>
+<p>Week four's biggest progress was integrating a new broker.</p>
+<p>I built the new client with an interface identical to the existing one, so upstream code wouldn't need to change when swapping brokers later.</p>
+<p>I manually verified the full buy → sell → cancel-unfilled cycle on a live account within small limits, then had another AI review it — it came back with "not ready to swap in yet," so I fixed nearly everything it flagged and re-verified.</p>
+<p>The very next day I put this broker on top of the paper-validation track as a separate sleeve and started parallel operation, keeping the existing broker as primary.</p>
+<p>Instead of creating a bot-only account, I chose to safely share the existing account between manual and automated trading.</p>
+<p>More quietly-broken-for-days bugs kept surfacing this week too.</p>
+<p>While doing a full reclassification pass over the backlog, I found a lookup function had been silently returning empty values for 8 days because a required library was missing.</p>
+<p>A separate cache had been broken for three days from mismatched library versions across environments, and a repeated-run verification job had been marking itself "complete" when a previous run had actually died midway.</p>
+<p>On the last day of the week I found a midnight-boundary bug in the overnight monitor's time comparison, leaving the entire second half of every night outside monitoring — the third recurrence of a monitoring-gap failure I'd seen before.</p>
+<p>I also moved several manually-checked things over to automation or AI review this week.</p>
+<p>I standardized a scheduling function so GPU experiments stop colliding with settlement windows, and turned a months-stalled, manually-checked adoption condition for a new AI model in the ensemble into an automatic sensor that only alerts once the condition is actually met.</p>
+<p>Another AI's full review also caught a process-kill rule that matched targets by model name alone, which could have killed an experimental server sharing a name with production — I narrowed it to also check the port number.</p>
+<p>The weeks-long local-model comparison wrapped up this week too, with a new candidate promoted to production. I kept the retired model logging silently at zero weight in the <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI ensemble pipeline</a>(new tab) to see how closely the two models agree before deciding anything further.</p>
+<h2>Two incidents collided on the last day</h2>
+<p>Two incidents collided on the final day of the month.</p>
+<p>A resident process that computes rankings hadn't restarted after a recent code change, so it kept running the old version for days and silently failed to pick up a newly added model family in its scheduled updates.</p>
+<p>It went unnoticed longer because a sibling process on the same system happened to have restarted recently, so the whole system didn't look stale. That same afternoon, an entire round on the paper-trading auto-validation track vanished without a trace.</p>
+<p>Digging in, I found the broker's API had been returning the average fill-price field scaled down by a factor of 1000. That corrupted value had been accumulating in the ledger, and the day-start baseline-reset logic misread it as an external cash movement, contaminating the P&amp;L baseline.</p>
+<p>That inflated the computed intraday drawdown far beyond reality and triggered the kill switch on a false signal.</p>
+<p>I worked around it by deriving the unit price from an uncorrupted field instead, and since correcting the ledger is irreversible, I consulted another AI beforehand for the exact sequence and expected values.</p>
+<p>That advice caught that my original three-step plan wasn't enough, and after correcting in the order backup → ledger fix → time-series fix → baseline regen → kill-switch release, the resulting numbers matched the AI's pre-computed values down to the decimal.</p>
+<hr />
+<p>Two threads ran through this month.</p>
+<p>One was visible forward progress: actually going live, moving to approval-free automatic execution and unattended operation, and taking a second broker through live verification into parallel operation.</p>
+<p>The other was a repeated pattern of finding things that had been quietly failing for days — sometimes weeks — scattered throughout that progress: a process that never restarted, an API field silently scaled down, a monitoring window that missed the second half of every night.</p>
+<p>Running into that same "it runs, but nothing is actually being checked" failure mode all month long was a steady reminder that this system still isn't at a point where it can be fully trusted on its own.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
