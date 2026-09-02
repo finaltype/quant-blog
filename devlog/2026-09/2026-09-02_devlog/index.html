@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260902] 장중 MoE 섀도 실가동과 코스피·코스닥 후보풀 재조정&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-02_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260902] 장중 MoE 섀도 실가동과 코스피·코스닥 후보풀 재조정&quot;</h1>
+<p class="subtitle">새로 켠 관측 파이프라인에서 버그 세 개가 연달아 튀어나왔고, 같은 날 후보 종목 구성비도 바꿨다</p><h2>장중 관측 파이프라인을 처음 켰더니 버그가 연달아 나왔다</h2>
+<p>며칠 전부터 준비해 온 "장중 MoE 섀도" — 장이 열려 있는 시간대에 보조 모델을 별도 계통으로 돌려서, 실제 매매에는 반영하지 않고 성능만 관측하는 파이프라인을 오늘 처음 실가동했습니다.</p>
+<p>배선 자체는 어제까지 다 끝나 있었습니다. 예외적으로 낮 시간에 GPU를 쓸 수 있는 창을 새로 정의하고, 사전등록 문서를 동결하고, 기존 프로덕션 경로와 데이터가 절대 섞이지 않도록 격리해서 트리거까지 걸어둔 상태였습니다.</p>
+<p>그런데 막상 오전에 처음 발화하자마자 문제가 세 개 연달아 터졌습니다.</p>
+<p>첫 번째는 GPU 메모리였습니다. 이전 실행이 남긴 서버가 자원을 붙잡고 있는 걸 모르고 새로 기동하려다 그대로 죽었습니다.</p>
+<p>기동 전에 남은 메모리를 미리 확인하는 절차를 추가했고, 마침 운영 중인 서버가 이미 같은 모델을 서빙하고 있으면 새로 띄우지 않고 읽기 전용으로 그냥 붙여 쓰도록 고쳤습니다.</p>
+<p>두 번째는 사소한 로깅 버그였습니다. 서버 준비에 실패했을 때 스킵 사유를 기록하는 함수가 야간용과 장중용이 서로 바뀌어 호출되고 있어서 정정했습니다.</p>
+<p>세 번째가 가장 심각했습니다. 장중 매매를 언제 멈출지 판단하는 로직이 오늘 새로 만든 예외 시간창의 존재를 몰라서, 발화한 지 얼마 안 돼 대부분의 종목을 처리하지 못한 채로 조기 종료해 버렸습니다.</p>
+<p>발견 즉시 판단 로직에 예외창 확인 단계를 끼워 넣고 테스트까지 붙여 고쳤습니다. 세 버그를 전부 잡은 뒤 수동으로 다시 돌렸더니, 이번엔 전 종목이 끝까지 정상 처리됐습니다.</p>
+<p>오늘이 이 관측 파이프라인의 첫 유효 관측일로 확정됐습니다. 실제 매매 가중치에 반영하는 결정은 여전히 데이터가 충분히 쌓인 뒤에나 검토할 일이라, 지금은 순수하게 관측만 쌓는 단계입니다.</p>
+<h2>코스피·코스닥 후보 종목 구성비를 바꿨다</h2>
+<p>다른 한쪽에서는 코스닥 종목이 너무 많이 후보에 오르고 코스피 쪽은 부족한 게 아니냐는 의문이 있었습니다.</p>
+<p>AI에게 자문을 구했더니 처음엔 신호 순위와 시가총액 순위 사이에 언뜻 모순처럼 보이는 결과가 나와서, 다시 한번 검증을 요청했습니다.</p>
+<p>재검증 결과 둘 사이 상관관계는 사실상 없다는 게 확인됐고, 결론이 정리됐습니다. 코스닥 쪽은 과공급이 아니었고, 코스피 쪽에서 후보풀 바깥에 있는 대형주 몇 종목이 신호 기준으로는 상위권에 들고 있다는 게 드러났습니다.</p>
+<p>처음엔 비용 없는 관측 로거를 새로 만들어 한 달 정도 데이터를 더 쌓고 판단하자는 게 권고안이었습니다.</p>
+<p>그런데 과거 30일치를 그냥 조회하면 되는 거 아니냐고 확인해봤더니, 전체 종목의 신호 점수가 매일 밤 덮어써지는 구조라 과거 기록 자체가 안 남아 있다는 걸 알게 됐습니다.</p>
+<p>그래서 지난 한 달치 가격 이력에 지금 모델을 다시 통과시켜서 그 기간의 신호 순위를 사후 재구성하는 일회성 스크립트를 새로 짜서 돌렸습니다.</p>
+<p>재구성 결과를 놓고 다시 자문을 거쳐 코스피 후보를 늘리고 코스닥 후보를 줄이는 쪽으로 최종 결정했습니다. 관련 소비 코드 열한 곳을 전부 하나의 설정값 참조로 동기화하고, 전체 회귀 테스트를 통과시킨 뒤 상주 프로세스를 재시작해서 바로 적용했습니다.</p>
+<p>바뀐 구성비 때문에 코스닥 하위권으로 밀려나는 보유 종목이 하나 있어서, 오늘 밤 야간 배치에서 실제로 강제 매도가 발생하는지도 함께 지켜보기로 했습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
