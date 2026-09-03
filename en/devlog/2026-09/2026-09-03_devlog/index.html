@@ -33,29 +33,29 @@
 <p>Yesterday, while wiring up a new intraday observation pipeline, one line inside the model-selection function got accidentally moved under a conditional.</p>
 <p>The problem was that the same function is also used by the regular overnight production batch. On that path, the condition never triggers, so a variable was left undefined and the batch crashed.</p>
 <p>From 8pm to 6am, it retried automatically every five minutes and died at the exact same spot every time. Close to a hundred attempts over ten hours, and not one of them finished.</p>
-<p>There was no self-alerting mechanism, so it only surfaced the next morning when someone directly asked "was everything okay overnight?" The one broken line was reverted immediately, and all resident processes were restarted.</p>
-<p>We also checked why over a thousand existing regression tests missed this. It turned out every test that touched this function replaced the whole thing with a mock, so none of them ever actually exercised the real internal logic.</p>
-<p>So a new test was added that actually runs the default code path. We confirmed it failed with the exact same error against the pre-fix code before committing it as passing.</p>
+<p>There was no self-alerting mechanism, so it only surfaced the next morning when I directly asked "was everything okay overnight?" I reverted the one broken line immediately and restarted all resident processes.</p>
+<p>I also checked why over a thousand existing regression tests missed this. It turned out every test that touched this function replaced the whole thing with a mock, so none of them ever actually exercised the real internal logic.</p>
+<p>So I added a new test that actually runs the default code path. I confirmed it failed with the exact same error against the pre-fix code before committing it as passing.</p>
 <h2>Recovery surfaced a loophole in the bypass path</h2>
 <p>A batch that never finished overnight meant the trading model's ranking was now two days stale by morning.</p>
-<p>The plan was to rerun the heavy model from scratch and let it finish by afternoon, relying in the meantime on the existing safety gate that filters out daytime automated trading rounds.</p>
-<p>Once the model finished in the afternoon, a script re-froze the day's trading criteria from that output, and a trading round was triggered manually.</p>
+<p>I decided to rerun the heavy model from scratch and let it finish by afternoon, relying in the meantime on the existing safety gate that filters out daytime automated trading rounds.</p>
+<p>Once the model finished in the afternoon, I ran a script that re-froze the day's trading criteria from that output, then triggered a trading round manually.</p>
 <p>That manual trigger failed completely — no orders went through. The cause: a flag meant only for scheduled runs was hardcoded into the execution unit itself, so even the manual run got misclassified as "a scheduled round that arrived too late" and was blocked.</p>
-<p>A workaround (running one layer lower, bypassing the unit) triggered it successfully. The loophole itself was left as a follow-up item for a proper fix later.</p>
+<p>I found a workaround (running one layer lower, bypassing the unit) and triggered it successfully. I left the loophole itself as a follow-up item for a proper fix later.</p>
 <h2>The live account had a similar incident</h2>
-<p>A few automated trading timers were stopped briefly during the day. One of them was quietly restarted by a separate auto-recovery mechanism nobody had accounted for.</p>
-<p>As a result, the live account executed a handful of trades against criteria that were still frozen from two days earlier. AI was asked to verify safety, and confirmed that the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety layer</a>(new tab) — the turnover cap and the loss ceiling — had both worked correctly, and that the worst-case loss was very small.</p>
-<p>Based on that verdict, the trades that had already gone out were left as is.</p>
-<p>Investigating this also turned up a second risk of the same kind: a recovery trigger registered earlier that morning turned out to be another mechanism capable of reviving the same timer.</p>
-<p>Turning it off right away would have also killed the afternoon's automated trading restart, so the decision was escalated for a direct call. The answer was to keep it, since the afternoon restart was wanted.</p>
+<p>I briefly stopped a few automated trading timers during the day. One of them was quietly restarted by a separate auto-recovery mechanism I hadn't accounted for.</p>
+<p>As a result, the live account executed a handful of trades against criteria that were still frozen from two days earlier. I asked an AI model to verify safety, and it confirmed that the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety layer</a>(new tab) — the turnover cap and the loss ceiling — had both worked correctly, and that the worst-case loss was very small.</p>
+<p>Based on that verdict, I decided to leave the trades that had already gone out as is.</p>
+<p>While investigating this, I also turned up a second risk of the same kind: a recovery trigger I'd registered earlier that morning turned out to be another mechanism capable of reviving the same timer.</p>
+<p>Turning it off right away would have also killed the afternoon's automated trading restart, so I had to make a direct call: keep it, since I wanted the afternoon restart to go ahead.</p>
 <p>The lesson: whenever something gets stopped temporarily, first check whether any other automation could bring it back, and handle all of them together.</p>
 <h2>A two-day-old ledger contamination bug, finally traced to its root</h2>
 <p>Yesterday, a paper-trading account showed unexplained ghost trades, and the exact cause couldn't be pinned down at the time.</p>
 <p>Today the same symptom reappeared, and this time tracing it backward from the recurrence found the root cause: a regression test file.</p>
 <p>That test exercised the real code path of the internal function that records fills, without mocking it out. So every time the full test suite ran, it quietly wrote a handful of fake trades into the live operational database.</p>
-<p>The contaminated rows were backed up, precisely identified, and deleted, then reconciled against actual holdings.</p>
-<p>The test was also fixed to properly isolate that function. And as a general defense against this class of bug recurring, any new database file used in production was reconfirmed to be registered in the test-isolation list right away.</p>
-<p>The same day also produced a wave of test failures from an unrelated full suite run during market hours — those turned out to be false positives, triggered by the test suite mistaking live production writes for corruption. Running the full regression suite during market hours was reaffirmed as something to avoid going forward.</p>
+<p>I backed up the contaminated rows, precisely identified and deleted them, then reconciled the ledger against actual holdings.</p>
+<p>I also fixed the test to properly isolate that function. As a general defense against this class of bug recurring, I reconfirmed the rule that any new database file used in production gets registered in the test-isolation list right away.</p>
+<p>The same day also produced a wave of test failures from an unrelated full suite run during market hours — I confirmed those were false positives, triggered by the test suite mistaking live production writes for corruption. I reaffirmed the rule that the full regression suite shouldn't run during market hours.</p>
 </article>
 <footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
 </body>
