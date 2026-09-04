@@ -121,6 +121,8 @@
   <url><loc>https://finaltype.github.io/quant-blog/en/e1_weekly/2026/2026-08-28_weekly/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/e1_weekly/2026/2026-09-03_weekly/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/en/e1_weekly/2026/2026-09-03_weekly/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/e1_weekly/2026/2026-09-04_weekly/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/en/e1_weekly/2026/2026-09-04_weekly/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-08-22_building-a-numeric-verifier/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_building-a-numeric-verifier/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/</loc></url>
@@ -137,4 +139,6 @@
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-08-29_swallowed-exception-silent-failure/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-09-06_stale-process-never-recognizes-new-condition/</loc></url>
 </urlset>
