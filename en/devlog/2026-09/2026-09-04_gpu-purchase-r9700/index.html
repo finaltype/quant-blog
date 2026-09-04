@@ -39,6 +39,11 @@
 <h2>So why buy it today</h2>
 <p>This time the purpose is different. <strong>I'm not trying to replace my main production card</strong> — I wanted to try running, offline, <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/" target="_blank" rel="noopener noreferrer">a different local model I'm currently evaluating</a>(new tab), on this card specifically.</p>
 <p>My single RTX 5090 is already using nearly all its VRAM for nightly jobs, so there's no headroom to stack an experimental server on top of it. With a second card, I can run experiments entirely separately without touching the main workload at all.</p>
+<h2>Actually, I changed the motherboard before the card</h2>
+<p>The moment I decided to install this card, the first problem I ran into wasn't the card itself — it was the <strong>motherboard</strong>.</p>
+<p>With a thick card like the 5090 already occupying the first slot, the physical clearance to the second slot varies a lot between boards. Most of the boards I considered simply didn't have enough clearance to fit two cards side by side.</p>
+<p>On top of that, I had to check whether the second slot actually gets usable bandwidth. A lot of boards have a slot that's physically there but routed through the chipset with narrow bandwidth — plug a card in and its performance takes a real hit.</p>
+<p>Finding a board that satisfied both conditions took several rounds of swapping candidates, and I eventually settled on the board I'm using now. I upgraded the case and power supply at the same time, to cover two cards, a bigger case, and more power headroom all at once.</p>
 <h2>What I checked today</h2>
 <p>The first thing I checked after installing the card was whether the drivers picked it up correctly. Kernel driver recognition, GPU detection, and the compute stack (ROCm) all checked out fine.</p>
 <p>I set the motherboard slots to physically split the two cards' PCIe lanes in the BIOS, so the two cards don't step on each other's resources.</p>
