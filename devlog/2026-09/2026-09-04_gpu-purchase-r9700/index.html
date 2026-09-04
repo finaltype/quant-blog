@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>몇 번이나 기각했던 그래픽카드를 오늘 결국 들였습니다 - AMD Radeon AI PRO R9700 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-04_gpu-purchase-r9700/index.html">Read in English</a></p>
+<article>
+<h1>몇 번이나 기각했던 그래픽카드를 오늘 결국 들였습니다 - AMD Radeon AI PRO R9700</h1>
+<p class="subtitle">메인 카드로는 세 번 넘게 떨어뜨렸던 카드를, 목적을 바꿔서 다시 산 이야기</p><p>오늘 중고로 그래픽카드를 한 장 더 들였습니다. 기가바이트 AMD Radeon AI PRO R9700(32GB)입니다.</p>
+<p>지난 <a href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-27_gpu-purchase-rtx5090/" target="_blank" rel="noopener noreferrer">RTX 5090 구매 후기</a>(새 창)를 쓴 지 얼마 안 됐는데, 벌써 카드가 한 장 늘었습니다. 근데 이번엔 좀 특이한 사연이 있습니다 — 사실 이 카드, <strong>제가 몇 번이나 기각했던 카드</strong>입니다.</p>
+<p><img alt="기존 RTX 5090과 나란히 둔 R9700 AI TOP 박스" src="https://finaltype.github.io/quant-blog/images/2026-09-04_r9700-box-compare.jpg" /></p>
+<h2>세 번쯤 검토하고, 세 번쯤 접었다</h2>
+<p>이 카드를 처음 검토한 건 한참 전이었습니다. 당시 메인으로 쓰던 카드보다 메모리가 더 크고 전력 효율도 낫다는 얘기를 듣고, "메인 프로덕션 카드를 이걸로 바꿀 수 있지 않을까" 하는 생각으로 조사를 시작했습니다.</p>
+<p>그런데 파고들수록 걸리는 게 많았습니다. 실측 벤치마크를 찾아보니, 제가 실제로 쓰는 워크로드(작은 모델을 단일 스트림으로 반복 호출하는 방식) 조건에서는 이 카드가 기존 카드보다 오히려 느렸습니다. 특히 입력을 처리하는 초반 단계(prefill)가 유독 약했는데, 이건 서빙 소프트웨어를 바꿔가며 여러 번 다시 재봐도 같은 방향으로 나왔습니다 — 소프트웨어 문제가 아니라 이 세대 칩 자체의 특성으로 보였습니다.</p>
+<p>두 장을 나란히 꽂아서 계산을 나눠 맡기는 구성도 검토했습니다. 이론상 속도는 두 배 가까이 나올 수 있었지만, 전력·슬롯 간격 같은 물리적 제약과, 계산해보니 기대만큼 이득이 크지 않다는 결론이 겹쳐서 이것도 접었습니다.</p>
+<p>그래서 그때는 "메인 카드로는 안 되겠다"로 판정을 내리고 정리했습니다. 다만 완전히 문을 닫진 않았습니다 — 나중에 서빙 소프트웨어 쪽 커널 지원이 좋아지거나, 실측 데이터가 더 쌓이면 다시 볼 여지는 남겨뒀습니다.</p>
+<h2>그런데 오늘 왜 다시 샀나</h2>
+<p>이번엔 목적이 다릅니다. <strong>메인 프로덕션 카드를 바꾸려는 게 아니라</strong>, 지금 <a href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/" target="_blank" rel="noopener noreferrer">정식 검증 중인 다른 로컬 모델</a>(새 창)을 이 카드에서 오프라인으로 한 번 돌려보고 싶었습니다.</p>
+<p>지금 RTX 5090 한 장이 이미 밤마다 도는 작업으로 VRAM을 거의 다 쓰고 있어서, 실험용 서버를 더 얹을 여유가 없습니다. 두 번째 카드가 있으면 메인 작업을 전혀 건드리지 않고 따로 실험을 돌릴 수 있습니다.</p>
+<h2>오늘 확인한 것</h2>
+<p>카드를 꽂고 나서 제일 먼저 드라이버가 제대로 잡히는지부터 확인했습니다. 커널 드라이버, GPU 인식, 계산 스택(ROCm)까지 전부 정상 동작을 확인했습니다.</p>
+<p>메인보드 슬롯은 5090과 나눠서 물리적으로 분기되도록 BIOS에서 설정했습니다. 두 카드가 서로 자원을 침범하지 않게 하기 위해서입니다.</p>
+<p><img alt="케이스에 장착된 R9700, 위쪽 GEFORCE RTX와 나란히" src="https://finaltype.github.io/quant-blog/images/2026-09-04_r9700-case-installed.jpg" /></p>
+<p><img alt="두 카드가 함께 장착된 케이스 전체 모습, 책상 위" src="https://finaltype.github.io/quant-blog/images/2026-09-04_r9700-desk-setup.jpg" /></p>
+<p><img alt="GEFORCE RTX 로고 클로즈업, 아래로 R9700의 방열판이 보인다" src="https://finaltype.github.io/quant-blog/images/2026-09-04_r9700-closeup-geforce.jpg" /></p>
+<p><img alt="AORUS 로고와 미니 디스플레이 클로즈업" src="https://finaltype.github.io/quant-blog/images/2026-09-04_r9700-closeup-aorus.jpg" /></p>
+<h2>다음에 할 일</h2>
+<p>어젯밤 다른 모델이 검증용으로 얼려둔 입력 데이터 스냅샷이 하나 있습니다. 이걸 그대로 재사용해서, 이 카드에서 로컬 모델을 오프라인으로 한 번 채점해볼 계획입니다.</p>
+<p>중요한 건 이 실험이 <strong>실제 매매 판단에는 전혀 섞이지 않는다</strong>는 점입니다. 완전히 격리된 별도 실험이고, 결과가 아무리 좋게 나와도 곧바로 프로덕션에 반영하지 않습니다. 지금까지 다른 실험용 모델들에도 똑같이 적용해온 원칙 그대로입니다 — 결과를 충분히 지켜본 다음에야 별도로 채택 여부를 판단합니다.</p>
+<p>결과가 나오면 이 카드가 그 실험에서 어느 정도 성능을 보였는지 따로 정리해서 올리겠습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
