@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 4] Closing Out Yesterday&#x27;s Workaround and Two Misfiring Bugs&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-04_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 4] Closing Out Yesterday&#x27;s Workaround and Two Misfiring Bugs&quot;</h1>
+<p class="subtitle">Fixed the hardcoding that blocked manual trading rounds at the root, and tracked down why a ledger-contamination bug recurred and why an overnight recovery guard kept misfiring</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Going back to fix yesterday's workaround properly</h2>
+<p>While recovering from yesterday's overnight batch failure, I found that manually triggering a trading round always failed with zero orders placed.</p>
+<p>At the time I patched around it by running the underlying script directly instead of going through the normal service layer, and left the real fix for later.</p>
+<p>Today I actually dug into the cause. A flag marking "this is a scheduled automatic round" was hardcoded directly into the service unit files, so even a manual run got mistaken for a scheduled one every time.</p>
+<p>I asked an AI for a design recommendation, and we settled on using a separate environment variable that systemd only injects when a unit is triggered by its timer. No new files or markers needed — just fixing how the existing check reads that signal.</p>
+<p>The work went in three stages. First I added the new check function to the code and covered it with tests, then ran a rehearsal with disposable timers before touching the real units, to confirm the check held up even across retries.</p>
+<p>Finally I removed the hardcoded flag from the three real service units and synced the repository's copies of those unit files to match.</p>
+<p>Along the way I found a blind spot in how those copies were maintained: one recently-added unit had never been registered in the repository copy at all, so sync checks had been missing it silently. I added it this time.</p>
+<p>The final confirmation is still pending — I want to see next week's first scheduled round log the marker correctly before calling this done.</p>
+<h2>Tracking the ledger contamination bug to its root, two days in</h2>
+<p>The phantom trade record problem I'd left unexplained yesterday showed up again today. This time I traced the recurrence back far enough to actually find the root cause.</p>
+<p>The culprit was, again, a regression test. Same family of bug as yesterday's but hitting a different function — this test also left the real code path of an internal fill-recording function unmocked.</p>
+<p>So every time the full test suite ran, it wrote a few fake fill records straight into the live production database. I backed up the contaminated records, removed exactly the fake ones, and reconciled the ledger against actual broker holdings again.</p>
+<p>I fixed the test to properly isolate that function. And to keep this class of bug from recurring a third time, I formally registered that database file in the test-isolation list — something that would have caught both days' incidents immediately if it had been there from the start.</p>
+<p>Separately, during the same investigation I confirmed another, unrelated fact: one paper-trading account failed to place any trades because a price-lookup call was rejected outright. That wasn't a code bug — it turned out the broker simply doesn't offer that lookup endpoint for paper accounts. The round ended safely with no trades and no real loss.</p>
+<h2>An overnight recovery guard was misjudging normal runs as stuck</h2>
+<p>Separately that day, I looked into a safety mechanism that watches a nightly model-swap job and force-reverts it if the job looks stuck.</p>
+<p>It turned out this guard had misfired on both of the last two nights the job actually completed successfully — not a coincidence, but a structural problem that fired every single time.</p>
+<p>The cause was a timing mismatch between the check interval and how long the job actually needs. The check interval was shorter than the job's normal completion window, so the guard would declare "stuck" while the job was still legitimately running.</p>
+<p>I asked the AI to dig further back, and it found the actual trigger for when this misjudgment first appeared. On that earlier night, someone had run the same job manually via a separate script; when the regular process restarted right afterward, the two processes' markers got crossed, and the guard misread the first process's leftover marker as a stuck state.</p>
+<p>So I changed the fix's basis from "how long has this been running" to directly checking whether the process actually doing the job is still alive. Since that check doesn't care which process started the job, it also resolves the cross-process case found today.</p>
+<p>Deployment avoided a restart during market hours — it's scheduled to restart quietly once, in a fixed off-hours window. Whether it actually stops misfiring only gets confirmed by tonight's run.</p>
+<p>All three things that landed on the same day followed a similar shape: one problem patched around yesterday, one recurrence of the same bug family in a different function, and one safety mechanism that had been misjudging a normal situation as an incident. In each case, I didn't just stop the symptom — I traced it back to the actual root cause before calling it closed.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
