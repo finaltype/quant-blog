@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 5] Chasing a 100-Stocks-in-10-Hours Goal for a Local LLM&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-05_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 5] Chasing a 100-Stocks-in-10-Hours Goal for a Local LLM&quot;</h1>
+<p class="subtitle">Tracked down why a setting that won on benchmark lost in production, and closed out a statistical alert I&#x27;d been re-litigating for days</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Trying to run a local LLM through 100 stocks in 10 hours</h2>
+<p>I spent most of today running an open-source large language model locally, on the stock-analysis pipeline, using my main GPU together with a spare card I picked up recently.</p>
+<p>This model uses a mixture-of-experts structure — a large total parameter count, but a much smaller set of parameters actually active during inference. The goal was to process 100 stocks in under 10 hours.</p>
+<p>Running requests one at a time already came in over 40% past that target. I expected batching multiple requests together to help, but instead it either slowed things down or made the GPU stop responding entirely.</p>
+<p>At first I wrote those failures off as transient network errors. Asking the AI to dig through the system logs showed otherwise: the GPU itself was actually hanging, a hardware-level fault. From then on, I kept concurrency experiments within a range where that fault didn't reproduce.</p>
+<p>A separate benchmark confirmed the batching engine itself wasn't at fault. The real bottlenecks were two structural things: the initial prompt-processing stage hogging its turn and stalling other requests behind it, and memory-reference range growing continuously as conversations got longer.</p>
+<p>The most promising fix looked like moving part of the computation (the expert layers) entirely onto the secondary GPU. In single-request benchmarks this was clearly faster, and the gain grew the longer the request got.</p>
+<p>But re-testing it under real concurrent load flipped the result completely. The setting that won on benchmark was actually slower in production.</p>
+<p>I asked the AI to diagnose it again. Raw decoding speed was still faster with this setup, but the initial prompt-processing stage lost out in exactly the opposite way — switching back and forth between the two GPUs happened far more often, and an optimization that overlaps multiple requests' pipelines was disabled entirely under this configuration.</p>
+<p>So I dropped that approach and went back to the simpler one — splitting computation by layer, spread evenly across both cards — which turned out to be the best option after all.</p>
+<p>Instead, I found gains on a different axis. I applied a patch that reorders prompts so multiple stocks can share a common prefix, and another that nudges the model away from unnecessarily verbose answers, both of which cut processing time.</p>
+<p>I couldn't yet tell whether these patches affect the actual stock ratings themselves or just fall within normal run-to-run variance, so I held off on a final verdict there.</p>
+<p>I also reviewed the model's compression (quantization) level separately. The level I'm currently using turned out to be fairly aggressive. Going up a level for better quality would exceed GPU memory and slow things down significantly, so I decided against that — instead I'll pull a middle-ground level and run a small side-by-side comparison.</p>
+<p>By the end of the day: I'd reached the best result server tuning alone could give, getting close to the 10-hour target but still short of it. Closing the remaining gap needs further code changes, which I'll pursue separately after getting approval.</p>
+<h2>Closing out a statistical alert after days of re-litigation</h2>
+<p>I finally closed out a statistical anomaly alert today that I'd been re-examining for days.</p>
+<p>Switching to a different model recently increased the number of nightly comparison samples. But the alert's threshold was still calibrated on the old absolute-count basis.</p>
+<p>That meant the alert could trip easily even when nothing was actually wrong. Recomputing it as a ratio instead showed the recent activity wasn't statistically distinguishable from the normal baseline.</p>
+<p>I closed this case with no action taken, and I'm redefining the alert threshold to use a ratio going forward instead of an absolute count.</p>
+<p>While investigating, I also found and fixed two bugs in an observation-only tracking path (used for measuring predictive signal quality). Neither touched live trading logic, so they had no bearing on this verdict.</p>
+<h2>Also wrapped up today</h2>
+<p>A few days ago, a motherboard swap and reboot briefly set the system clock to the past; the moment the time server corrected it, the system mistook a schedule that hadn't actually passed yet for one that had, and triggered a scheduled retraining job on a day it wasn't supposed to run.</p>
+<p>Today I added two safeguards to the retraining pipeline as follow-up: one that automatically demotes an out-of-schedule run to a dry run instead of a real deployment, and one that holds off deployment if it comes too soon after the last one.</p>
+<p>I also retuned the power limit on the spare GPU downward to deal with fan noise, and finished a head-to-head comparison of two driver backends on that card — the existing one won, so that's confirmed as the pick going forward.</p>
+<p>With the recent full hardware swap now reflected in the docs, a few old hardware verdicts had their underlying assumptions disappear entirely, so I marked them invalid.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
