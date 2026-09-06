@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Aug 31-Sep 06] Tracing Recurring Ledger Corruption and Automation Traps Back to Their Roots&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-06_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Aug 31-Sep 06] Tracing Recurring Ledger Corruption and Automation Traps Back to Their Roots&quot;</h1>
+<p class="subtitle">I finally found the root cause of ledger corruption that recurred two days in a row, and opened new experiment tracks with an intraday observation pipeline and a GPU expansion along the way</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Several quiet problems surfaced all at once</h2>
+<p>This week started heavy.</p>
+<p>Two unrelated incidents collided on the same day. A resident process that computes rankings had been running stale code for days because it never got restarted after a code change, and the same afternoon a round on the <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">fully-automated paper-trading validation track</a>(new tab) went missing entirely.</p>
+<p>Digging in, the broker API was sending an execution-price field scaled down to 1/1000 of its real value. That corrupted number fed straight into the ledger, distorted the P&amp;L baseline, and made one of the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">execution safety layers</a>(new tab) — the stop-loss kill switch — trigger falsely.</p>
+<p>Ledger corrections are irreversible, so I had another AI work out the exact fix order and expected values in advance. After the fix, the computed numbers matched those predictions down to the decimal. The remaining preventive measures carried over to the next day only half done.</p>
+<h2>Ledger corruption recurred two days straight, and I finally found the root</h2>
+<p>Mid-week, a different flavor of ledger corruption showed up two days in a row.</p>
+<p>First, a paper account turned up unidentified phantom trade records, and the initial pass didn't find the exact cause. When the same symptom reappeared the next day, I traced the recurrence backward and found the root.</p>
+<p>The culprit was a regression test. It left the real code path of an internal order-fill logging function unmocked, so every full test run was injecting fake trades straight into the production database.</p>
+<p>I backed up the contaminated records, removed exactly the tainted ones, and reconciled against actual holdings. But the very next day, the same problem showed up again — same family of bug, different function.</p>
+<p>This time I didn't just isolate the function properly; I formally registered that database file itself on the test-isolation list. The investigation's conclusion was blunt: registering it from the start would have caught both days immediately.</p>
+<h2>Chasing workarounds down to their root cause</h2>
+<p>The same mid-week stretch also had an overnight batch that failed for ten straight hours without completing once.</p>
+<p>A single line inside the model-selection function had accidentally slipped into a conditional block, and the production batch that doesn't take that branch kept dying at the same spot on nearly a hundred retries overnight. There was no alerting for this, so it only surfaced the next morning when I checked in manually.</p>
+<p>Recovery turned up another issue: manually triggering a trading round failed with zero orders placed, every time. That day I only patched around it with a lower-level workaround and left the real fix for later.</p>
+<p>The next day I actually looked into why. A "this is a scheduled automatic round" marker was hardcoded directly into the execution unit file, so the system always assumed a manual run was a scheduled one. With AI's design input, I switched the check to rely on an environment variable that systemd only injects for timer-triggered runs — a proper root-cause fix.</p>
+<p>The same day, the real account hit a similar class of incident. A trading timer I'd briefly disabled got silently re-enabled by a separate auto-restart mechanism I hadn't known about, and several trades went out using trading criteria that had been frozen two days stale.</p>
+<p>Having AI verify the safety implications, all the safeguards had worked as designed and the possible loss was very small, so I decided not to unwind the orders that had already gone out. But investigating this also turned up a second mechanism with a similar risk, and I confirmed directly with myself whether to keep it before deciding.</p>
+<p>I also revisited the safeguard that watches the nightly model-swap job and force-reverts it if it looks stuck. It turned out to misfire on every single night that actually completed normally — a structural problem, not a fluke. Tracing it back, the root cause was that the monitoring interval was shorter than the job actually needed to finish.</p>
+<p>I redirected the fix from "how long has it been running" to directly checking "is the process actually still alive" instead.</p>
+<h2>New observation track and GPU expansion</h2>
+<p>Between the incident responses, work also went into opening new experiment tracks.</p>
+<p>Early in the week, I had AI review the entire project structure and worked through the resulting recommendations in order — splitting out the serving-engine code, consolidating scattered ensemble-combination formulas, and building a shared library for reading fill records. Once done, I handed the whole day's changes back to AI for review, which caught one real defect: a timestamp comparison in a check-only mode wasn't excluding a timestamped field properly.</p>
+<p>A few days later, I ran a pipeline that runs a secondary model on a separate track during market hours purely to observe performance, without feeding it into actual trades, for the first time live. Three bugs hit back to back on first fire — GPU memory handling, a logging mix-up, and a stop-condition check that didn't know about a new exception window — but once all three were fixed, every ticker processed cleanly. The same week, I also rebalanced the KOSPI/KOSDAQ candidate-pool mix after re-verification.</p>
+<p>Later in the week I picked up a second GPU purely for experiments. The goal wasn't replacing the main production card — it was running a local model under validation completely isolated from the main workload, offline.</p>
+<p>Using that card alongside the existing one, I spent a day tuning the server toward a "100 tickers within 10 hours" target for a local large model. Offloading part of the computation to the second card won on single-request benchmarks but turned out to actually hurt under real concurrent-request conditions, so I dropped it and went back to the original, simpler split-by-layer approach. I ended the week close to the target but still slightly short.</p>
+<p>Later that week I also closed out a statistical alert that had been under review for days. The comparison sample size had grown after a model swap, but the alert threshold was still set on the old absolute-count basis. Recalculated as a ratio, it was statistically indistinguishable from normal. I closed it with no action and switched future thresholds to a ratio basis.</p>
+<hr />
+<p>One thread ran through this whole week: problems that looked quiet on the surface kept recurring, and each time, instead of just patching the symptom, I traced the recurrence backward to its actual root cause.</p>
+<p>Even amid that repetition, new work kept moving forward — the intraday observation pipeline and the GPU expansion. Next week will likely start by watching how much data those newly opened tracks actually accumulate.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
