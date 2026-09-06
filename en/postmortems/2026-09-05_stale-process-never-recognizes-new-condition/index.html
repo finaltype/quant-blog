@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why a Resident Process Could Never Recognize a Newly Registered Condition · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-09-05_stale-process-never-recognizes-new-condition/index.html">한국어로 보기</a></p>
+<article>
+<h1>Why a Resident Process Could Never Recognize a Newly Registered Condition</h1>
+<p class="subtitle">The code was deployed, but the process meant to run it had already been running since before that</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>The trading system has a scheduling queue for tasks meant to run "not now, but once a specific condition becomes true later." I recently added a new condition to that queue, and the task I registered sat silently for over an hour without firing.</p>
+<h2>What happened</h2>
+<p>The new condition was meant to judge "is it currently safe to restart a resident process." This particular restart couldn't overlap with other overnight jobs, so it was designed to wait until the condition became true before triggering the restart.</p>
+<p>I deployed the code and registered the task in the queue. But even well past the time window when the condition should have been true, it hadn't fired for over an hour.</p>
+<p>This queue re-evaluates its conditions every 5 minutes, so missing it once or twice would be normal. An hour, though, meant the condition had been re-evaluated more than a dozen times.</p>
+<h2>What I suspected first</h2>
+<p>My first suspicion was the condition-evaluation logic itself. I wondered whether the function judging "is it safe to restart" was misreading the status of other overnight jobs, incorrectly concluding "not yet" over and over even when it was actually safe.</p>
+<p>I went looking for that function's logs — and found no trace of it ever having been called at all. The condition hadn't evaluated to false; it had never been evaluated in the first place.</p>
+<h2>The real cause</h2>
+<p>The process running this queue every 5 minutes was a long-lived resident process. And that process had been running <strong>before</strong> the deployment that added the new condition.</p>
+<p>A new condition gets registered in two places in the code: a name string in a whitelist, and a branch that wires that name to the actual judgment logic. The deployment landed on the filesystem fine, but the process that had already loaded that module into memory hours earlier had no idea the change had happened.</p>
+<p>From that process's point of view, the new condition's name was simply "unrecognized." The system was designed to lean safe when it saw an unrecognized value — treating it as "condition not met." No error, no exception raised, just a quiet false every single time.</p>
+<p>Put together, it was a loop: evaluating the new condition required a process that knew about it, but starting that process fresh was exactly the "safe restart" the condition was meant to protect. The condition was waiting for the restart, and the restart was waiting for the condition to become true — a chicken-and-egg problem.</p>
+<h2>How I fixed it</h2>
+<p>The immediate fix was simply restarting that process once, to load the new code into memory. The moment it restarted, the queue evaluated the condition normally and the task fired.</p>
+<p>For the actual prevention, I put the fix in process rather than code. I added a hard rule to the deployment checklist: "any deployment that adds a new condition to this queue must either directly confirm it fires right after registration, or restart the resident process that evaluates it at least once to load the new code."</p>
+<p>I could have fixed the condition-evaluation logic itself, but the real substance of this incident wasn't a logic bug — it was missing the fact that "deployed" and "the running process knows about the deployment" are two different events. So I chose to close that gap procedurally instead.</p>
+<h2>The general lesson</h2>
+<p><strong>When adding a whitelist or dispatch-table entry to a long-lived process, treat "the file changed" and "the process that loaded that file into memory knows about the change" as separate events.</strong> This gap hides especially well in interpreted languages. The confidence that "the code is already deployed" is exactly what makes you suspect last that the running process is still on the old version.</p>
+<p><strong>"Treat unrecognized values safely as false" is a sound design on its own, but combined with silent failure, it becomes dangerous.</strong> Instead of quietly returning false when a value isn't recognized, at minimum log or alert on "this condition name is unknown." That's the only way to tell apart a legitimate false from the judgment logic and a false that came from the system never being able to evaluate the condition at all.</p>
+<p><strong>In systems where deployment and process lifecycle are decoupled, it's safer to make "does the process running this also need a restart" an explicit checklist item for every deployment that touches dispatch logic.</strong> Rather than relying on someone remembering every time, it would be even better to have the deploy script look at the list of changed files and automatically report back which resident processes import them.</p>
+<p><strong>Directly watching a newly registered condition actually fire once, as scheduled, is cheap insurance.</strong> In this case, checking whether it fired right after registration would have narrowed down the cause immediately instead of waiting an hour. "It's registered" and "it actually works" are different questions.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

@@ -25,7 +25,7 @@
 </head>
 <body>
 <header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-
+<p class="lang-switch"><a href="../../en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/index.html">Read in English</a></p>
 <article>
 <h1>새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유</h1>
 <p class="subtitle">코드는 배포됐는데 그 코드를 실행할 프로세스가 그 전부터 떠 있었던 경우</p><p>자동매매 시스템에는 "지금은 아니지만 나중 특정 조건이 되면 실행"할 작업을 등록해두는 예약 큐가 있습니다. 최근 이 큐에 새 조건 하나를 추가했는데, 등록한 작업이 한 시간 넘게 아무 반응 없이 조용히 멈춰 있었습니다.</p>
