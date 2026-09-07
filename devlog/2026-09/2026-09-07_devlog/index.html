@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260907] VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-07_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260907] VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루&quot;</h1>
+<p class="subtitle">낮에 적용한 GPU 메모리 정리 패치가 저녁 프로덕션 3연속 실패로 돌아왔고, 별도로 증권사 API 페이지네이션 버그도 하나 잡았습니다</p><h2>VRAM 정리 패치가 낳은 저녁 장애</h2>
+<p>낮에는 신호모델 하나가 그래픽카드 메모리를 계속 조금씩 붙잡고 있는 문제를 정리했습니다.</p>
+<p>이 모델은 원래도 계산량이 작아 그래픽카드를 꼭 써야 할 이유가 없었는데, 종료 후에도 메모리 일부를 반납하지 않고 남기고 있었습니다. 코드 레벨에서 이 모델을 아예 CPU로만 돌게 고정하고, 그래도 남는 잔여분은 실행 단위 설정에 "이 그래픽카드는 아예 안 보이게" 하는 값을 추가해서 완전히 비웠습니다.</p>
+<p>문제는 저녁에 터졌습니다. 이 설정값이 원래 목표였던 신호모델뿐 아니라, 같은 실행 단위 안에서 별도로 뜨는 대형 언어모델 서버 프로세스에까지 그대로 상속됐습니다.</p>
+<p>대형 언어모델 서버 입장에서는 자기가 써야 할 그래픽카드가 갑자기 안 보이게 된 셈이라, 기동 자체가 실패했습니다. 이어서 예비 경로로 넘어갔는데 그 예비 모델마저 설치가 안 돼 있어서, 세 번 연속 빠르게 실패했습니다.</p>
+<p>다행히 이 상황을 위해 미리 만들어 둔 안전장치가 정상 작동했습니다. 짧은 시간 안에 연속 실패가 쌓이면 그날 작업을 종목 0개로 안전하게 종료시키는 장치인데, 덕분에 가짜 데이터가 쌓이는 일 없이 조용히 멈췄습니다.</p>
+<p>원인을 찾은 뒤에는 문제의 설정값을 실행 단위 전체가 아니라 신호모델 쪽 코드에서만 걸도록 좁혀 다시 적용했습니다. 재시작 후 대형 언어모델 서버가 정상적으로 그래픽카드를 다시 찾았고, 그날의 종목 분석도 이어서 정상적으로 시작됐습니다.</p>
+<h2>증권사 API 페이지네이션 버그</h2>
+<p>모의투자 계좌에서 보유 종목 하나가 조회 결과에서 통째로 빠지는 문제도 있었습니다.</p>
+<p>내부 장부와 실제 체결 기록에는 둘 다 정상적으로 남아있는데, 증권사 API로 잔고를 물어보면 그 종목만 없는 것으로 나왔습니다. 자동매매 로직의 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">장부대조 안전장치</a>(새 창)가 이걸 "장부와 실제 잔고가 어긋났다"고 판단해서 해당 종목 거래를 안전하게 멈췄습니다.</p>
+<p>원인은 페이지네이션이었습니다. 증권사 API는 잔고가 많으면 여러 페이지로 나눠서 응답하는데, 다음 페이지가 더 있다는 표시를 응답 헤더로 알려줍니다.</p>
+<p>기존 코드는 첫 페이지만 읽고 끝내고 있었습니다. 문제가 된 종목이 하필 두 번째 페이지에 있어서, 별다른 오류 없이 조용히 누락되고 있었습니다.</p>
+<p>다음 페이지 존재 여부를 확인해서 끝까지 이어붙이도록 고쳤고, 이후 라운드에서 해당 종목이 다시 정상적으로 인식되는 것을 확인했습니다. 비슷한 페이지네이션 구조를 쓰는 다른 API 호출들도 같은 문제가 있을 수 있어서, 필요하면 나중에 따로 점검하기로 남겨뒀습니다.</p>
+<h2>그 외 - 장중 관측 서버 헬스체크 버그</h2>
+<p>낮 동안 장중에 별도로 돌리는 관측용 언어모델 서버 하나가 매번 시간을 다 채우고서야 겨우 기동에 성공하는 것처럼 보이는 문제도 있었습니다.</p>
+<p>들여다보니 이 서버가 실제로는 80초 안팎이면 이미 정상 기동을 마치는데, 기동 확인 코드가 응답 형식을 잘못 가정하고 있어서 매번 정상 응답도 실패로 잘못 읽고 있었습니다. 그 결과 실제로는 멀쩡한 서버를 앞에 두고도 매번 최대 대기시간을 다 채운 뒤에야 넘어가고 있었던 것으로 보입니다.</p>
+<p>확인 방식을 다른 서버들과 같은 기준으로 맞춘 뒤로는 기동 확인이 정상 속도로 통과하는 것을 확인했습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
