@@ -67,12 +67,14 @@
 </tr>
 </tbody>
 </table>
+<p>I wrote up how I ended up actually buying the R9700 and putting it in (photos included) in a <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-04_gpu-purchase-r9700/" target="_blank" rel="noopener noreferrer">separate post</a>(new tab) — it's actually a card I'd rejected as a main-card candidate multiple times before, bought again for a different purpose.</p>
+<p><img alt="R9700 installed in the case, right next to the GEFORCE RTX above it" src="https://finaltype.github.io/quant-blog/images/2026-09-04_r9700-case-installed.jpg" /></p>
 <h2>The actual model and serving config</h2>
 <p>The model running in production every night is <strong>Qwen3.6-35B-A3B (MoE, 3B active)</strong>, GGUF <strong>Q4_K_M</strong> quantization. Weights are 20.75GiB + 1.16GiB of KV/compute buffer = 21.91GiB in actual use (91% of the XTX's 24GB). The vLLM server runs on port 8200 with <code>max-num-seqs 14</code>, fp8 KV cache, prefix caching off, temperature 0.8, thinking mode off — this is the frozen production command.</p>
 <p>At the same time, I'm evaluating whether to adopt <strong>Qwen3.8-27B (dense)</strong>. Same conditions (fp8 KV cache, prefix caching off, temp 0.8, thinking off), but <code>max-num-seqs</code> is dropped to 3 — dense has different memory/compute characteristics than MoE, so concurrency has to be lower for stability.</p>
 <p>MTP (speculative decoding) is always on. Acceptance rate is <strong>50.1%</strong> for our MoE model, <strong>66.95%</strong> for the 27B dense model in an external measurement, and anywhere from 81-97% in other external measurements — it varies a lot by model and settings.</p>
 <h2>Prefill/decode measurements — 27B dense</h2>
-<p>Same 27B dense model, roughly 12.7k prefill tokens per call, limited to cards I've actually run myself (I'm leaving out AMD R9700 — I've never tested one myself, so it only appears as a cited reference in the public-benchmark section below):</p>
+<p>Same 27B dense model, roughly 12.7k prefill tokens per call, limited to cards I've actually run myself (at the time of writing I hadn't tested an AMD R9700 myself, so it only appears as a cited reference in the public-benchmark section below — for the numbers from actually buying and testing one, see the update at the end):</p>
 <table>
 <thead>
 <tr>
@@ -131,6 +133,7 @@
 </tbody>
 </table>
 <p>The 5090 is about 1.13x faster than the XTX. I originally expected a much bigger gap based on the memory-bandwidth ratio (1.81x), but it turned out that conversion doesn't hold once MTP is on — speculative decoding frees decode from the bandwidth ceiling.</p>
+<p>The R9700 row above (56 t/s) was someone else's measurement. I later bought the card myself and paired it with the 5090, and the picture turned out different — see the update at the end for the actual numbers.</p>
 <h2>Decode speed from our own production logs, by hardware generation</h2>
 <p><code>ta_usage_tracker</code> logs input/output tokens and elapsed time for every LLM call, per stock. I first averaged <code>output_tokens ÷ elapsed_s</code> per call, but vLLM batches multiple stock requests concurrently (continuous batching), so a single call's apparent speed swings with however many other requests happened to be in flight at that moment — that gave numbers that couldn't actually be used to compare hardware. So instead of averaging per-call rates, I recomputed it as <strong>total output tokens produced during that run ÷ the run's actual wall-clock duration (first call to last call)</strong>.</p>
 <table>
@@ -261,7 +264,8 @@
 <h2>What's next</h2>
 <p>Once forward RankIC is measured, I'll write up which model actually got adopted as a separate post.</p>
 <h2>Update (2026-09-08) - RTX 5090 + AMD R9700 mixed setup</h2>
-<p>The local LLM card lineup changed once more since this post. I added an R9700 alongside the 5090, splitting layers across both on a single llama.cpp server (<code>-ts 23,25</code>), and switched the model away from this post's MoE/dense candidates to <strong>Qwen3.8-Flash-Next (Q3_K_XL quantization)</strong>. Here's the measured result from the first full 100-stock completion on this setup.</p>
+<p>The local LLM card lineup changed once more since this post. I added an R9700 alongside the 5090 (the story of how I ended up buying it, with build photos, is in <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-04_gpu-purchase-r9700/" target="_blank" rel="noopener noreferrer">this post</a>(new tab)), splitting layers across both on a single llama.cpp server (<code>-ts 23,25</code>), and switched the model away from this post's MoE/dense candidates to <strong>Qwen3.8-Flash-Next (Q3_K_XL quantization)</strong>. Here's the measured result from the first full 100-stock completion on this setup.</p>
+<p><img alt="Full view of the case with both cards installed, on the desk" src="https://finaltype.github.io/quant-blog/images/2026-09-04_r9700-desk-setup.jpg" /></p>
 <table>
 <thead>
 <tr>
