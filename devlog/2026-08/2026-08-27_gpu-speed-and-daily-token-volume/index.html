@@ -60,6 +60,11 @@
 <td>32GB</td>
 <td>아래 참고</td>
 </tr>
+<tr>
+<td>RTX 5090 + AMD R9700 ×1(이종, tensor-split)</td>
+<td>32GB+32GB(64GB)</td>
+<td>글 끝 "업데이트(2026-09-08)" 참고</td>
+</tr>
 </tbody>
 </table>
 <h2>실제 쓰는 모델과 서빙 설정</h2>
@@ -255,6 +260,36 @@
 <p>이 구간은 두 모델 다 종목당 호출 수가 같아서(17회) 토큰량 자체는 거의 비슷합니다 — 차이는 토큰량이 아니라 위에서 본 "걸린 시간"(46분 vs 6시간18분)에서 납니다. 참고로 정상적으로 하루 종일 도는 MoE 단독 운영일(평일 평균)에는 종목당 호출 수가 이보다 훨씬 많은 약 55~71회까지 올라가는 날도 있어서, 호출 깊이 자체는 그날그날의 실행 목적(정식 배치인지, 이런 비교 실행인지)에 따라 달라집니다.</p>
 <h2>다음</h2>
 <p>forward RankIC 측정이 끝나면 실제로 어느 모델을 채택했는지, 그 판정 결과를 별도 글로 정리하겠습니다.</p>
+<h2>업데이트(2026-09-08) — RTX 5090 + AMD R9700 이종 구성</h2>
+<p>이 글을 쓴 뒤 로컬 LLM 카드 구성이 한 번 더 바뀌었습니다. R9700을 한 장 더 들여서 5090과 함께 하나의 llama.cpp 서버에 묶었고(레이어 분배 <code>-ts 23,25</code>), 모델도 이 글의 MoE/dense 후보들이 아니라 <strong>Qwen3.8-Flash-Next(Q3_K_XL 양자화)</strong> 로 바뀌었습니다. 이 구성으로 처음 100종목을 완주한 실측치입니다.</p>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>모델</th>
+<th>종목당 소요(100종목)</th>
+<th>prefill</th>
+<th>decode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTX 5090 ×1(이 글 기준)</td>
+<td>27B dense</td>
+<td>227초(6.3시간)</td>
+<td>—</td>
+<td>118 t/s(집계)</td>
+</tr>
+<tr>
+<td><strong>RTX 5090 + AMD R9700(이종)</strong></td>
+<td>Qwen3.8-Flash-Next(Q3_K_XL, MoE)</td>
+<td><strong>369.9초(10.28시간)</strong></td>
+<td><strong>약 610 t/s</strong></td>
+<td><strong>약 124 t/s</strong>(4슬롯 합산)</td>
+</tr>
+</tbody>
+</table>
+<p>카드 두 장을 더했는데 종목당 시간은 오히려 늘었습니다 — 이건 하드웨어 문제가 아니라 모델 자체가 이 글의 dense(27B)보다는 빠르지만 이 글의 MoE(active 3B, 46분 완주)보다는 무거운 모델(active 6B)로 바뀌었기 때문입니다. 이종 GPU 조합에서 양자화 버전을 세 번 갈아치우고 동시 요청 수·배치 크기를 하루 종일 실험한 전체 과정은 <a href="https://finaltype.github.io/quant-blog/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/" target="_blank" rel="noopener noreferrer">별도 글</a>(새 창)에 정리했습니다.</p>
 </article>
 <footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
 </body>

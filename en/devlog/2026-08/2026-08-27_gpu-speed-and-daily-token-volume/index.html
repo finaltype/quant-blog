@@ -60,6 +60,11 @@
 <td>32GB</td>
 <td>See below</td>
 </tr>
+<tr>
+<td>RTX 5090 + AMD R9700 ×1 (mixed vendor, tensor-split)</td>
+<td>32GB+32GB (64GB)</td>
+<td>See "Update (2026-09-08)" at the end</td>
+</tr>
 </tbody>
 </table>
 <h2>The actual model and serving config</h2>
@@ -255,6 +260,36 @@
 <p>Both models used the same call depth here (17 per stock), so the token volume itself is nearly identical — the difference shows up not in tokens, but in the wall-clock time above (46 min vs 6h 18m). For reference, on a normal day of MoE running solo, calls per stock can run much higher (55-71), since call depth itself depends on the purpose of that particular run (a formal production batch vs. a comparison run like this one).</p>
 <h2>What's next</h2>
 <p>Once forward RankIC is measured, I'll write up which model actually got adopted as a separate post.</p>
+<h2>Update (2026-09-08) - RTX 5090 + AMD R9700 mixed setup</h2>
+<p>The local LLM card lineup changed once more since this post. I added an R9700 alongside the 5090, splitting layers across both on a single llama.cpp server (<code>-ts 23,25</code>), and switched the model away from this post's MoE/dense candidates to <strong>Qwen3.8-Flash-Next (Q3_K_XL quantization)</strong>. Here's the measured result from the first full 100-stock completion on this setup.</p>
+<table>
+<thead>
+<tr>
+<th>Setup</th>
+<th>Model</th>
+<th>Per-ticker time (100 stocks)</th>
+<th>Prefill</th>
+<th>Decode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTX 5090 ×1 (this post)</td>
+<td>27B dense</td>
+<td>227s (6.3h)</td>
+<td>—</td>
+<td>118 t/s (aggregate)</td>
+</tr>
+<tr>
+<td><strong>RTX 5090 + AMD R9700 (mixed)</strong></td>
+<td>Qwen3.8-Flash-Next (Q3_K_XL, MoE)</td>
+<td><strong>369.9s (10.28h)</strong></td>
+<td><strong>~610 t/s</strong></td>
+<td><strong>~124 t/s</strong> (summed across 4 slots)</td>
+</tr>
+</tbody>
+</table>
+<p>Adding a second card actually made the per-ticker time longer — that's not a hardware regression, it's that the model itself changed from something lighter than this post's MoE (3B active, 46-minute completion) to something heavier (6B active), while still being faster than this post's dense candidate. The full story — three quantization swaps and a full day of concurrency/batch-size tuning on this mixed-GPU setup — is written up in a <a href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/" target="_blank" rel="noopener noreferrer">separate post</a>(new tab).</p>
 </article>
 <footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
 </body>
