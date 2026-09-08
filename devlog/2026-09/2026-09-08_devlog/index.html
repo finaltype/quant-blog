@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260908] 증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-08_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260908] 증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루&quot;</h1>
+<p class="subtitle">증권사 API 로그인이 매번 실패하던 원인을 찾다가, 고치지 않고 배포했으면 열렸을 뻔한 정보유출 구멍까지 함께 막았고, 별도로 종목 유니버스 편입 규칙에 완충을 넣었습니다</p><h2>증권사 로그인이 매번 실패하던 이유</h2>
+<p>모의투자 계좌 하나에서 증권사 API 로그인이 매 라운드 같은 에러로 실패하고 있었습니다.</p>
+<p>처음에는 설정 파일 하나가 빠진 문제로 보였는데, 직접 확인해보니 실전 계좌 쪽도 똑같이 실패하고 있었습니다. 두 계좌가 같은 증상을 보인다는 건 설정 누락이 아니라 더 근본적인 문제라는 뜻이었습니다.</p>
+<p>원인은 코드 실행 순서였습니다. 어떤 진입점 하나에서 환경변수(.env) 파일을 읽어들이는 코드가 아예 빠져 있었고, 그 상태에서 인증 라이브러리가 계정 정보를 읽는 함수가 먼저 호출되면서 빈 값으로 고정되고 있었습니다. 비슷한 사고가 예전에 다른 진입점에서도 한 번 있었는데, 이번엔 새 진입점에서 재발한 것이었습니다.</p>
+<p>이 진입점 맨 위에 환경변수 로딩 코드를 추가해서 고쳤습니다.</p>
+<h2>고치다가 발견한 유출 위험</h2>
+<p>여기서 버그를 고치는 것만으로 끝내지 않은 이유가 있습니다.</p>
+<p>로그인이 여태 한 번도 성공한 적이 없어서 몰랐는데, 이 인증 라이브러리는 로그인에 성공하는 순간 계정 아이디를 평문으로 출력하는 특성이 있습니다. 과거에 이걸로 한 번 사고가 나서, 그 뒤로 로그 출력을 걸러주는 안전장치를 만들어뒀습니다.</p>
+<p>문제는 이번에 고친 진입점에는 이 안전장치가 걸려 있지 않았다는 겁니다. 로딩 순서 버그만 고치고 그대로 배포했다면, 로그인이 처음으로 성공하는 순간 계정 정보가 그대로 로그에 남을 뻔했습니다.</p>
+<p>같은 커밋에 안전장치 연결도 함께 추가했습니다. 격리된 환경에서 테스트해서 로그인 관련 로그 줄이 완전히 걸러지는 것도 확인했습니다.</p>
+<p>두 수정 모두 오늘 저녁 배포를 마쳤고, 최종 확인은 내일 아침 첫 거래 라운드에서 로그인이 정상적으로 완료되는지 보면 됩니다.</p>
+<h2>종목 유니버스 편입 경계에 완충 도입</h2>
+<p>별도로, 시가총액 상위 N종목을 골라 매매 대상 유니버스로 삼는 로직에 완충 규칙을 추가했습니다.</p>
+<p>기존에는 매번 랭킹을 그대로 갈아끼우다 보니, 순위가 경계선 근처에서 살짝만 오르내려도 종목이 유니버스에 들어왔다 나갔다 하는 문제가 있었습니다. 잦은 편입/탈락은 그 자체로 불필요한 매매 회전을 만듭니다.</p>
+<p>그래서 기존에 유니버스에 있던 종목은 순위가 조금 밀려도 일정 범위 안이면 잔류시키고, 새로 들어오려는 종목은 확실히 순위가 올라와야 편입시키는 방식으로 바꿨습니다. 유니버스 전체 정원 자체는 그대로라, 총 종목 수는 바뀌지 않습니다.</p>
+<p>오늘 코스피·코스닥 양쪽에 배포했고, 회귀 테스트와 상태 파일 생성까지 확인했습니다. 지금은 막 켜진 시점이라 아직 실제 편입/탈락이 발생하지 않았고, 완충이 실제로 작동하는 모습은 다음에 경계선 근처에서 순위가 흔들리는 날 확인할 수 있을 것 같습니다.</p>
+<h2>그 외 - 어제 저녁 장애 후속</h2>
+<p>어제 저녁 그래픽카드 인식 실패로 세 번 연속 실패했던 건은, 원인을 고친 뒤 재시작한 작업이 오늘 새벽 열 시간 넘게 걸리는 전체 종목 분석을 끝까지 정상적으로 완주하는 것으로 확인됐습니다. 재발은 없었습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
