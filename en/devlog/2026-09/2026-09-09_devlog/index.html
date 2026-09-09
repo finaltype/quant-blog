@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 9] Redesigning a Brokerage Account for Shared Use — and the First Live Order&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-09_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 9] Redesigning a Brokerage Account for Shared Use — and the First Live Order&quot;</h1>
+<p class="subtitle">A new brokerage account mixes personal and bot funds, so I rebuilt the safety layer around that, sent the first live order through it, and finalized a bank-transfer-free way to move funds between accounts</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>The brokerage account I'm newly bringing into live trading is different in nature from the existing one.</p>
+<p>The old account was dedicated entirely to the bot. This new one has personal funds and bot funds sitting in the same account. The problem: every <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">execution safety mechanism</a>(new tab) I'd built so far assumed the whole account belonged to the bot.</p>
+<p>Once that assumption broke, several places needed rework.</p>
+<p>Buying-power calculations had to filter out personal funds so they wouldn't leak into the bot's available cash. Whenever an unexplained quantity showed up in the balance, I needed logic to tell whether it belonged to the bot or to me personally.</p>
+<p>Sell orders needed a hard, code-level invariant that personal holdings are never touched. The reconciliation process and the watchdog that checks whether the system is armed also had to be retuned for a shared account.</p>
+<p>I broke this redesign into stages and worked through them in order, finishing the last one today.</p>
+<p>Once it was done, I had another AI review the entire implementation. It came back with a mix of findings across severity levels — all of them fixed by the end of the day.</p>
+<h2>The first live order on the new account</h2>
+<p>With the redesign done, I ran a verification: sending one real order through this account.</p>
+<p>The goal was to confirm the whole money path — journaling, the three-way order-result classification (success/failure/unknown), reconciliation, and duplicate prevention — works correctly on this account too.</p>
+<p>It succeeded. There was one hiccup along the way: a throwaway debugging script touched the ledger file directly and briefly broke consistency, but I caught and fixed it immediately, and later checks came back clean.</p>
+<p>To be clear, this only verifies the order pipeline works — it doesn't mean continuous operation starts on this account yet. That still needs a separate arming step.</p>
+<h2>Fund transfer between accounts, settled on automatic conversion</h2>
+<p>How to move funds from the old account to the new one changed direction more than once today before it was settled in the evening.</p>
+<p>The first idea was a bank transfer of cash. On review, that turned out to be unnecessary. Tomorrow morning, a portion of the holdings currently in the old account will be physically transferred (in-kind) to the new one, and once that's done the old account switches to sell-only.</p>
+<p>For cash, instead of a bank transfer, I'm handling it as a book-only conversion. Some of the cash already sitting in the new account gets converted into the bot's operating budget to start, and from then on, any further cash freed up as the old account sells (now sell-only) gets automatically detected and credited to the new account's budget within the same trading round.</p>
+<p>No manual back-and-forth between accounts needed — when the old account sells, the new account can buy with that money in the same round. I also added protection against double-crediting.</p>
+<p>This only means something once tomorrow's physical transfer is actually filed and processed, so final verification carries over to tomorrow.</p>
+<h2>Also today</h2>
+<p>I stopped using a remote-desktop tool, so it's been dropped from infrastructure monitoring too.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
