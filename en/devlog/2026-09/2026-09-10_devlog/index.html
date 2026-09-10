@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 10] Two Bugs on Account-Migration Day, Plus the Real Root Cause of the GPU Failure&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-10_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 10] Two Bugs on Account-Migration Day, Plus the Real Root Cause of the GPU Failure&quot;</h1>
+<p class="subtitle">The physical share transfer went through, but the cash auto-sweep sat broken all day and a live account hit a reconciliation incident. Separately, the recurring GPU-detection failure finally got a real fix.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Migration day, and the auto-sweep sat dead all day</h2>
+<p>As decided last night, this morning I carried out the physical transfer of held positions from the old account into the new one.</p>
+<p>The transfer itself went through cleanly and was processed without issue.</p>
+<p>The problem was the cash auto-sweep logic I'd written the day before — code meant to automatically roll cash freed up by sells on the old account into the new account's trading budget. A field name was mismapped, so it never fired once, all day.</p>
+<p>The core feature of migration day was silently dead. I found the cause and fixed it before the day was out.</p>
+<h2>A reconciliation incident on the live account</h2>
+<p>Right after the market closed this afternoon, the new account threw a <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">reconciliation</a>(new tab) alert.</p>
+<p>Two bugs compounded. One: the logic that fetches account valuation only read the first page of a paginated response, and mistook an empty intermediate page for an actual zero balance.</p>
+<p>Two: the end-of-day close was missing a step that reconciles the day's fills into the ledger before closing. So the last round's two buy orders never made it into the ledger before close ran.</p>
+<p>Both got fixed today, and the missing fills were booked manually to restore consistency. The same close-time reconciliation step already existed on the other account — it had simply never been carried over to the newly migrated account's code path.</p>
+<h2>Finally found the real cause of the GPU-detection failure</h2>
+<p>Last week (see the Sep 8 post) I thought I'd fixed the GPU-detection failure. This week the same symptom came back.</p>
+<p>Today, working with a different AI, I retraced the cause from scratch. The original hypothesis — power-saving mode as the culprit — was ruled out by direct measurement.</p>
+<p>The real cause was something else entirely: the display manager occasionally crashes in this multi-GPU setup and restarts, and during that restart GPU access permission quietly shifted from the login session's account over to a different system account.</p>
+<p>It sat in that broken state for hours before the next early-morning job tried to grab the GPU and failed outright.</p>
+<p>Tonight I applied a real fix — restructuring the permission model to remove that race condition — and verified it with a controlled reboot. After reboot, I brought production back up for real, and unlike last time, the GPU-detection failure did not reproduce.</p>
+<h2>Also today</h2>
+<p>I started validating a minimum-holding-period rule meant to cut down on turnover, rolled out to both paper accounts first. After about ten trading days of observation, I'll decide whether to extend it to the live account.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
