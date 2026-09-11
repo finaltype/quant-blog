@@ -79,6 +79,7 @@
 </ul>
 <h2>Postmortems</h2>
 <ul>
+<li><a href="postmortems/2026-09-12_test-cleanup-killed-production-process/index.html">테스트 정리 코드가 운영 서버를 죽인 사고</a> · <a href="en/postmortems/2026-09-12_test-cleanup-killed-production-process/index.html">EN</a><div class="sub">이름이 겹치는 프로세스를 패턴으로 죽이는 정리 코드와, 에러 메시지를 문자열로만 분류하는 로직이 겹쳐서 만든 헛다리 진단</div></li>
 <li><a href="postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/index.html">Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델</a> · <a href="en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/index.html">EN</a><div class="sub">양자화 버전을 세 번 바꾸고 자문을 열여섯 차례 거친 끝에, 프로덕션에 올린 로컬 모델 교체기</div></li>
 <li><a href="postmortems/2026-09-05_stale-process-never-recognizes-new-condition/index.html">새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유</a> · <a href="en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/index.html">EN</a><div class="sub">코드는 배포됐는데 그 코드를 실행할 프로세스가 그 전부터 떠 있었던 경우</div></li>
 <li><a href="postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/index.html">테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다</a> · <a href="en/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/index.html">EN</a><div class="sub">이틀 연속 재발하고서야 잡은 근본원인 - 로컬 임포트와 파이썬 기본인자 바인딩</div></li>

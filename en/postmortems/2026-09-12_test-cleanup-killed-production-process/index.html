@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When a Test Cleanup Step Killed a Production Process · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-09-12_test-cleanup-killed-production-process/index.html">한국어로 보기</a></p>
+<article>
+<h1>When a Test Cleanup Step Killed a Production Process</h1>
+<p class="subtitle">A pattern-matched kill command that collided with production naming, and an error classifier that only looked at a substring, together produced a completely wrong diagnosis</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Overnight, an automated processing pipeline skipped 77 out of 100 jobs.</p>
+<p>The logs pointed to an obvious suspect right away. Right around the incident time, there was a burst of noise from calls to an external data vendor.</p>
+<p>So my first conclusion was: a brief local network blip combined with the vendor's rate limiting (429s) at just the wrong moment. The real cause turned out to be somewhere else entirely.</p>
+<h2>Why the first diagnosis looked plausible</h2>
+<p>The same pipeline calls an external data vendor every night, and that call has always left a harmless trace in the logs — every single night, without exception.</p>
+<p>That trace showed up again near the incident time, and the number of jobs that got skipped after exhausting retries happened to be large right around then too.</p>
+<p>Because the timing lined up, I jumped to "this must be it" without digging further. The log fit the story too well to question it.</p>
+<h2>The real cause</h2>
+<p>What actually happened at that moment was something else. A test suite that had been running as part of a code review, during its cleanup step, executed a pattern-matching kill command — something like <code>pkill -f "process-name.*port-number"</code>.</p>
+<p>The test was only trying to clean up a process it had spun up for its own use. But the part of the code that ran that pattern-matching command as a real system call had never been mocked.</p>
+<p>And, as it happened, the actual production LLM server was using the same name and port-number convention. Because test and production accidentally shared a naming pattern, the cleanup command killed the production process instead of the test one.</p>
+<p>Once the production server went down, every upstream call to it failed to get a response for 34 minutes straight.</p>
+<p>The logic that classified this failure made things worse. Any error message that contained the substring "ConnectionError" was automatically classified as an "external network failure."</p>
+<p>A connection failure caused by a dead local server and a connection failure caused by an actual internet outage both produce that same string. The classifier couldn't tell them apart, so requests misclassified as network failures just retried a fixed number of times and then got skipped.</p>
+<p>That's how the skip count climbed to 77.</p>
+<h2>How it was fixed</h2>
+<p>First, a safeguard went into the cleanup code. Before killing anything, it now checks whether the target is actually a production process, and refuses to kill it if that check fails.</p>
+<p>The test itself was fixed too. The part of cleanup that made a real system call is now mocked, so running the test — no matter how many times — can no longer touch a real process.</p>
+<p>A regression test was added separately just to verify that this safeguard itself works correctly.</p>
+<p>Improving the error-classification logic is still an open item. Splitting "the local server itself died" from "an actual external network outage" into separate buckets was left as follow-up work.</p>
+<h2>Generalizing this</h2>
+<p><strong>A test's teardown/cleanup step is easier to neglect than its main logic, and that makes it more dangerous, not less.</strong> Main logic gets scrutiny during review because it's obvious what it's supposed to verify. Cleanup code gets waved through as "just tidying up," which is exactly how a real system call slips past review unmocked. It's worth adding "is the cleanup code that runs on test completion or failure also mocked?" to a test-review checklist.</p>
+<p><strong>A kill command that finds its target by matching a name or port pattern becomes dangerous the moment test and production happen to share that pattern.</strong> Something like <code>pkill -f</code> rests on the implicit assumption "this will only match the thing I spun up myself." That assumption breaks the instant another environment reuses the same naming convention. Before terminating a process, it's safer to first confirm you own the exact PID you started, or explicitly check whether you're in a production environment at all.</p>
+<p><strong>Classifying errors by matching a substring in the message mixes together failures with completely different root causes.</strong> The string "ConnectionError" can't distinguish a connection failure caused by a dead local process from one caused by a genuine network outage. If a retry or fallback strategy is built on top of that shallow classification, two situations that need different responses end up getting the same one. Where possible, classify by something more structural — exception type, or where in the code the failure originated — instead of matching text.</p>
+<p><strong>A plausible-looking log observed at the same time as an incident is not guaranteed to be the actual cause.</strong> Harmless nightly noise happened to overlap with the incident time and steered the initial diagnosis in a completely wrong direction. Before locking in a root cause just because the timing lines up, it helps to ask yourself: would this incident have happened even without that log entry? That question alone catches a lot of these false leads.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
