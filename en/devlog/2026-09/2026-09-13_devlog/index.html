@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 13] Kill-Switch Postmortem - the Root Cause Was Still There&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-13_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 13] Kill-Switch Postmortem - the Root Cause Was Still There&quot;</h1>
+<p class="subtitle">Yesterday I patched the symptom of a false kill-switch trip in a hurry. Today&#x27;s postmortem found the root cause was still live and could have blocked Monday&#x27;s real trading again.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The symptom was gone, but the root was still there</h2>
+<p>Yesterday I scrambled to fix a false trip of the live account's <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">kill switch</a>(new tab).</p>
+<p>I fixed the immediate cause — a missing account tag — right away. But when I ran a full postmortem on the whole incident today, I found that only the symptom had been cleared. One root cause was still sitting there.</p>
+<p>Here's what happened. Right before yesterday's false trip, a partial withdrawal had gone through on the account. That withdrawal got recorded in the ledger, but nothing re-anchored the loss-tracking reference point (the peak balance) to match.</p>
+<p>With that peak left stale, the next scheduled round would compare today's balance against that old, higher peak.</p>
+<p>That would make it look like a huge loss had happened when none actually did — which meant the same kill switch could fire again on Monday morning's regular round.</p>
+<p>As soon as I found this, I re-anchored the peak to the current balance. I also found and fixed two more spots where the same missing-account-tag problem was still lurking.</p>
+<p>I also revisited a memory-throttling safeguard I'd put in place. Looking at the actual measurements again, that setting could actually trigger memory pressure across the whole system earlier, not later.</p>
+<p>So I removed it and kept only a much higher ceiling that stays out of the way under normal conditions and only steps in during a genuine runaway.</p>
+<h2>A false positive hiding in the reconciliation alert, too</h2>
+<p>The daily reconciliation process compares account balance against the ledger, and escalates an alert if the discrepancy exceeds a threshold two days in a row.</p>
+<p>But the counter behind that streak had a flaw. On a day with multiple reconciliation runs, even if the day's <em>last</em> run came back clean, the counter still marked the whole day as "over threshold" if even one earlier run that day had been over.</p>
+<p>So a day that had actually been fully corrected by end of day kept showing up in the "consecutive days over threshold" count — turning one real day of unresolved discrepancy into a false two-day streak. I fixed the counter to only look at each day's final verdict and added regression tests for it.</p>
+<h2>Bugs a code review caught while rolling out the auto-tuning system</h2>
+<p>I finished implementing the execution engine for a system I designed a few days ago — one that automatically re-tunes performance settings whenever the GPU or the model changes.</p>
+<p>After finishing the implementation, I ran an AI code review on it, and several review angles cross-confirmed real bugs. The worst one: the logic that decides which trial is the quality baseline was inferring it from a naming convention in the trial ID, instead of an explicit field.</p>
+<p>Left as-is, the baseline would silently shift to a new candidate every round, making any "did this actually get faster" comparison meaningless. I replaced that with an explicit role field set during the design step instead.</p>
+<p>Beyond that, there were bugs that only show up once you actually run the thing — a port number not getting refreshed, an environment variable being overwritten after it was already locked in — and I fixed those too.</p>
+<p>Then I tried the first real run on actual GPU hardware, and hit a different kind of problem. Partway through, I found that some of the core execution steps were still unimplemented stubs.</p>
+<p>The system's safety design mandates that the GPU can only be touched through this one controlled path, so patching in a workaround on the spot to get past the stub would have violated that principle. I stopped the run instead of working around it, logged the reason, and left the rest of the implementation for the next session.</p>
+<h2>Verifying a safety net end to end on the spare GPU</h2>
+<p>There's a safeguard that, in a port conflict, is supposed to clean up only the production process and leave any experimental process alone. Until now it had only ever been checked with unit tests, since the two processes had never actually been running at the same time in practice.</p>
+<p>Today I used a spare GPU I recently picked up to reproduce a real conflict — launching two actual OS processes under the same name as production, without loading any real model.</p>
+<p>I then called production's actual cleanup logic against them, and confirmed that only the production process got killed while the experimental one stayed alive. That was the first time this safeguard was verified end to end under a real conflict, not just in a unit test.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

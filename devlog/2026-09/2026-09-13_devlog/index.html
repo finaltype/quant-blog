@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260913] 킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-13_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260913] 킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다&quot;</h1>
+<p class="subtitle">어제 급하게 지운 킬스위치 오발 증상, 오늘 사후검토에서 뿌리 원인이 월요일 실거래를 다시 막을 위험으로 남아있는 걸 발견해 수선했습니다.</p><h2>어제 지운 증상, 뿌리는 남아있었다</h2>
+<p>어제 실계좌 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">킬스위치</a>(새 창)가 오발했던 사고를 급하게 수습했습니다.</p>
+<p>원인이던 계좌 구분값 문제는 그때 바로 고쳤습니다. 그런데 오늘 그 사고 전체를 다시 짚어보는 사후검토를 돌려보니, 증상만 지웠을 뿐 원인 하나가 그대로 남아있었습니다.</p>
+<p>문제는 이랬습니다. 어제 오발 직전에 계좌에서 자금을 일부 출금하는 처리가 있었는데, 이 출금이 손실 추적의 기준점(고점)을 다시 잡아주는 절차 없이 그냥 장부에만 반영됐습니다.</p>
+<p>기준점이 낮아진 잔고에 맞춰 다시 잡히지 않은 채로 남아있으면, 다음 정기 라운드가 지금 잔고를 그 오래된(더 높은) 기준점과 비교하게 됩니다.</p>
+<p>그러면 실제로는 아무 손실도 없었는데 마치 큰 폭으로 잔고가 줄어든 것처럼 계산돼서, 월요일 아침 정기 라운드에서 같은 킬스위치가 또 발동할 위험이 있었습니다.</p>
+<p>오늘 이 위험을 발견하자마자 기준점을 지금 잔고에 맞춰 다시 잡았습니다. 같은 계좌 구분값 문제가 남아있던 곳 두 군데도 추가로 찾아서 고쳤습니다.</p>
+<p>메모리 사용량이 일정 수준을 넘으면 속도를 늦추는 식으로 걸어뒀던 안전장치 하나도 재검토했습니다. 실측 데이터를 다시 보니 이 설정이 오히려 시스템 전체의 메모리 압박을 더 일찍 유발할 수 있는 구조였습니다.</p>
+<p>그래서 이 설정은 없애고, "정상적인 상황에서는 절대 안 걸리되 진짜 폭주만 막는" 훨씬 높은 안전판 하나만 남겼습니다.</p>
+<h2>대사 경보에도 오탐이 하나 섞여 있었다</h2>
+<p>계좌 잔고와 장부를 매일 맞춰보는 대사 절차에서, 잔차가 이틀 연속 기준을 넘으면 에스컬레이션 경보를 울리도록 해뒀습니다.</p>
+<p>그런데 이 카운터의 계산 방식에 결함이 있었습니다. 하루 안에 대사를 여러 번 돌리는 날, 그날 마지막 판정이 정상으로 끝났어도 중간에 한 번이라도 기준을 넘겼으면 그날 전체를 "초과"로 카운트하고 있었습니다.</p>
+<p>그래서 실제로는 하루 만에 정정까지 끝난 날이 계속 "연속 초과" 기록에 남아, 진짜론 하루치 미해결인 걸 이틀 연속으로 잘못 세고 있었습니다. 그날 마지막 판정만 보도록 계산 방식을 고치고 회귀 테스트를 추가했습니다.</p>
+<h2>성능 자동튜닝 시스템, 실전 투입 중 발견한 버그들</h2>
+<p>며칠 전 설계해둔, 그래픽카드나 모델이 바뀔 때마다 성능 설정을 자동으로 재튜닝해주는 시스템의 실행 엔진을 오늘 실제로 구현했습니다.</p>
+<p>구현을 마치고 AI 코드리뷰를 돌렸더니, 여러 리뷰 관점이 교차로 짚어낸 진짜 버그가 여러 건 나왔습니다. 그중 가장 심각했던 건 품질 비교 기준을 잡는 로직이 시행 번호의 이름 규칙만 보고 "이게 기준선이다"라고 판단하고 있었던 점입니다.</p>
+<p>이렇게 두면 매 라운드마다 기준선이 조용히 새 후보로 바뀌어버려서, 성능이 실제로 좋아졌는지 비교 자체가 무의미해질 수 있었습니다. 이 판정 로직을 이름이 아니라 설계 단계에서 명시적으로 붙이는 역할 값으로 바꿨습니다.</p>
+<p>이 밖에도 포트 번호가 갱신 안 되는 문제, 환경변수가 이미 고정된 뒤에 덮어써지는 문제 등 실제로 실행해봐야만 드러나는 버그들을 여럿 고쳤습니다.</p>
+<p>이후 실제 그래픽카드로 첫 실행을 시도했는데, 이번엔 다른 문제에 부딪혔습니다. 실행 엔진의 핵심 단계 일부가 아직 자리만 잡아둔 미구현 상태였던 걸 실행 도중에 발견한 겁니다.</p>
+<p>안전 원칙상 이 시스템은 정해진 경로로만 그래픽카드를 건드리도록 못박아뒀는데, 미구현 부분을 즉석에서 우회 코드로 채워 넣는 건 그 원칙을 어기는 셈이었습니다. 그래서 우회하지 않고 실행을 그대로 중단시켰고, 중단 사유를 기록에 남긴 뒤 다음 세션에서 마저 구현하기로 했습니다.</p>
+<h2>여분 그래픽카드로 안전장치 하나를 실측 검증했다</h2>
+<p>포트가 충돌했을 때 프로덕션 프로세스만 정확히 골라 정리하고 다른 실험 프로세스는 건드리지 않는 안전장치가 있는데, 지금까지는 실제로 두 프로세스가 동시에 떠 있는 상황이 한 번도 없어서 코드 단위 테스트로만 검증돼 있었습니다.</p>
+<p>오늘은 최근에 들여온 여분 그래픽카드를 이용해서, 실제 모델을 올리지 않고도 진짜 운영체제 프로세스 두 개를 프로덕션과 똑같은 이름으로 띄워 충돌 상황을 재현했습니다.</p>
+<p>프로덕션이 실제로 쓰는 정리 로직을 그대로 호출한 결과, 프로덕션 프로세스만 정확히 종료되고 실험 프로세스는 그대로 살아있는 걸 확인했습니다. 이걸로 이 안전장치가 실제 상황에서도 제대로 동작한다는 걸 처음으로 실측 검증했습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
