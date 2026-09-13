@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 07-13] Moving to a Shared Live Account - The Same Missing-Account-ID Bug Kept Recurring&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-13_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 07-13] Moving to a Shared Live Account - The Same Missing-Account-ID Bug Kept Recurring&quot;</h1>
+<p class="subtitle">I started live trading through a new shared account, and along the way the same class of bug kept resurfacing - code that forgot to pass or accidentally shared an account identifier, triggering both a false kill-switch trip and a wrongful forced sell</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The turning point - the first live order through a shared account</h2>
+<p>Wednesday split this week in two.</p>
+<p>The existing live account had always belonged entirely to the bot, so the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">execution safety layers</a>(new tab) were built on that assumption.</p>
+<p>The account I brought online this week breaks that assumption. Personal funds and the bot's trading capital sit in the same account together.</p>
+<p>After a redesign that filters personal funds out of buying-power calculations, determines who owns any unidentified holding, and hard-codes an invariant at the code level that sell orders can never touch personal holdings, the first live order through this account went out on Wednesday. It succeeded.</p>
+<p>The fund-transfer method between the two accounts was also finalized that same day. No bank transfer — instead, whenever the old account sells something, the new account automatically factors the proceeds into its budget within the same trading round, purely as a ledger-level conversion.</p>
+<p>Thursday morning, the physical transfer of holdings from the old account went through cleanly. From there, the rest of the week became cleanup work around this new account.</p>
+<h2>The recurring pattern - a missing or accidentally shared account identifier</h2>
+<p>Starting Thursday, three incidents that looked unrelated on the surface turned out to be the same kind of bug. Whenever code didn't explicitly say which account a given operation belonged to, the system fell back to a default or a shared global state.</p>
+<p>On Thursday, the auto-transfer logic that was supposed to move cash from the old account to the new one never fired once all day, because a single field name had been mapped incorrectly. On Friday, it turned out the flag meant to prevent "don't rebuy something you already transferred out" wasn't scoped per account at all — it was stored in one file shared across the whole system.</p>
+<p>As a result, positions in the new account that had just been transferred in and should have stayed held got treated as "excluded from ranking" too. Hours after the transfer, those positions were forcibly sold — the exact opposite of what the transfer was supposed to accomplish. The flag file was cleared as soon as this was found.</p>
+<p>Saturday brought a heavier incident. A simulation tick meant purely for informational purposes never passed an account identifier, and it ended up sharing the same kill-switch namespace as the real live account.</p>
+<p>That simulation tick happened to reference an old, unrelated, small account when computing balance. Comparing that balance against the live account's running peak made the system conclude the live account had lost nearly half its value in a single day. The kill switch tripped, freezing all new buys and sells.</p>
+<p>It was the weekend, so there was no immediate damage — but left alone, it would have frozen live trading entirely come Monday.</p>
+<p>Sunday's postmortem turned up something more important. Saturday's fix had only cleared the symptom: a withdrawal from Friday had been recorded in the ledger without resetting the loss-tracking peak that should have followed it.</p>
+<p>With that peak left un-lowered, Monday's regular trading round would have compared the current balance against that same stale, higher peak — and the same kill switch could have tripped again. The peak was reset as soon as this was found, and two more spots with the same missing-account-identifier problem were patched.</p>
+<p>All three incidents trace back to one root cause: leave an account identifier unspecified, and the system quietly falls back to a default or a shared value. Going forward, any code touching this identifier is required to specify it explicitly.</p>
+<h2>The GPU recognition failure — finally found the real cause</h2>
+<p>The GPU recognition failure I thought I'd already fixed last week came back this week.</p>
+<p>The original suspect, power management, was ruled out by direct measurement. The real cause was the display manager: in a multi-GPU setup, it occasionally crashes and restarts, and during that restart GPU access permissions quietly shifted from the login session account to a different system account.</p>
+<p>That state sat dormant for hours until an early-morning job the next day tried to grab the GPU and failed. A root-level fix that restructures the permission model to eliminate that race condition was applied and verified with a controlled reboot, with no recurrence since.</p>
+<p>Saturday morning brought a separate GPU incident — an OS auto-update partially upgraded the driver, leaving the userspace and kernel-module versions mismatched. With no trading that day, there was room to handle it calmly with another reboot.</p>
+<h2>The performance auto-tuning tool — from design to a first run</h2>
+<p>I designed and started building a tool this week to automate the performance-tuning work that's had to be redone by hand every time the GPU or model changed.</p>
+<p>Friday was design only: replay real captured load, search tuning parameters against it, and validate the results, with GPU-touching permissions kept strictly separate from design-only permissions so a design-side mistake can't reach production.</p>
+<p>Sunday I actually implemented that design. AI code review caught several real bugs, the worst being baseline-selection logic that judged "is this the baseline" purely from a run-number naming convention — which would have let the baseline silently drift to a new candidate every round.</p>
+<p>The first real run on an actual GPU hit a different wall: part of the execution engine's core steps turned out to still be unimplemented stubs, discovered mid-run. Given the safety principle that this tool may only touch the GPU through its designated path, patching in an improvised workaround on the spot would have violated that principle — so the run was stopped cleanly instead, with the reason logged for the next session.</p>
+<p>The same day, using a spare GPU, I ran the first live measurement of a safeguard that's supposed to clean up only the production process on a port conflict while leaving experimental processes alone. It had only ever been verified with unit tests before. Spinning up two real OS processes under production-matching names to reproduce the conflict confirmed the safeguard worked exactly as intended — production cleaned up, the experimental process untouched.</p>
+<h2>Also this week</h2>
+<p>On Monday, a broker API balance query that only read the first page of a multi-page response caused a holding to disappear entirely from the results — fixed. The same class of pagination bug resurfaced as part of Thursday's reconciliation incident, so other API calls with a similar paged structure were flagged for a later check.</p>
+<p>On Tuesday, fixing a broker login credential loading-order bug also surfaced a leak risk that hadn't shipped yet — if left unfixed, the account ID would have been logged in plaintext the first time login actually succeeded. A buffer rule was also added around the boundary of the trading universe to cut down on frequent additions and drops caused by minor rank fluctuations near the cutoff.</p>
+<p>A minimum holding-period rule aimed at reducing turnover also went into validation on both paper accounts.</p>
+<hr />
+<p>Looking back, introducing one new assumption — a shared account — surfaced, one by one, all the places in the code that had quietly assumed "there's only ever one account."</p>
+<p>The false kill-switch trip, the wrongful forced sell, and the failed cash auto-transfer all turned out to be the same hole. Each time, it was caught before live trading actually got blocked, and Sunday's postmortem tracked down the root that was still left behind.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

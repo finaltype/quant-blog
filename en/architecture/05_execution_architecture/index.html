@@ -52,6 +52,7 @@
 <h2>My share and the whole account are different things</h2>
 <p>This bot manages only one part of the account, not the whole thing. So it's dangerous to assume "the quantity the bot thinks it holds" must always exactly equal "the account's actual holdings" — the account could have other holdings mixed in that the bot doesn't know about.</p>
 <p>Instead I use a weaker but actually-correct condition: "the share the bot thinks it holds must always be less than or equal to the actual holdings." If that condition breaks, something is wrong, and it stops immediately and sends an alert.</p>
+<p>Recently this assumption got pushed a step further. One account now mixes personal funds with the bot's trading capital directly. I extended the safeguards to filter personal funds out of buying-power calculations, added logic to determine who owns an unidentified holding, and hard-coded an invariant at the code level so a sell order can never touch personal holdings.</p>
 <h2>Stopping is also a design decision</h2>
 <p>Loss-prevention is split into two layers.</p>
 <p>One layer is automatic. If losses cross a set threshold, that part stops on its own.</p>
