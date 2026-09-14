@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260914] The Day Market-Cap Data Came Back Empty - A Universe Contamination Incident&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-14_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260914] The Day Market-Cap Data Came Back Empty - A Universe Contamination Incident&quot;</h1>
+<p class="subtitle">When market-cap data came back entirely empty, stock rankings silently reverted to alphabetical order — so I added three layers of defense to catch it next time.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>This morning, while the system was refreshing its list of tradable stocks (the "universe"), the external market-data provider had an outage and returned empty market-cap values for every single stock.</p>
+<p>The problem was that the system let those empty values pass through. Once market-cap sorting became meaningless, the raw list's original order — alphabetical — got mistaken for "top N by market cap."</p>
+<p>As a result, nearly the entire KOSDAQ slice and close to half of the KOSPI slice got swapped out for the wrong stocks in a single day.</p>
+<p>The way I found out was a bit embarrassing. I noticed the real account had bought an unfamiliar stock and asked, "why did it buy this one?"</p>
+<p>Following that question back led straight to the root cause: a trade that had gone out with no real signal behind it, chosen essentially at random. I consulted an AI twice to pin down the cause and scope precisely.</p>
+<p>The actual damage turned out to be limited. The KOSPI side was safe, protected by a cache that gets locked in once each morning — the contamination only hit the KOSDAQ slice.</p>
+<p>Only a handful of trades went out on the bad signal, and the loss wasn't directional — just transaction-cost-level churn from buying and selling without any real signal. One stray position from the bad buy was still sitting in the account, so I liquidated it as soon as things were back to normal.</p>
+<h2>Adding three layers of defense</h2>
+<p>The first move was halting trading on every affected account. While trading was paused, I worked on restoring the universe to its last known-good state from the day before.</p>
+<p>One trap surfaced mid-recovery: an old version of the logic, not yet restarted with the fix, re-contaminated the data once more during the restore. I moved the restart earlier in the sequence to close that gap.</p>
+<p>For the root fix, I stacked several layers of validation on the market-cap data. If the fraction of missing values from a data source is too high, it's rejected outright now. If the day-over-day membership change is abnormally large, the system raises an alert and keeps the previous known-good membership instead of applying the change.</p>
+<p>Finally, there's one more revalidation step right before the universe is finalized. All three layers catch the same class of contamination but at different points — the data source, the update logic, and the final commit.</p>
+<h2>A GPU resource conflict on the same morning</h2>
+<p>Separately, the same morning, a manual performance benchmark that was running ate up most of the graphics card's memory, causing the scheduled report-generation job to fail three times in a row.</p>
+<p>The failure alerts actually fired every time, but I missed them while focused on the incident above. Stopping the benchmark resolved it immediately, but there's still no process in place to check for resource conflicts between manual runs and scheduled jobs ahead of time.</p>
+<h2>What's next</h2>
+<p>Today's incident also exposed a reliability problem with the data source itself — I'm considering reporting the missing-data issue to the provider.</p>
+<p>I'm also reconsidering whether the system needs to re-query market data live during trading hours at all. Since the universe is already locked in once each morning, an intraday re-query adds risk like today's without any real benefit.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
