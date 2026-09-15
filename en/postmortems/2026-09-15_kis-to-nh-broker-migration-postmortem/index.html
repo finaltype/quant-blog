@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I Added a Second Broker API, and Every Incident Since Has Come From It · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/index.html">한국어로 보기</a></p>
+<article>
+<h1>I Added a Second Broker API, and Every Incident Since Has Come From It</h1>
+<p class="subtitle">A class of bugs that barely showed up on KIS (Korea Investment &amp; Securities) for weeks started firing almost weekly the moment NH Securities&#x27; Open API joined the stack</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I've been migrating my main trading account from KIS to NH Securities. Along the way, something odd stood out: a whole class of incidents that had barely shown up on the KIS side for weeks started firing almost weekly the moment NH's API joined the stack.</p>
+<p>Two APIs doing the same job — so why did the trouble cluster almost entirely on one side? This post is my attempt to lay that out.</p>
+<h2>Why switch brokers at all</h2>
+<p>Everything originally ran on KIS (Korea Investment &amp; Securities). Once the decision was made to move the main account to NH, I started running an NH paper-trading sleeve in parallel as a validation step before the real-money cutover. At first I treated it as "just wiring up one more API."</p>
+<p>The first outside review came back almost immediately: cutting over the next day was not viable. The order-placement path didn't exist yet, the target account had my own pre-existing holdings mixed in (so the bot risked touching stock I hadn't asked it to touch), and above all there was zero validated track record on the NH side. So the plan became: paper trading in parallel → small real-money pilot → staged budget migration → eventual KIS retirement.</p>
+<p>The trouble hit hardest during that "build up a track record" phase.</p>
+<h2>What broke, only on NH, over three weeks</h2>
+<p>Listing every single one would get tedious, so here are a few that stood out for being different kinds of problems.</p>
+<p><strong>A fill price quietly came back 1000x too small.</strong> NH's execution-history endpoint had been returning the average fill price field scaled down by a factor of 1000, and I hadn't noticed. The first time it showed up, I wrote it off as a one-off. It turned out to have been happening on every single fill since that day. That corrupted value flowed straight into the ledger, understating how much cash had gone out on each buy, and three days later a safety guard picked up the anomaly and halted trading automatically. No money actually went out wrong, but the ledger needed manual reconstruction.</p>
+<p><strong>A stock I'd clearly bought didn't show up in the holdings query.</strong> The fill history showed the buy correctly, but querying current holdings made it look like the position didn't exist at all. It turned out the holdings endpoint paginates its response, and the client was only reading the first page. Once holdings crossed a page boundary, anything past it silently vanished. From the ledger's point of view, it looked like "the ledger has it, the broker doesn't" — which is exactly the signal a safety guard is built to halt on.</p>
+<p><strong>The same pagination bug behaved differently between the live and sandbox accounts.</strong> After fixing the above, digging deeper turned up something more structural: on the live account, a truncated page honestly reports "there's more," but on the paper/sandbox account, the exact same truncation falsely reports "that's everything." The two looked like the same documented API, but they were actually running on different backends. That meant validating something on paper carried no guarantee it would hold on live money — which forced a rewrite of how validation itself was supposed to work.</p>
+<p><strong>An endpoint got blocked with zero notice.</strong> A price-lookup call that had worked fine for days suddenly started returning "not available for paper trading accounts." Nothing in the docs changed, no notice went out. A quiet fallback to a second price source got patched in on short notice.</p>
+<p><strong>An auth token got invalidated before its stated expiry.</strong> The locally cached token still had plenty of time left according to its own expiry field, but the server had already invalidated it — and that quietly halted trading for the rest of that afternoon. The fix now discards the cache and re-issues immediately on any "invalid token" response.</p>
+<p><strong>The exact same bug resurfaced in a different endpoint.</strong> The pagination issue from the holdings query showed up again, this time in the account-summary endpoint — with a meaner twist: intermediate pages had their summary totals zeroed out, so reading only the first page made the account look like it held zero value. That this one hit the live account made it sting more.</p>
+<p><strong>The same false alarm repeated nine times over two weeks.</strong> "The ledger has it, the broker query doesn't" kept recurring, and for a while I chalked it up to "NH's servers must just be flaky." Looking closer, the real cause was on our side: the holdings-query function could fail partway through paginating and still return whatever partial results it had collected as if it had succeeded — no exception thrown. That partial gap got misread as "the broker genuinely doesn't have this position." The first hypothesis — "their server is unreliable" — turned out to be our own code misreading the API's contract.</p>
+<h2>Why this only happened on NH, not KIS</h2>
+<p>A few structural differences stacked up.</p>
+<ul>
+<li><strong>The starting point for documentation was different.</strong> KIS had proper developer docs. NH's official documentation wasn't sufficient, so the spec had to be reverse-engineered by observing real requests and responses. That left a much larger surface of unverified behavior, and each unverified corner eventually turned into a real incident.</li>
+<li><strong>The assumption that "sandbox is a scaled-down live environment" didn't hold.</strong> That was mostly true for KIS. On NH, live and sandbox behaved like effectively different systems. Something confirmed safe on paper didn't always carry over to live.</li>
+<li><strong>Pagination signals were hidden in response headers.</strong> Instead of the response body, a specific header value indicated "there's another page." That's easy to miss once, and once missed, the same mistake repeated across multiple endpoints.</li>
+<li><strong>Field reliability varied endpoint by endpoint.</strong> A field like fill price, which looks like it should obviously be correct, turned out to be computed wrong in one specific place — something no amount of reading documentation would catch; only measuring the actual values caught it.</li>
+</ul>
+<h2>What I'd tell anyone else migrating brokers (or any external financial API)</h2>
+<p>Turning this into a checklist, in case it saves someone else the same three weeks.</p>
+<ol>
+<li><strong>Don't trust the docs — measure everything.</strong> Request limits, response codes, even what counts as success vs. failure — verify every one of these against the documented value. Our request limits alone didn't match what the docs claimed.</li>
+<li><strong>Don't assume sandbox and live are "two modes of the same system."</strong> They can look like the same API on paper while running on completely different backends underneath. Passing validation on sandbox is not a substitute for validating on live.</li>
+<li><strong>Check whether pagination lives in response headers before you trust a single page as "complete."</strong> Reading only the body and assuming you're done produces a silent gap that looks like missing data rather than truncated data. And once you find this pattern in one endpoint, assume every other endpoint on the same backend needs the same suspicion, not just the one that already broke.</li>
+<li><strong>Audit whether your query functions can turn "partial failure" into "apparent success."</strong> Whether a function throws on a mid-pagination failure or just returns whatever it managed to collect determines how every downstream safety check behaves. We assumed the wrong contract here and burned two weeks chasing "the server must be flaky" as a result.</li>
+<li><strong>Be suspicious of every field's scale and units, not just its presence.</strong> Especially for anything price- or quantity-related where money is on the line, it's worth building a separate cross-check path against another derivable value (like fill amount divided by quantity).</li>
+<li><strong>Assume API behavior can change with zero notice, and have a fallback ready.</strong> Free-tier and sandbox-only features in particular can get restricted at any time.</li>
+<li><strong>Don't trust that the server will honor your local token's stated expiry.</strong> It's safer to build in, from day one, a path that discards the cache and re-issues immediately the moment you see any "invalid token" class of error.</li>
+<li><strong>Treat an alert as something to close out the same day it fires.</strong> The single costliest incident here wasn't the bug itself — it was leaving the alert unaddressed for three days while the corruption kept compounding. The bug alone could have been a one-day incident. Neglect is what turned it into a three-day recovery.</li>
+</ol>
+<h2>Generalizing this</h2>
+<p><strong>Expect a new API integration to fail far more often than an existing one doing the same job — that's normal, not a red flag about the vendor.</strong> The size of the unverified surface is just different. Jumping to "this API must be inherently unstable" during that early period is the wrong first move; "we still don't fully understand this API's contract" is the better default hypothesis. In fact, our longest-running recurring incident turned out to be our own calling code, not the other side's server.</p>
+<p><strong>Fixing a bug class in one place doesn't mean it's fixed everywhere.</strong> The pagination bug got fixed in one endpoint, and the same bug came right back in a different endpoint sharing the same backend. Once you find a structural flaw in one place, checking "does anything else use this same pattern?" right then is far cheaper than discovering each instance one incident at a time.</p>
+<p><strong>When money is involved, leaving an alert unaddressed is itself a cost.</strong> The damage at the moment an alert fires is usually small. What compounds it is letting the alert sit while the corrupted value keeps feeding into other calculations. Responding to alerts quickly was the single habit that decided whether an incident stayed a one-day problem or grew into a multi-day one.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
