@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260915] 동점 점수 처리 로직 교체 - 기각된 방식에서 새 방식으로&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-15_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260915] 동점 점수 처리 로직 교체 - 기각된 방식에서 새 방식으로&quot;</h1>
+<p class="subtitle">순위 동점 처리 방식 하나가 사전에 정한 판정 기준을 통과하지 못해 기각됐고, 같은 날 새 방식으로 즉시 교체했습니다.</p><h2>동점 처리 방식이 기각되다</h2>
+<p>종목을 순위로 줄 세우는 로직에는 점수가 동점일 때 순위가 하루하루 뒤집히는 문제가 있었습니다. 이 뒤집힘이 잦아지면 매매가 불필요하게 늘어나고 수수료도 그만큼 더 나갑니다.</p>
+<p>며칠 전 이 문제를 줄이려고 동점 처리 방식 하나를 도입해서 실거래에 적용해 놓았습니다. 적용 전에 "일정 기간 지켜본 뒤 효과가 기준을 넘으면 채택, 못 넘으면 기각"이라는 판정 기준을 미리 정해뒀습니다.</p>
+<p>오늘 그 판정일이 됐는데, 실측 결과가 기준선에 한참 못 미쳤습니다. 통계적으로도 원래 상태와 유의미한 차이가 없다는 결론이 나와서 기각으로 확정했습니다.</p>
+<p>기각 소식을 듣고 "이대로 두면 계속 손해 아니냐, 더 정교한 대안을 찾아달라"고 요청했습니다. 지금 방식은 수수료가 많이 나가고 실시간성도 떨어져 보인다는 게 이유였습니다.</p>
+<h2>AI 자문 끝에 즉시 교체</h2>
+<p>AI에게 자문을 구해 원인을 다시 짚어봤습니다. 결과가 흥미로웠습니다. "실시간성이 떨어진다"는 제 직관은 방향이 틀렸다는 진단이 나왔고, 실제 원인은 순위를 매기는 원재료 점수 자체가 하루 사이 거의 무작위에 가깝게 흔들린다는 데 있었습니다.</p>
+<p>즉 하루하루의 순위 변동이 어떤 추세를 반영한 게 아니라 잡음에 가까웠다는 뜻입니다. 그렇다면 해법은 그날그날의 점수를 그대로 쓰는 대신, 최근 며칠 치를 평균 내서 잡음을 눌러주는 쪽이 더 근본적이라는 제안을 받았습니다.</p>
+<p>기존 방식을 걷어내고 이 새 방식으로 바로 교체하기로 했습니다. "속도가 우선"이라는 제 판단에 따라 검증과 동시에 실거래에 즉시 적용했습니다.</p>
+<p>적용 전에 가용한 과거 데이터로 미리 시뮬레이션을 돌려봤습니다. 원래는 두 달 치를 보고 싶었는데, 실제 쓸 수 있는 데이터는 한 달 남짓뿐이었습니다.</p>
+<p>그 안에서는 매매 회전이 뚜렷하게 줄어드는 방향이 확인됐고, 비용 절감 방향도 일관되게 나타났습니다. 다만 전체 수익률이 실제로 더 나아졌는지는 표본이 짧아 판단하기 어려웠습니다. 이 부분은 다시 며칠을 지켜본 뒤 별도로 판정하기로 했습니다.</p>
+<h2>하루 종일 코드 리뷰</h2>
+<p>같은 날 대규모 코드 리뷰도 진행했습니다. 특정 AI 모델과 리뷰 강도를 인자로 받아 실행하는 범용 리뷰 절차를 새로 만들고, 지난번 리뷰 이후 바뀐 부분 전체를 다섯 갈래로 나눠 병렬로 점검했습니다.</p>
+<p>리뷰에서 나온 치명·중요 지적 열네 건을 전부 그날 안에 수정했고, 급하지 않은 제안 열아홉 건도 마저 반영했습니다.</p>
+<p>리뷰 과정에서 발견한 버그 하나가 특히 인상적이었습니다. 실계좌 리포트에 수익률이 수백 퍼센트로 찍혀 있었던 겁니다. 원인을 보니 계좌 간에 종목을 옮긴 이관분이 투입 원금 계산에서는 빠지고 평가금액에는 반영되는 불일치가 있었습니다. 분자만 부풀고 분모는 그대로였던 셈입니다.</p>
+<p>바로잡은 수치로 정정 리포트를 다시 발송했습니다. 테스트 코드 하나가 실제 운영 텔레그램 채널로 경보를 잘못 쏘던 버그도 같이 발견해서 고쳤습니다. 목킹 범위가 테스트 클래스의 일부에만 걸려 있던 게 원인이었습니다.</p>
+<h2>보유 종목 조회 오탐도 근본 수선</h2>
+<p>브로커 쪽에서 보유 종목을 조회할 때 일부 페이지만 조용히 실패해도 "정상 완료"로 돌려주는 계약이 있다는 걸 새로 확인했습니다.</p>
+<p>이 때문에 실제로는 갖고 있는 종목이 조회 결과에서만 빠지는 거짓 불일치가 반복적으로 발생했고, 그때마다 매매가 멈춰서는 일이 있었습니다. 조회 실패를 조용히 넘기지 않고 명시적인 오류로 승격시키도록 고쳐서, 이 유형의 오탐 자체가 나오지 않게 만들었습니다.</p>
+<p>이런 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행과 안전장치 계층</a>(새 창)은 핵심 종목 선별 로직과 달리 설계 취지를 비교적 자세히 공개하고 있습니다.</p>
+<h2>앞으로</h2>
+<p>새 동점 처리 방식은 며칠 더 지켜보면서 이상 신호가 없는지 확인하는 절차를 거칩니다. 그 뒤 수익률 개선 여부를 별도로 판정할 예정입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

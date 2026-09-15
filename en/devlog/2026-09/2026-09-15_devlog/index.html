@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 15] Replacing the Tie-Break Logic — from a Rejected Method to a New One&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-15_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 15] Replacing the Tie-Break Logic — from a Rejected Method to a New One&quot;</h1>
+<p class="subtitle">A tie-break method for ranking failed a pre-registered evaluation bar, and I swapped it for a new one the same day.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A tie-break method gets rejected</h2>
+<p>The ranking logic that lines up stocks had a problem: when scores tied, the ranking could flip day to day. Frequent flipping meant unnecessary trades, and each of those trades cost fees.</p>
+<p>A few days ago I introduced a tie-break method to reduce this and put it live. Before deploying it, I set a pre-registered bar: watch it for a fixed period, adopt it if the effect clears a threshold, reject it otherwise.</p>
+<p>Today was judgment day, and the measured result fell well short of the bar. It also showed no statistically meaningful difference from the original state, so I confirmed the rejection.</p>
+<p>Hearing that, I pushed back: "doesn't leaving it as-is just mean continuing to lose money — find a more sophisticated alternative." The current approach seemed to generate too many fees and lag behind the market in real time.</p>
+<h2>AI advisor, then an immediate swap</h2>
+<p>I asked an AI advisor to re-examine the root cause. The result was interesting. My own intuition — that the lag was the problem — turned out to be pointing the wrong direction. The real cause was that the raw score feeding the ranking itself swung almost randomly day to day.</p>
+<p>In other words, the day-to-day ranking movement wasn't tracking any real trend — it was closer to noise. The advisor's suggestion: instead of using each day's raw score, average several recent days together to suppress that noise. That felt like a more fundamental fix than patching the tie-break mechanism itself.</p>
+<p>I decided to rip out the old method and swap in the new one right away. Since speed mattered more to me than a longer validation window, I applied it to live trading the same day I verified it.</p>
+<p>Before deploying, I ran a quick backtest on whatever historical data was available. I'd hoped for two months of history, but only about a month turned out to be usable.</p>
+<p>Within that window, trading turnover dropped clearly, and cost reduction pointed the same direction consistently. Whether overall returns actually improved was harder to tell — the sample was too short. I decided to watch it for a few more days and judge that separately.</p>
+<h2>A whole day of code review</h2>
+<p>The same day, I also ran a large code review. I built a reusable review workflow that takes a model and a review intensity as parameters, then split everything changed since the last review into five parallel tracks and went through all of it.</p>
+<p>I fixed every critical and important finding — fourteen in total — the same day, and also folded in nineteen lower-priority suggestions.</p>
+<p>One bug the review turned up stood out. A live-account report was showing a return in the hundreds of percent. The cause: shares transferred between accounts were being excluded from the principal calculation but still counted in the valuation — the numerator was inflated while the denominator stayed flat.</p>
+<p>I sent out a corrected report with the fixed numbers. A separate bug also surfaced where a test was firing real alerts into the production messaging channel — the mock only covered part of a test class, so I fixed the scope.</p>
+<h2>A root fix for false holdings-mismatch halts</h2>
+<p>I discovered that the broker's holdings-lookup call had a quiet failure mode: if one page of a paginated response failed, it would still return as if the whole call had succeeded.</p>
+<p>That caused a recurring false mismatch — positions the account genuinely held would drop out of the lookup result — and each time, trading would halt. I changed the call to surface that partial failure as an explicit error instead of silently swallowing it, which eliminates this entire class of false halt.</p>
+<p>Layers like this — <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and the safety layer around it</a>(new tab) — are, unlike the core stock-picking logic, something I'm comfortable documenting in more detail.</p>
+<h2>What's next</h2>
+<p>The new tie-break method still needs a few more days of watching for anomalies. After that, I'll judge separately whether it actually improved returns.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
