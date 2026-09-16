@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260916] AI 판단 모델 샘플링 설정 점검 - 의도와 다른 값으로 돌고 있었다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-16_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260916] AI 판단 모델 샘플링 설정 점검 - 의도와 다른 값으로 돌고 있었다&quot;</h1>
+<p class="subtitle">AI 리포트용 모델들이 몇 주째 의도한 것과 다른 샘플링 설정으로 돌고 있었다는 걸 발견해 바로잡았고, 지난주 그래픽카드 장애의 후속 안전장치도 마무리했습니다.</p><h2>"그 설정, 논의한 적 있었나?"</h2>
+<p>오늘은 AI 리포트 파이프라인에서 쓰는 로컬 모델들의 샘플링(출력의 무작위성을 조절하는) 설정을 다시 들여다보는 걸로 시작했습니다.</p>
+<p>계기는 단순한 질문이었습니다. "이 설정, 우리가 제대로 논의하고 정한 적이 있었나?"</p>
+<p>AI에게 코드를 훑어 확인을 맡겼더니, 답은 "사실상 없었다"에 가까웠습니다.</p>
+<p>몇 주 전 진행했던 한 비교 실험이 있었는데, 알고 보니 설정값을 바꿔 보내는 코드가 중간 경유 지점에서 그 값을 그냥 버리고 있었습니다.</p>
+<p>그러니까 "설정을 바꾼 쪽"과 "안 바꾼 쪽"을 비교한 게 아니라, 사실상 같은 설정끼리 비교한 셈이었습니다. 실험 결과 자체가 무효였다는 뜻입니다.</p>
+<p>더 찾아보니 더 근본적인 문제도 있었습니다. 지금 프로덕션에서 쓰는 메인 모델은 "깊이 생각하는 모드"를 의도적으로 꺼둔 채 쓰고 있는데, 정작 적용되고 있던 샘플링 값은 그 모드가 켜져 있을 때를 가정한 기본값이었습니다.</p>
+<p>모드는 꺼져 있는데 설정은 켜진 쪽 기준으로 돌고 있었던 셈입니다. 누가 일부러 바꾼 게 아니라, 값을 명시하지 않으면 모델 파일에 딸려 있는 기본값으로 조용히 폴백되는 구조였다는 게 원인이었습니다.</p>
+<h2>권장값을 찾아 바로잡았다</h2>
+<p>AI에게 지금 쓰는 모드에 맞는 권장 설정값을 조사해달라고 맡겼습니다.</p>
+<p>찾아보니 모델 제공사가 "생각 모드를 껐을 때"와 "켰을 때" 각각 다른 권장 설정을 공식적으로 제시하고 있었고, 지금까지는 그중 맞지 않는 쪽 값으로 돌고 있었던 걸 확인했습니다.</p>
+<p>권장값을 메인 프로덕션 모델에 반영했습니다. 같은 시점에 장중에만 별도로 돌리는 관측 전용 모델(실거래 판단에는 관여하지 않고 성능만 지켜보는 그림자 구성)에도 같은 값을 맞췄습니다.</p>
+<p>반영 전후로 코드 테스트와 실제 실행 로그로 값이 제대로 걸리는지 확인했고, 상주 중인 작업들을 전부 재시작해 적용했습니다.</p>
+<p>이 김에 "생각 모드를 꺼둔 결정 자체가 여전히 맞는가"도 다시 검토했습니다. 결론은 기존 결정 유지 — 끈 채로 두는 게 맞다는 쪽으로 재확인됐습니다.</p>
+<p>이번 조사로 몇 주 전 실험 하나가 무효였다는 사실도 함께 남겨뒀습니다. 그 실험 결과를 근거로 다른 결론을 내리지 않도록, 관련 기록에 무효 표시를 해뒀습니다.</p>
+<h2>지난주 그래픽카드 장애 후속 조치도 마무리</h2>
+<p>지난주 며칠에 걸쳐 다뤘던 그래픽카드 인식 실패 장애의 후속 작업도 오늘 마저 처리했습니다.</p>
+<p>먼저 장치 접근 권한이 원인인 실패를 더 빨리 알아챌 수 있도록, 실패 메시지 안에 권한 문제 여부를 바로 짚어주는 진단 단계를 새로 넣었습니다.</p>
+<p>운영체제가 자동으로 업데이트를 설치하는 시각도 거래 시간과 겹치지 않는 시간대로 옮겼습니다. 자동 업데이트 자체가 원인은 아니었지만, 만에 하나 겹칠 경우의 위험을 미리 없애두기 위해서입니다.</p>
+<p>마지막으로 지난 장애를 기록해둔 메모 중 하나가 실제로는 파일이 없는 끊긴 링크였다는 것도 발견해서 정리했습니다.</p>
+<h2>앞으로</h2>
+<p>새로 적용한 샘플링 설정은 아직 초기 관찰 단계입니다. 이 설정이 실제로 리포트 품질에 어떤 영향을 주는지는 내일 아침과 이번 주말에 좀 더 지켜볼 예정입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

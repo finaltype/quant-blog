@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 16] Checking the AI Judgment Models&#x27; Sampling Settings — Wrong Values All Along&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-16_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 16] Checking the AI Judgment Models&#x27; Sampling Settings — Wrong Values All Along&quot;</h1>
+<p class="subtitle">The local models behind my AI reports had been running with the wrong sampling settings for weeks, and I also closed out last week&#x27;s graphics-card incident.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>"Wait, did we ever actually discuss that setting?"</h2>
+<p>Today started with revisiting the sampling settings (the parameters that control how random a model's output is) for the local models behind my AI reporting pipeline.</p>
+<p>The trigger was a simple question I asked myself: had this setting ever actually been discussed and deliberately chosen?</p>
+<p>I asked an AI to trace through the code and check, and the answer came back close to "not really."</p>
+<p>A few weeks earlier I'd run a comparison experiment that changed this setting. It turned out the client code relaying that value was silently dropping it partway through.</p>
+<p>So instead of comparing "changed" against "unchanged," I'd effectively compared the same setting against itself. The experiment's result was invalid.</p>
+<p>Digging further turned up something more fundamental. The main production model is deliberately run with its "deep thinking" mode turned off — but the sampling values actually in effect were the defaults meant for when that mode is <em>on</em>.</p>
+<p>The mode was off, but the settings behind it assumed it was on. Nobody had changed this on purpose; whenever the value wasn't explicitly set, it quietly fell back to whatever default was bundled with the model file.</p>
+<h2>Finding the right values and fixing it</h2>
+<p>I asked an AI to look up the recommended settings for the mode I'm actually running.</p>
+<p>It turned out the model vendor publishes separate official recommendations for "thinking mode off" versus "on," and my setup had been running with the wrong one all along.</p>
+<p>I applied the correct values to the main production model. At the same time, I applied the same fix to a separate observation-only model that runs during market hours purely to watch performance — it has no say in actual trades.</p>
+<p>I verified the fix both with unit tests and by checking the actual runtime logs, then restarted every resident process to apply it.</p>
+<p>While I was at it, I also revisited whether keeping "thinking mode" off was still the right call. The conclusion held: it stays off.</p>
+<p>I also flagged the earlier invalidated experiment in my records, so its result doesn't get cited as evidence for anything else going forward.</p>
+<h2>Also wrapped up last week's graphics-card incident</h2>
+<p>I closed out the remaining follow-up work from last week's graphics-card recognition failures today too.</p>
+<p>First, I added a diagnostic step that flags permission-related causes directly in the failure message, so this kind of issue is easier to spot at a glance next time.</p>
+<p>I also moved the time the OS installs automatic updates to a window outside trading hours. The auto-update process wasn't the actual cause of last week's incident, but shifting it removes even the small chance of it colliding with anything in the future.</p>
+<p>Lastly, I found and cleaned up one of my own incident notes from a previous write-up that turned out to be a broken link — the file it pointed to no longer existed.</p>
+<h2>What's next</h2>
+<p>The new sampling settings are still in an early observation phase. I'll keep an eye on how they affect report quality tomorrow morning and over the weekend.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
