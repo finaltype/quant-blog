@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 17] First Run of a Benchmark Harness — Plugging the Leaks One by One&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-17_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 17] First Run of a Benchmark Harness — Plugging the Leaks One by One&quot;</h1>
+<p class="subtitle">I found that yesterday&#x27;s model setting fix hadn&#x27;t actually reached the new benchmark tool at all, spent the day plugging leak after leak, and also finally closed out a set of safety items that had sat untouched for 11 days.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>"Did yesterday's fix actually make it into the new tool?"</h2>
+<p>Yesterday I fixed the sampling settings for the models behind my AI reports.</p>
+<p>Today's job was to prepare the first verification run of a new benchmark tool (perf-harness) I've been building to measure how fast those models run.</p>
+<p>Partway through, the question came up: did yesterday's fix actually carry over into this test run?</p>
+<p>The answer turned out to be no.</p>
+<p>The benchmark tool was building a fresh, minimal config object for every trial, and it never once looked at the value I'd just fixed the day before.</p>
+<p>If I'd run the first verification as-is, it would have measured the wrong condition entirely — making the whole benchmark meaningless.</p>
+<h2>The same kind of leak showed up two more times</h2>
+<p>Once I started suspecting it, the same class of bug kept turning up.</p>
+<p>One case: the benchmark request was overwriting the startup config used when spinning up a fresh server. Another: a separate measurement path that replays the real pipeline directly wasn't carrying the value either.</p>
+<p>I fixed all three the same way — inject the value if one's set, fall back to the old behavior if not — and added tests for each.</p>
+<h2>The sample itself was a moving target</h2>
+<p>While reviewing the design, I noticed the sampling approach for test data had its own problem.</p>
+<p>Until now, every run pulled a fresh sample from the last 7 days of real prompts. That means comparing benchmark records across months mixes up "the setting changed" with "the sample changed" — no way to tell which caused a difference.</p>
+<p>So I picked one day's worth of samples and locked it in as a fixed baseline going forward. If there's ever a real reason to change the sample, I'll version it explicitly instead of letting it drift.</p>
+<h2>The automated run itself was stuck</h2>
+<p>Once the settings and sample were sorted, I tried running the tool unattended for the first time.</p>
+<p>The first attempt just went silent. Tracing it back, the automated launcher had shortened the command it was passing, which tripped a permission check and left it stuck waiting for approval forever.</p>
+<p>If a person had been watching, they could've just approved it. But this was meant to run with no one watching, so nothing could approve it.</p>
+<p>Even if that shortened command had somehow gotten through, it likely would've failed anyway — running in the system's default environment instead of this project's dedicated one, missing components it needed.</p>
+<p>I fixed it by hardcoding the command so it can't get shortened.</p>
+<p>Along the way I also discovered that one of the time windows where extra GPU headroom is allowed had been registered while yesterday's sampling bug was still live. I closed that window temporarily until I can confirm the fix actually holds.</p>
+<p>Only after clearing all of that did the benchmark actually get through its first launch step. It ended up colliding with other work already using the same resources, though, so I pushed the run back and rescheduled it rather than forcing it through.</p>
+<h2>Also closed out a set of safety items that had sat for 11 days</h2>
+<p>A few days ago I found an issue with a data-collection safety mechanism and got an AI's advice on how to fix it.</p>
+<p>During a routine review today, I found that only the most urgent piece of that advice had actually been implemented — the rest had sat untouched for 11 days.</p>
+<p>I had the remaining items re-checked for whether they still applied. One turned out to be a real, recurring problem. Another looked like the same category on paper, but measuring it showed it had zero actual impact.</p>
+<p>I implemented everything that still applied, all in one sitting. Engine crashes and external network failures are now handled as separate cases, and a data-collection failure now raises immediately instead of silently falling back to another method.</p>
+<p>While I was in there, I also added a safeguard to stop test code from accidentally touching processes that are actually running in production.</p>
+<p>Nothing exotic caused the 11-day gap — there was just no process for tracking advice items once they'd been given. So today I also did a full pass over the whole outstanding-items list to check whether anything else had slipped through the same way.</p>
+<h2>What's next</h2>
+<p>The postponed first benchmark run is rescheduled for the next automated window.</p>
+<p>The thing to confirm this time: that the automated command actually goes through with the full path intact, and that the run completes end to end.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
