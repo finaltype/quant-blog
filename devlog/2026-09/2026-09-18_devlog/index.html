@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260918] 성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-18_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260918] 성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다&quot;</h1>
+<p class="subtitle">GPU 사용량을 실제보다 3배 넘게 잘못 계산하고 있었고, 측정 시간제한이 너무 짧아 후보 순위까지 거꾸로 나오고 있었습니다. 두 건 다 오늘 안에 찾아 고쳤습니다.</p><h2>GPU 사용량이 3배 넘게 부풀려져 있었다</h2>
+<p>어제 마지막으로 걸어둔 벤치마크가 밤사이 자동으로 돌았습니다.</p>
+<p>결과를 확인하니 이상한 숫자가 나왔습니다. 트라이얼 하나가 하루 GPU 사용 한도의 80% 넘게를 혼자 다 써버린 걸로 기록돼 있었습니다.</p>
+<p>처음엔 "서버가 죽은 뒤에도 클라이언트가 계속 재시도하면서 시간을 낭비했다"는 식으로 원인을 짚었습니다.</p>
+<p>그런데 "그 숫자가 어디서 나온 계산이야?"라는 질문을 받고 다시 들여다보니, 이 설명 자체가 근거 없이 지어낸 추정이었습니다. 실제 서버 로그에는 재시도 흔적이 전혀 없었습니다.</p>
+<p>진짜 원인은 따로 있었습니다. 벤치마크가 여러 종목을 동시에 처리한 시간을 순차로 처리한 것처럼 그냥 다 더해서 기록하고 있었고, 이 합산값을 실제 GPU 점유 시간으로 착각해 예산에 그대로 얹고 있었습니다. 실측 대비 3배 넘게 과다 청구된 셈입니다.</p>
+<p>다른 AI에게 이 계산 과정을 자문받아 원인을 확정한 뒤, 시작 시각과 종료 시각의 실제 경과로 계산하도록 회계 로직을 고치고 잘못 기록된 과거 값도 정정했습니다. 표본 데이터에 같은 내용이 중복으로 여러 번 섞여 있던 것도 같이 정리했습니다.</p>
+<h2>순위 자체가 거꾸로 나오고 있었다</h2>
+<p>회계를 고친 뒤 실제로 GPU를 써서 몇 가지 설정 변형을 비교해봤습니다.</p>
+<p>한 설정은 예상과 반대로 오히려 느려진 것으로, 다른 설정은 빨라졌지만 실패율이 높아진 것으로 나왔습니다. 실패율이 높으면 후보에서 제외하는 게 상식적인 판단이라 그렇게 정리하고 넘어갔습니다.</p>
+<p>그런데 여기서 두 번째 계측 오류가 있었습니다. "이 실패들이 정말 서버 문제였는지 로그로 확인했어?"라는 질문에 서버 로그를 다시 보니, 실패로 잡힌 요청들은 전부 정상적으로 응답을 생성하던 중이었습니다.</p>
+<p>문제는 벤치마크 도구가 응답을 기다리는 시간제한을 실제 운영 환경보다 훨씬 짧게 잡아두고 있었던 것이었습니다. 정상적으로 진행 중인 요청을 시간이 다 됐다는 이유로 강제로 끊어버리고 있었습니다.</p>
+<p>이 시간제한을 운영 환경과 같은 값으로 맞추고, 끊긴 요청에 쓴 시간도 결과에 포함시키도록 고친 뒤 다시 계산해보니 순위가 뒤집혔습니다. 느려졌다고 판단했던 설정이 사실은 더 빨랐고, 빠르다고 판단했던 설정이 사실은 가장 느린 쪽이었습니다.</p>
+<p>완주율이 낮은 결과는 이제 별도로 표시해서 비교 대상에서 자동으로 빠지게 했습니다.</p>
+<p>같은 날 두 번이나 "측정 도구 자체가 잘못 재고 있었다"는 걸 발견한 셈입니다. 둘 다 겉으로는 그럴듯한 숫자가 나오고 있어서, 근거를 하나씩 되짚지 않았다면 그대로 지나갔을 문제였습니다.</p>
+<h2>밤새 아무 진행 없이 9시간 넘게 멈춰 있던 원인도 확인</h2>
+<p>이 벤치마크 작업과 별개로, 전날 밤 종목 분석 작업이 100개 중 75개만 끝내고 끊긴 일이 있었습니다.</p>
+<p>원인을 로그로 추적해보니 "밤새 작업이 뜨문뜨문 진행됐다"가 아니라, 여러 갈래로 나뉜 작업 중 한 갈래가 첫 번째 종목의 외부 데이터 조회 단계에서 응답 시간제한이 걸려 있지 않아 9시간 넘게 그대로 멈춰 있었던 것이었습니다. 나머지 갈래들은 모두 정상적으로 끝났습니다.</p>
+<p>외부 데이터 조회에 시간제한을 강제로 걸고, 한 갈래가 일정 시간 진행이 없으면 스스로 감지해 남은 작업을 넘기고 종료하도록 안전장치를 추가했습니다. 오늘 밤 작업부터 바로 적용됩니다.</p>
+<h2>앞으로</h2>
+<p>정정된 회계·시간제한 기준으로 벤치마크를 계속 이어가는 중입니다.</p>
+<p>다음 확인 지점은 오늘 밤 자동으로 재개되는 라운드에서 이번에 고친 값들이 실제로 정상 찍히는지, 그리고 지난 데이터와 직접 비교하지 않고 이번 라운드 자체 기준으로만 판정되는지입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
