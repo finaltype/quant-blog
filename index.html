@@ -19,6 +19,7 @@
 <h1>Quant Trading Bot Devlog</h1>
 <h2>개발일지</h2>
 <ul>
+<li><a href="devlog/2026-09/2026-09-19_devlog/index.html">&quot;[260919] 성능측정 하네스 - 자동 재개가 권한 벽에 막혀 GPU를 헛되이 점유했다&quot;</a> · <a href="en/devlog/2026-09/2026-09-19_devlog/index.html">EN</a><div class="sub">어제 고친 측정 도구로 새벽에 자동 재개가 걸렸는데, 첫 트라이얼만 띄운 채 조용히 멈춰버렸습니다. 결국 사람이 직접 이어받아 라운드를 마무리했습니다.</div></li>
 <li><a href="devlog/2026-09/2026-09-18_devlog/index.html">&quot;[260918] 성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다&quot;</a> · <a href="en/devlog/2026-09/2026-09-18_devlog/index.html">EN</a><div class="sub">GPU 사용량을 실제보다 3배 넘게 잘못 계산하고 있었고, 측정 시간제한이 너무 짧아 후보 순위까지 거꾸로 나오고 있었습니다. 두 건 다 오늘 안에 찾아 고쳤습니다.</div></li>
 <li><a href="devlog/2026-09/2026-09-17_devlog/index.html">&quot;[260917] 벤치마크 하네스 첫 검증 - 설정이 새는 지점을 하나씩 막았다&quot;</a> · <a href="en/devlog/2026-09/2026-09-17_devlog/index.html">EN</a><div class="sub">어제 고친 모델 설정이 새로 만든 성능 측정 도구에는 하나도 안 들어가고 있었던 걸 발견해 하루 종일 하나씩 막았고, 11일째 방치돼 있던 안전장치 항목들도 오늘 전부 정리했습니다.</div></li>
 <li><a href="devlog/2026-09/2026-09-16_devlog/index.html">&quot;[260916] AI 판단 모델 샘플링 설정 점검 - 의도와 다른 값으로 돌고 있었다&quot;</a> · <a href="en/devlog/2026-09/2026-09-16_devlog/index.html">EN</a><div class="sub">AI 리포트용 모델들이 몇 주째 의도한 것과 다른 샘플링 설정으로 돌고 있었다는 걸 발견해 바로잡았고, 지난주 그래픽카드 장애의 후속 안전장치도 마무리했습니다.</div></li>
@@ -88,6 +89,7 @@
 </ul>
 <h2>Postmortems</h2>
 <ul>
+<li><a href="postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/index.html">LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유</a><div class="sub">상위 함수에 값을 넘겼다는 것과, 그 값이 실제로 서버에 도착했다는 것은 다른 문장이었습니다</div></li>
 <li><a href="postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/index.html">증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다</a> · <a href="en/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/index.html">EN</a><div class="sub">KIS(한국투자증권)에서 3주 넘게 안 나던 종류의 버그가 NH증권 Open API를 붙이자마자 연달아 터진 이유</div></li>
 <li><a href="postmortems/2026-09-12_test-cleanup-killed-production-process/index.html">테스트 정리 코드가 운영 서버를 죽인 사고</a> · <a href="en/postmortems/2026-09-12_test-cleanup-killed-production-process/index.html">EN</a><div class="sub">이름이 겹치는 프로세스를 패턴으로 죽이는 정리 코드와, 에러 메시지를 문자열로만 분류하는 로직이 겹쳐서 만든 헛다리 진단</div></li>
 <li><a href="postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/index.html">Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델</a> · <a href="en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/index.html">EN</a><div class="sub">양자화 버전을 세 번 바꾸고 자문을 열여섯 차례 거친 끝에, 프로덕션에 올린 로컬 모델 교체기</div></li>

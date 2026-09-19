@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
+
+<article>
+<h1>LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유</h1>
+<p class="subtitle">상위 함수에 값을 넘겼다는 것과, 그 값이 실제로 서버에 도착했다는 것은 다른 문장이었습니다</p><p>몇 주 전, 대뜸 "우리 temperature 얘기 논의한 적 없지 않나?"라는 질문을 받았습니다.</p>
+<p><a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI 추천 파이프라인</a>(새 창)에서 쓰는 로컬 LLM의 디코딩 온도(temperature) — 같은 입력에도 매번 답이 얼마나 흔들리는지를 좌우하는 값 — 값을 정말 의도적으로 정했는지 되짚어보라는 질문이었습니다. 다시 뒤져보니, 절반은 맞고 절반은 틀린 상황이었습니다.</p>
+<h2>이미 끝난 줄 알았던 실험</h2>
+<p>몇 주 전에 온도를 낮추면 답이 더 일관되게 나오는지 확인하는 A/B 테스트를 이미 한 번 돌렸었습니다.</p>
+<p>결과는 "차이 없음"이었습니다. 낮은 온도 쪽과 기본값 쪽 사이에 통계적으로 의미 있는 차이가 나오지 않았고, 그래서 온도를 건드리는 대신 다른 방향(같은 입력을 여러 번 재추첨해서 평균 내는 방식)으로 일관성 문제를 풀기로 결론을 냈습니다. 그 결론은 그 뒤로 몇 주간 의심 없이 그대로 남아 있었습니다.</p>
+<h2>진짜 원인 — 값은 넘겼지만 서버까지 가지 않았다</h2>
+<p>다시 열어본 질문에 답하려고 코드를 처음부터 따라가 봤습니다.</p>
+<p>상위 계층(그래프를 구성하는 코드)은 실제로 온도 값을 인자로 넘기고 있었습니다. 여기까지는 맞았습니다.</p>
+<p>문제는 그 값을 받아서 실제로 로컬 LLM 서버에 요청을 보내는 클라이언트 함수였습니다. 이 함수는 콜백 같은 몇 가지 인자만 받아서 넘기고, temperature는 시그니처에 아예 없어서 조용히 버려지고 있었습니다. 에러도, 경고도 없었습니다. 그냥 사라졌습니다.</p>
+<p>결국 그 A/B 테스트의 "저온" 팔은 실제로는 서버 기본값으로 돌고 있었던 겁니다. 두 팔이 사실상 같은 조건이었던 셈이니, "차이 없음"이라는 결론은 애초에 아무것도 검증하지 못한 측정이었습니다.</p>
+<h2>여기서 한 겹 더 — 프로덕션 자체도 의도한 값이 아니었다</h2>
+<p>값이 유실된다는 걸 확인한 김에, 그럼 지금 프로덕션은 정확히 어떤 온도로 돌고 있는지도 같이 확인했습니다.</p>
+<p>서버를 띄울 때 온도 플래그를 명시적으로 넘기지 않고 있었습니다. 이 경우 서버는 모델 파일에 박혀 있는 기본 샘플링 프로파일을 그대로 채택합니다.</p>
+<p>그런데 그 기본값은 "사고 모드(reasoning 강화 모드)"용으로 권장된 값이었고, 실제 운영 중인 모델은 사고 모드를 쓰지 않는 설정이었습니다. 즉 모드와 샘플링 프로파일이 서로 안 맞는 조합으로 몇 주째 돌고 있었던 겁니다.</p>
+<p>"어떤 값으로 튜닝했다"는 인식과 "실제로 그 값으로 돌고 있다"는 사실이, 한 번도 검증된 적 없이 분리돼 있었습니다.</p>
+<h2>고친 방법 — 그리고 검증 방식도 같이 바꿨다</h2>
+<p>클라이언트 함수 시그니처에 온도·top_p·presence_penalty를 명시적으로 추가해서 상위 계층에서 넘긴 값이 실제로 요청에 실리게 했습니다. 값이 없을 때는 기존과 완전히 동일하게 동작하도록 만들어서 회귀를 막았습니다.</p>
+<p>여기서 검증 방식도 바꿨습니다. "코드에 인자가 추가됐다"만으로는 안 믿기로 했습니다. 실제로 서버 프로세스를 띄운 뒤, 그 프로세스가 커맨드라인에 그 플래그를 정말로 들고 있는지 로그로 직접 확인했습니다. 요청을 실제로 처리한 로그에서 "적용됨" 문구가 찍히는지도 따로 확인했습니다. 코드 리뷰가 아니라 실행 중인 프로세스의 실측이 증거였습니다.</p>
+<h2>같은 사고가 다른 시스템에서 한 번 더</h2>
+<p>수선을 배포하고 이틀 뒤, 별개로 진행하던 하드웨어 성능 비교 작업에서 같은 클래스의 문제가 또 나왔습니다.</p>
+<p>이 성능 비교 하네스는 검증용으로 자체 서버 프로세스를 따로 띄우는 구조였는데, 그 시작 경로가 프로덕션이 서버를 띄우는 경로와 달랐습니다. 방금 고친 샘플링 값 배선이 그 경로에는 안 들어가 있었습니다.</p>
+<p>결과적으로 성능 비교용 트라이얼이 수정 전 기본값(사고 모드용 프로파일)으로 돌 뻔했습니다. 프로덕션 경로를 고쳤다고 해서, 같은 종류의 요청을 만드는 다른 경로까지 자동으로 같이 고쳐지는 건 아니었습니다.</p>
+<p>이 두 번째 재발을 계기로, 프로덕션이 실제로 띄우는 서버 설정값과 코드에 정의된 의도값이 어긋나면 자동으로 잡아내는 일반 감시축을 하나 추가했습니다. 다음번엔 누군가 우연히 질문을 던져야만 발견되는 구조를 없애려는 목적이었습니다.</p>
+<h2>일반화하면</h2>
+<p><strong>"상위 함수에 값을 넘겼다"는 "그 값이 실제로 목적지에 도착했다"를 증명하지 않는다.</strong> 파라미터가 여러 계층을 거쳐 전달될 때, 중간 어딘가의 함수 시그니처가 조용히 값을 버릴 수 있다. 이런 유실은 에러도 경고도 안 남기기 때문에, 코드 리뷰만으로는 잘 안 잡힌다. 실제로 나가는 요청이나 실행 중인 프로세스를 직접 확인하는 검증 단계가 따로 필요하다.</p>
+<p><strong>파라미터가 조용히 사라지면 A/B 테스트는 A-vs-A 테스트가 된다.</strong> "차이 없음"이라는 결과는 두 가지 뜻일 수 있다. 정말 차이가 없거나, 애초에 비교 대상이 서로 달라지지 않았거나. 실험 결과를 신뢰하기 전에, 두 조건이 코드 상에서 정말로 다른 값을 만들어내는지부터 확인할 가치가 있다.</p>
+<p><strong>설정 버그를 고쳤다고 그 설정을 쓰는 모든 경로가 같이 고쳐지는 건 아니다.</strong> 같은 종류의 요청을 만드는 코드 경로가 여러 개면, 하나를 고친 뒤에는 "이 값을 쓰는 다른 진입점이 또 있는가"를 반드시 물어야 한다. 이번처럼 검증용 하네스가 프로덕션과 다른 경로로 같은 서버를 띄우는 구조라면 특히 그렇다.</p>
+<p><strong>우연히 발견된 사고는 재발 방지 장치로 이어져야 한다.</strong> 이번 건 전부 오너의 우연한 질문 하나에서 시작됐다. 같은 종류의 어긋남을 다음엔 질문이 아니라 감시축이 먼저 잡아내도록, 발견 직후에 일반화된 체크를 하나 심어두는 게 낫다.</p>
+</article>
+<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

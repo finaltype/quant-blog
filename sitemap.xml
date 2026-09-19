@@ -47,6 +47,8 @@
   <url><loc>https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-17_devlog/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-18_devlog/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-18_devlog/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-19_devlog/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-19_devlog/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-04_devlog/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-04_devlog/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-09_weekend/</loc></url>
@@ -177,4 +179,5 @@
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-09-12_test-cleanup-killed-production-process/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/</loc></url>
 </urlset>

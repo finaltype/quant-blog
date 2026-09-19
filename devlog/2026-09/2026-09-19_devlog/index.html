@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260919] 성능측정 하네스 - 자동 재개가 권한 벽에 막혀 GPU를 헛되이 점유했다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-19_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260919] 성능측정 하네스 - 자동 재개가 권한 벽에 막혀 GPU를 헛되이 점유했다&quot;</h1>
+<p class="subtitle">어제 고친 측정 도구로 새벽에 자동 재개가 걸렸는데, 첫 트라이얼만 띄운 채 조용히 멈춰버렸습니다. 결국 사람이 직접 이어받아 라운드를 마무리했습니다.</p><h2>새벽 자동 재개가 조용히 멈췄다</h2>
+<p>어제 회계 오류를 고친 성능측정 하네스가 새벽에 자동으로 재개되도록 걸어둔 상태였습니다.</p>
+<p>로그를 확인해보니 재개 자체는 예정대로 발화했습니다. 첫 트라이얼도 정상적으로 시작됐습니다.</p>
+<p>문제는 그 다음이었습니다. 트라이얼이 시작되고 몇 분 뒤부터 이어지는 모든 명령이 "승인 필요" 상태로 막혀버렸습니다. 사람이 없는 새벽 시간이라 승인해줄 사람도 없었고, 세션은 그대로 멈춘 채 끝났습니다.</p>
+<h2>원인은 권한이 턴 단위로만 유효했다는 것</h2>
+<p>원인을 추적해보니 구조적인 문제였습니다. 자동화 스킬이 부여받는 명령 실행 권한은 그 스킬을 처음 연 턴에만 유효했습니다.</p>
+<p>백그라운드에서 돌던 작업이 다음 턴으로 넘어가는 순간, 이미 부여됐던 권한이 사라지는 구조였습니다. 사람이 지켜보며 대화로 진행할 때는 그때그때 승인하면 되니 문제가 안 됐는데, 사람 없이 혼자 도는 새벽 자동 재개에서는 이게 그대로 막다른 길이 됐습니다.</p>
+<p>그사이 GPU는 정리되지 않은 채 약 47분 동안 아무 일도 하지 않으면서 자리만 차지하고 있었습니다.</p>
+<p>결국 아침에 이 상태를 확인하고 GPU 점유를 정리한 뒤, 이번에는 사람이 대화로 직접 재개 명령을 내려서 라운드를 이어갔습니다.</p>
+<h2>사람이 이어받아 라운드를 마무리했다</h2>
+<p>대화로 재개한 뒤에는 트라이얼 세 건이 끝까지 무사히 돌았습니다.</p>
+<p>어제 고친 측정 방식대로 결과를 다시 계산해보니, 검토하던 새 설정은 처리량 면에서 뚜렷한 이득이 없었습니다. 반복 측정 사이의 차이가 잡음 수준과 거의 겹쳤기 때문입니다.</p>
+<p>그래서 결론은 "현재 쓰고 있는 설정을 그대로 유지"였습니다. 바꿔서 얻는 게 없다는 걸 확인한 것도 이번 검증의 성과로 남겼습니다.</p>
+<p>자동 재개 구조는 이번 일로 드러난 구조적 한계를 어떻게 풀지 아직 결정하지 못했습니다. 몇 가지 방법을 후보로 남겨두고, 방법을 정하기 전까지는 자동 재개를 쓰지 않고 사람이 대화로만 재개하기로 했습니다.</p>
+<h2>그 와중에 재부팅이 세 번</h2>
+<p>같은 날 컴퓨터가 세 번 재부팅되는 일이 있었습니다.</p>
+<p>원인을 확인해보니 작업과는 무관하게, 냉각팬을 새로 설치하는 하드웨어 작업 때문이었습니다. GPU 관련 설정은 바뀐 게 없었고, 재부팅 뒤에도 환경은 그대로 깨끗한 상태였습니다.</p>
+<h2>별도로 진행 중인 실험</h2>
+<p>이것과 별개로, 모델이 답을 생성할 때 쓰는 무작위성 설정(온도) 값을 바꿔볼지 검증하는 실험도 오늘 시작했습니다.</p>
+<p>작게 돌려보는 예비 시험을 통과해서 본격적인 비교 작업을 밤사이 이어가도록 걸어뒀습니다. 결과 판단과 최종 결정은 주말이 지난 뒤로 미뤄뒀습니다.</p>
+<h2>앞으로</h2>
+<p>자동 재개의 권한 구조 문제를 어떤 방식으로 풀지 결정하는 게 다음 과제입니다.</p>
+<p>온도 실험도 주말 동안 이어지는 결과를 지켜보고 판단할 예정입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

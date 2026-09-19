@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 19] Benchmark Harness — Auto-Resume Hit a Permission Wall and Wasted GPU Time&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-19_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 19] Benchmark Harness — Auto-Resume Hit a Permission Wall and Wasted GPU Time&quot;</h1>
+<p class="subtitle">The corrected tool from yesterday resumed automatically overnight, but it launched one trial and quietly froze. I ended up taking over by hand to finish the round.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Auto-resume quietly froze overnight</h2>
+<p>The benchmark harness I'd fixed the accounting on yesterday was scheduled to resume automatically overnight.</p>
+<p>Checking the logs, the resume itself fired on schedule, and the first trial started normally.</p>
+<p>The trouble started right after. A few minutes into the trial, every following command started returning "requires approval." There was no one around at that hour to approve anything, and the session just sat there until it ended.</p>
+<h2>The root cause: permissions only lasted one turn</h2>
+<p>Tracing it back, this turned out to be a structural problem. The command-execution permission an automation skill gets is only valid for the turn in which that skill was first opened.</p>
+<p>The moment a background task rolled over into the next turn, the permission it had been granted simply evaporated. That's never an issue when I'm watching and approving things interactively — but for an unattended overnight resume, it turned into a dead end.</p>
+<p>Meanwhile the GPU sat there uncleaned, occupied and idle, for about 47 minutes.</p>
+<p>I found this the next morning, cleared the stuck GPU occupancy, and this time issued the resume command myself, interactively, to carry the round forward.</p>
+<h2>Taking over by hand to finish the round</h2>
+<p>Once resumed by hand, all three trials ran through to completion without issue.</p>
+<p>Recalculating with yesterday's corrected measurement method, the configuration under review showed no meaningful throughput gain — the difference between repeated runs was close to noise level anyway.</p>
+<p>So the conclusion was to keep the current configuration as-is. Confirming that the change wasn't worth making counts as a result in its own right.</p>
+<p>I still haven't decided how to fix the structural limitation this exposed in auto-resume. A few candidate approaches are on the table, and until one is picked, resumes will only happen interactively, by hand.</p>
+<h2>Three reboots, unrelated</h2>
+<p>The same day also saw three unplanned reboots.</p>
+<p>Tracing the cause, it had nothing to do with any of this work — it was a hardware job installing new cooling fans. No GPU-related settings changed, and the environment came back clean after each reboot.</p>
+<h2>A separate experiment, still running</h2>
+<p>Separately, I also kicked off a test today comparing two settings for the randomness parameter (temperature) a model uses when generating responses.</p>
+<p>A small-scale smoke test passed, so I let the full comparison run continue overnight. Judging the results and making a final call is deferred until after the weekend.</p>
+<h2>What's next</h2>
+<p>Deciding how to fix the permission-structure problem in auto-resume is the next task.</p>
+<p>I'll also keep watching the temperature experiment's results over the weekend before making a call.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
