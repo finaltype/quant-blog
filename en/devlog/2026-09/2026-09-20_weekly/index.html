@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 14-20] A Week of Catching Measurement Tools Lying to Us&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-20_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 14-20] A Week of Catching Measurement Tools Lying to Us&quot;</h1>
+<p class="subtitle">A universe-contamination incident kicked off a week where ranking logic, AI sampling settings, and a new benchmark tool each turned out to be quietly wrong</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>This week started with a Monday data-contamination incident and kept circling back to the same question: is the tool actually measuring what we think it's measuring?</p>
+<p>Ranking logic, AI model settings, and a newly built benchmark tool all turned out to have the same kind of flaw in turn. Numbers looked plausible on the surface, but digging one layer deeper often showed the verification itself was invalid.</p>
+<h2>Monday: the trading universe got contaminated</h2>
+<p>An external market-data provider returned empty market-cap values across the board. The system let those empty values pass through silently, so the raw list's original ordering (alphabetical) got mistaken for "top N by market cap."</p>
+<p>The discovery started with a simple question — why did the live account buy an unfamiliar ticker? Fortunately the KOSPI side was untouched, protected by a cache locked in each morning; the contamination only hit the KOSDAQ slice.</p>
+<p>Trading was halted immediately and rolled back to the prior day's state. A three-layer defense was added, each layer catching the same class of contamination at a different point — the data source, the update logic, and the final confirmation step.</p>
+<h2>Tuesday: ranking logic got rejected and swapped same-day</h2>
+<p>A tie-breaking method introduced a few days earlier failed the pre-set evaluation criteria and was rejected. Asking AI to dig into why, the real cause wasn't "not real-time enough" — the raw scores feeding the ranking were fluctuating almost randomly day to day.</p>
+<p>It was replaced immediately with an approach that averages scores over recent days instead of using each day's raw value. The same day's large code review caught a bug where transfers between accounts were excluded from principal calculations but included in valuation, inflating reported returns to hundreds of a percent, plus a test that had been firing alerts to the live ops channel by mistake.</p>
+<p>A brokerage-side contract that silently returned "success" even when some pages of a holdings query failed was also fixed that day, promoting those silent failures into explicit errors. This kind of <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety-layer design</a>(new tab) is one area where the design intent is documented more openly than the stock-selection logic.</p>
+<h2>Wednesday: sampling settings had been wrong for weeks</h2>
+<p>A simple question — "did we ever actually decide on this setting?" — led to re-examining the sampling configuration for the local models used in AI reports. It turned out a comparison experiment from a few weeks earlier was invalid, because the code passing the changed setting through was silently dropping it midway.</p>
+<p>More fundamentally, the production model runs with "thinking mode" deliberately turned off, but the sampling values in effect assumed thinking mode was on. It was corrected to the provider's official recommended values, and the shadow-observation model got the same fix.</p>
+<h2>Thursday: yesterday's fix hadn't reached the new tool at all</h2>
+<p>While preparing the first validation run for a new benchmark tool (perf-harness) that measures model throughput, it turned out the sampling fix from the day before wasn't being applied there at all.</p>
+<p>Once that was suspected, the same kind of leak showed up in three more places — one where the benchmark was overwriting the server's own startup config, another in a measurement path that replays the real pipeline. Each was fixed with the same rule: inject the value if it's set, otherwise fall back to the existing default.</p>
+<p>The sampling method for benchmark inputs was also pinned to a fixed date instead of being redrawn every run, so future comparisons wouldn't conflate "the setting changed" with "the sample changed." While cleaning this up, a set of safety-improvement items that had sat untouched for 11 days after an earlier advisory got re-validated and applied.</p>
+<h2>Friday: the measurement tool had its own instrumentation bugs</h2>
+<p>The first benchmark run produced a strange number — one trial appeared to have used over 80% of the daily GPU budget by itself. Asking "where does that number actually come from" revealed the tool was summing per-ticker processing times as if they ran sequentially, when they'd actually run in parallel — overcounting by more than 3x.</p>
+<p>After fixing that accounting, comparing configuration variants produced an odd ranking. Checking the server logs again showed the response timeout was set far shorter than production, so requests that were still completing normally were being counted as failures.</p>
+<p>Matching the timeout to production flipped the ranking — the setting that looked slower was actually faster. Separately that day, one branch of an overnight ticker-analysis job was found stuck for over 9 hours with no timeout on an external data call, and that got fixed too.</p>
+<h2>Saturday: automated resume hit a permission wall</h2>
+<p>The corrected benchmark tool was scheduled to auto-resume overnight, but it silently stalled after launching just the first trial. The cause was structural: the automation skill's command-execution permission was only valid for the turn in which the skill was opened.</p>
+<p>Once a background job crossed into the next turn, that permission vanished — a dead end for an unattended overnight resume with nobody around to approve anything. The GPU sat idle, uncleaned, for about 47 minutes before a human noticed in the morning and manually resumed the round to finish it.</p>
+<p>The configuration under review showed no clear throughput gain — the difference was within noise — so the current setting stays as-is. Auto-resume is shelved for now until a fix for the permission structure is decided; resumes go through manual conversation only in the meantime.</p>
+<h2>Sunday: the temperature experiment's verdict went back to a human call</h2>
+<p>A two-day comparison experiment on the AI response randomness (temperature) setting finished its main comparison. The direction of the effect was clear, but whether it was large enough to matter couldn't be settled from this data alone.</p>
+<p>Handing the raw data to a separate, unrelated AI for an independent recalculation produced the same conclusion — a clear direction, an unclear magnitude — with a recommendation to revert to the old setting and hold it steady for now. The final call was left for a human to make the next evening.</p>
+<p>Separately, a backlog of small benchmark-tool fixes got cleared in one pass: a log-parsing rule that had never actually matched the real output format, a broken weekend/holiday time-window check, and a report file that had been installing to a temporary path instead of its proper location.</p>
+<hr />
+<p>Looking back, this was less a week of new features and more a week of re-asking whether the tools already running were measuring correctly. Universe contamination, ranking logic, model settings, benchmark accounting, timeouts — fixing one kept surfacing the same class of bug one layer below.</p>
+<p>Each time, the fix started with the same question: where did that number actually come from? Next week's priorities are the final call on the temperature setting and confirming the newly repaired benchmark tool runs reliably on its own.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
