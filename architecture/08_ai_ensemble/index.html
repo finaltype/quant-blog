@@ -59,6 +59,7 @@
 <p>같은 조건으로 여러 로컬 LLM을 정식 비교해본 적도 있습니다. 표면적인 등급 분포만 보고는 못 잡는 문제(최종 답변 생성 자체가 실패해서 기본값으로 몰린 경우, 낮은 확률로 완전히 다른 종목을 분석해버리는 환각, 도구 호출 자체가 아예 안 먹혀서 리포트가 무근거로 나오고 있었던 적)가 있어서 로그를 직접 까봐야 했던 경험도 여러 번 있습니다.</p>
 <p>이건 로컬 모델끼리의 비교였는데, 이후에 아예 다른 질문도 하나 생겼습니다. 로컬에서 무료로 돌리는 모델과 돈을 내고 쓰는 외부 API 모델 중, 실제 매매 성과 기준으로는 어느 쪽이 나은지였습니다. 이 질문에 답하려고 만든 별도의 시뮬레이터 이야기는 <a href="https://finaltype.github.io/quant-blog/architecture/04_sim_harness/" target="_blank" rel="noopener noreferrer">따로 글로 정리</a>(새 창)했습니다.</p>
 <p>최근엔 이 프레임워크를 돌리는 서빙 엔진과, 각 담당에게 자료를 넘기는 방식도 손봐서 종목 하나를 훑는 속도를 꽤 줄였습니다.</p>
+<p>어떤 모델을 쓰느냐만큼 그 모델에 어떤 샘플링 설정을 주느냐도 검증 대상이라는 걸 최근에 배웠습니다. 예전에 했던 설정 비교 실험이 설정값이 서버에 전달되지 않아 사실상 무효였다는 걸 뒤늦게 발견했고(<a href="https://finaltype.github.io/quant-blog/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/" target="_blank" rel="noopener noreferrer">postmortem</a>(새 창)), 이후 입력을 동결하고 판정 규칙을 미리 등록해서 다시 비교했습니다. 그 결과와 결정 과정은 <a href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-21_temperature-ab-rule-override/" target="_blank" rel="noopener noreferrer">따로 정리</a>(새 창)했습니다.</p>
 <hr />
 <p>돌이켜보면 이 파이프라인에서 가장 공들인 건 어느 모델을 쓸지가 아니라, 서로 다른 의견을 어떻게 존중하며 묶을지였습니다. 전체 프로젝트 구조가 궁금하시면 <a href="https://finaltype.github.io/quant-blog/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">프로젝트 구조 글</a>(새 창)도 함께 봐주세요.</p>
 </article>
