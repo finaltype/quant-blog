@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I Finally Changed the Temperature for Real - and Overrode a Pre-Registered Rule That Said &quot;Reject&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-21_temperature-ab-rule-override/index.html">한국어로 보기</a></p>
+<article>
+<h1>I Finally Changed the Temperature for Real - and Overrode a Pre-Registered Rule That Said &quot;Reject&quot;</h1>
+<p class="subtitle">The sampling-temperature experiment I believed I&#x27;d already run for weeks had never actually been executed</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I ran an A/B experiment on the sampling temperature of the local LLM in production. The short version: the decision rule I'd fixed in advance said "reject the current setting," and I chose not to enforce it.</p>
+<p>This post isn't arguing that the call was right. It's a record of what I based the override on, and how I documented it.</p>
+<h2>I had never changed the temperature</h2>
+<p>The project has a <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">pipeline where a local LLM analyzes stocks</a>(new tab). Last month I logged that I'd already run an A/B experiment comparing sampling settings for this model.</p>
+<p>When I dug that record back up, that experiment turned out to be A versus A. The client code was dropping the temperature parameter instead of passing it to the server, so the B arm never received a temperature either.</p>
+<p>It wasn't "we discussed it but the validation was invalid." The reality was that I had never actually changed the temperature even once.</p>
+<h2>Production was running on the wrong mode's values</h2>
+<p>Looking at temperature properly for the first time, I found something bigger. Production ran with the model's reasoning (thinking) feature turned off, but no sampling values were specified, so whatever defaults were baked into the model file were being used.</p>
+<p>Those defaults happened to be the recommended values for reasoning-on mode. The mode and the values didn't match, and it had been like that for weeks.</p>
+<p>That same night I switched to the values the vendor recommends for reasoning-off mode. At that point I had a rule of my own — "no production changes until the evaluation is done" — and I made an exception to it, knowingly.</p>
+<h2>What the "improved" numbers really were</h2>
+<p>For the first three days after the change, the numbers looked good. The rate at which two runs on the same input agreed on the grade went up. It looked like reproducibility had improved.</p>
+<p>But the share of the Hold grade had gone up over the same period. When results pile onto one grade, the agreement rate rises on its own, because independent draws are more likely to coincide by chance.</p>
+<p>So the increase in agreement wasn't evidence that reproducibility improved — it could be the same fact as "results are collapsing toward Hold" stated differently. That's when I upgraded my first "all clear" reading to an alert.</p>
+<h2>A pre-registered confirmation experiment</h2>
+<p>Now that I had a suspicion, I designed a confirmation experiment. Since the hypothesis came from looking at data, I wrote the decision rules down in a document before seeing any results.</p>
+<ul>
+<li><strong>Same input</strong>: I froze one day's input snapshot and picked 50 stocks by a fixed procedure</li>
+<li><strong>Two arms</strong>: the old setting (A) and the current setting (B). If the server launch command didn't actually show the flags, that run was invalid</li>
+<li><strong>Three endpoints</strong>: Hold collapse (degeneration), reproducibility gain (agreement beyond chance), signal retention</li>
+<li><strong>Hard gates</strong>: basic quality conditions like output-format parse failures, truncation, and run time. A run that failed them was discarded and rerun</li>
+</ul>
+<p>The first A-arm run did trip a gate. Format parse failures and truncated responses exceeded the limit, so I threw that run out and ran a replacement. The discarded run's numbers were kept for reference only.</p>
+<h2>The rule's answer was "reject"</h2>
+<p>The results:</p>
+<ul>
+<li><strong>Degeneration</strong>: B collapsed further toward Hold, by an amount inside the "fail" zone I'd set in advance. By the rule, B gets rejected</li>
+<li><strong>Reproducibility</strong>: agreement beyond chance was essentially identical across the two arms. The reproducibility gain I'd believed was B's one advantage didn't show up</li>
+<li><strong>Cause isolation</strong>: I tested a separate arm for the hypothesis that a single penalty setting was the culprit. It wasn't</li>
+</ul>
+<p>The rule detected exactly the hypothesis I'd set up. The rule wasn't wrong.</p>
+<h2>I kept B anyway</h2>
+<p>I asked a different AI for advice, and at first it recommended reverting to the old setting. The pre-registered rule said reject, and the one thing that would have justified keeping B, its reproducibility gain, had no evidence.</p>
+<p>But I pointed out two things.</p>
+<p>First, the old setting can't be called a "validated previous regime." I'd only run this model in production for a bit over ten days, and the old setting was a reasoning-mode default that had been applied by accident. The values the vendor recommends have surely been validated by far more usage than a few nights on my machine.</p>
+<p>Second, in my investing, a lot of Hold isn't automatically bad. Treating it as a loss was an assumption I'd put into the endpoints when designing the experiment, without verifying it.</p>
+<p>When I passed these two premises along, the advice flipped within a day. The side that had recommended reverting the night before now recommended keeping B. The data hadn't changed; the premises I gave it had. So this decision isn't "the experiment supported B" — it's more accurate to call it "I overrode a pre-registered rule with after-the-fact premises."</p>
+<h2>I wrote the override down</h2>
+<p>Overriding a rule is allowed, but not quietly. I recorded four things in the experiment document:</p>
+<ul>
+<li>the original text of the rule I overrode</li>
+<li>what the rule's answer actually was (including the fact that the rule wasn't wrong)</li>
+<li>that the grounds for overriding are post-hoc and exploratory</li>
+<li>who approved it</li>
+</ul>
+<p>I also attached conditions. A non-blocking alert fires if the Hold share climbs too high, and I committed to not changing the sampling setting, whatever the results, until the next scheduled review. That review happens after the fix described below.</p>
+<h2>The input itself was degraded</h2>
+<p>After the experiment I learned something more awkward. Two external data sources had quietly died a few days earlier, so the news going into the prompts was nearly empty and even stock names were being replaced by codes.</p>
+<p>The frozen input for this A/B happened to be a day from exactly that degraded period. So the results carry a caveat: they're results on "input with no news." The day the Hold collapse jumped also coincided with the first day the news vanished, so I can't pin the collapse on the new setting alone.</p>
+<p>I fixed the inputs and added the degraded window as a boundary note in the evaluation document. The next review will use normal inputs.</p>
+<h2>Takeaways</h2>
+<p><strong>Believing you changed a parameter and confirming it reached the server are two different things.</strong> A run now counts as valid only if the server launch command shows the flags. No evidence, no valid run.</p>
+<p><strong>A metric that looks better can just be distribution arithmetic.</strong> If an agreement rate went up, first check whether the results piled onto one side.</p>
+<p><strong>When you override a pre-registered rule, record whether the rule was wrong or the premise was wrong.</strong> Here the rule was right and the premise built into it had never been verified.</p>
+<p><strong>Advice depends on the premises you hand over.</strong> If a conclusion changes, you have to record what changed, the data or the premises, so you can revisit the decision later.</p>
+<p>Some things remain unresolved. Whether the Hold collapse is actually costly, and whether normal inputs produce the same collapse, are things I'll only find out at the next review.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
