@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Dropped Temperature Parameter - Why the A/B Test Was Invalid From the Start · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/index.html">한국어로 보기</a></p>
+<article>
+<h1>The Dropped Temperature Parameter - Why the A/B Test Was Invalid From the Start</h1>
+<p class="subtitle">Passing a value to a parent function and that value actually reaching the server turned out to be two different statements</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>A few weeks ago, out of nowhere, I got asked: "Haven't we never actually discussed the temperature setting?"</p>
+<p>The question was about the decoding temperature of the local LLM used in the <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI recommendation pipeline</a>(new tab) — the value that governs how much the answer wobbles from run to run on the same input — and whether I had really chosen it on purpose. When I went back and looked, the situation was half right and half wrong.</p>
+<h2>An experiment I thought was finished</h2>
+<p>A few weeks earlier I had already run an A/B test to check whether lowering the temperature makes the answers more consistent.</p>
+<p>The result was "no difference." There was no statistically meaningful gap between the low-temperature arm and the default arm, so instead of touching the temperature I concluded I'd solve the consistency problem another way (re-drawing the same input several times and averaging). That conclusion then sat there, unquestioned, for weeks.</p>
+<h2>The real cause - the value was passed, but never reached the server</h2>
+<p>To answer the reopened question, I traced the code from the start.</p>
+<p>The upper layer (the code that builds the graph) really was passing the temperature value as an argument. That part was right.</p>
+<p>The problem was the client function that received that value and actually sent the request to the local LLM server. It accepted a few arguments like callbacks and passed them on, but temperature wasn't in its signature at all, so it was silently discarded. No error, no warning. It just vanished.</p>
+<p>So the "low-temperature" arm of that A/B test had really been running on the server default. The two arms had effectively been under the same conditions, which means the "no difference" conclusion came from a measurement that hadn't verified anything to begin with.</p>
+<h2>One layer deeper - production wasn't on the intended value either</h2>
+<p>Since I'd confirmed the value was getting lost, I also checked what temperature production was actually running on.</p>
+<p>The server was being launched without an explicit temperature flag. In that case the server adopts whatever default sampling profile is baked into the model file.</p>
+<p>That default was the profile recommended for "thinking mode" (the reasoning-boosted mode), while the model in actual operation was configured not to use thinking mode. So the mode and the sampling profile were mismatched, and had been for weeks.</p>
+<p>The belief that "we tuned it to this value" and the fact that "it's actually running on this value" had been separated, and never once verified.</p>
+<h2>The fix - and changing how I verify</h2>
+<p>I explicitly added temperature, top_p, and presence_penalty to the client function's signature so that values passed from the upper layer actually make it into the request. When no value is given, it behaves exactly as before, which prevented regressions.</p>
+<p>I also changed how I verify this. "The argument was added in the code" is no longer enough for me. I launched a real server process and checked directly in the logs that the process was actually carrying those flags on its command line. I separately confirmed that the "applied" message shows up in the logs of a request actually being handled. The evidence was measurement of a running process, not code review.</p>
+<h2>The same incident, once more, in another system</h2>
+<p>Two days after deploying the fix, the same class of problem came up in a separate hardware performance comparison job.</p>
+<p>That benchmark harness launched its own server process for testing, and its startup path was different from the path production uses to launch the server. The sampling-value wiring I had just fixed wasn't part of that path.</p>
+<p>As a result, the performance-comparison trials were about to run on the pre-fix defaults (the thinking-mode profile). Fixing the production path did not automatically fix the other paths that build the same kind of request.</p>
+<p>Prompted by this second recurrence, I added a general monitoring check that automatically catches any mismatch between the server settings production actually launches with and the intended values defined in code. The goal was to get rid of a setup where this only gets found when someone happens to ask a question.</p>
+<h2>The general lesson</h2>
+<p><strong>"I passed the value to the parent function" doesn't prove "the value actually reached its destination."</strong> When a parameter travels through several layers, a function signature somewhere in the middle can silently drop it. This kind of loss leaves no error and no warning, so code review alone rarely catches it. You need a separate verification step that inspects the request actually going out, or the process actually running.</p>
+<p><strong>When a parameter silently disappears, an A/B test becomes an A-vs-A test.</strong> A "no difference" result can mean two things: there's really no difference, or the two things being compared never actually diverged. Before trusting an experiment's result, it's worth first checking that the two conditions really produce different values in the code.</p>
+<p><strong>Fixing a configuration bug doesn't fix every path that uses that configuration.</strong> If several code paths build the same kind of request, then after fixing one you must ask "is there another entry point that uses this value?" That's especially true when a verification harness launches the same server through a different path than production.</p>
+<p><strong>An incident found by accident should turn into a recurrence-prevention mechanism.</strong> The whole thing started with one offhand question. So that the next mismatch of this kind gets caught by a monitor rather than by a question, it's better to plant a generalized check right after the discovery.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
