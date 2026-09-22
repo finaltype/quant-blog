@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260922] 서버가 조용히 망가지는 문제 - 감지·격리·복구 안전장치를 만든 하루&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-22_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260922] 서버가 조용히 망가지는 문제 - 감지·격리·복구 안전장치를 만든 하루&quot;</h1>
+<p class="subtitle">어제 발견한 뉴스 입력 사고를 마무리하자마자 새로운 결함이 나타났고, 재발 방지 장치를 하루 만에 만들었습니다.</p><h2>어제 사고의 마무리</h2>
+<p>어제 밤 확인된 문제는 뉴스 기반 종목 스코어링의 입력 자체가 무너져 있었다는 것이었습니다.</p>
+<p>네이버가 종목 페이지를 리다이렉트하고 뉴스 목록을 가져오던 경로가 아예 사라지면서, 봇이 종목 이름조차 못 알아보고 뉴스 없이 점수를 매기는 상태가 일주일 넘게 이어지고 있었습니다.</p>
+<p>오늘 아침, 어제 자문받아 배포한 수선이 완주로 확인되면서 이 사고는 일단락됐습니다.</p>
+<p>다만 완전히 끝난 건 아니었습니다. 결손이 있던 날들이 이동평균 계산에 며칠 더 남아있어서 다음 판정에도 영향을 주기 때문에, 판정문에 "결손 잔류"를 병기하고 근본적인 개선은 다음 휴장기 이후로 미루기로 정리했습니다.</p>
+<h2>서버가 조용히 망가지고 있었다</h2>
+<p>문제는 그 직후에 또 터졌습니다.</p>
+<p>오늘 아침, 마땅히 정상 등급이 나와야 할 종목 몇 개가 벤더 기본값인 "보류"로 찍힌 게 눈에 띄었습니다. 그 중엔 실제로 보유 중인 종목도 있었습니다.</p>
+<p>원인을 추적해보니 뉴스 복구와는 무관한 별개의 문제였습니다. 로컬에서 돌아가는 추론 서버가 오래 켜져 있다가, 특정 요청에서 응답이 같은 글자만 반복 출력하는 "퇴화" 상태에 빠져 있었습니다.</p>
+<p>다행히 오늘 랭킹 자체에는 실질적인 영향이 없었다는 것도 함께 확인했습니다.</p>
+<p>여기서 재발 방지를 하기로 했고, 그날 안에 감지-격리-복구 체계를 만들었습니다. 서버 응답이 퇴화 패턴을 보이면 그 결과를 점수에 반영하지 않고, 서버를 자동으로 재기동시킨 뒤 해당 종목만 다시 시도하는 구조입니다.</p>
+<p>과거 실제 사고 로그 수천 건에 이 감지 로직을 돌려봐서, 오탐 없이 실제 사고만 정확히 잡아낸다는 것도 미리 확인했습니다.</p>
+<p>검증용 스크립트가 단독으로 실행할 때만 크래시하는 부수적인 버그도 같은 날 저녁에 고쳐서, 실제 서버를 대상으로 감지부터 재기동, 재시도까지 전체 흐름이 라이브에서 돌아가는 걸 확인했습니다.</p>
+<h2>60일을 채우기로 했다</h2>
+<p>같은 날 성격이 다른 결정도 하나 내렸습니다.</p>
+<p>실계좌에서 이미 제외한 실험용 전략 하나를 관측만 계속하고 있었는데, 사전에 정해둔 60거래일을 다 채우지 않고 49일째 결과만 보고 조기 판정할지 여부를 검토했습니다.</p>
+<p>통계적으로는 남은 기간이 결론을 뒤집을 가능성이 거의 없어 보였지만, 미리 정해둔 관측 기간을 지키기로 했습니다. 중간 결과를 엿보고 그때그때 멈출지 말지 정하는 방식 자체가 통계적으로 함정이 있기 때문입니다.</p>
+<p>이미 라이브에서는 빠진 전략이라 더 기다리는 데 드는 비용이 사실상 없다는 점도 이 판단에 힘을 보탰습니다.</p>
+<p>그 과정에서 부수적으로, 이 전략이 보유 종목을 하루에도 상당수 교체할 만큼 회전이 잦다는 문제가 새로 발견됐고, 이건 별도로 들여다보기로 남겨뒀습니다.</p>
+<h2>앞으로</h2>
+<p>오늘 있었던 일들을 돌아보면 공통된 패턴이 하나 있습니다. 문제를 발견하면 바로 고치기보다, 원인 분석과 대안을 먼저 검토받고 그 위에서 최종 판단을 내리는 순서를 그대로 지켰다는 점입니다.</p>
+<p>뉴스 입력 결손이 이동평균에서 완전히 빠지는 시점과, 섀도 전략의 60일 관측이 끝나는 시점 모두 앞으로 며칠 안에 자동으로 판정되도록 걸어뒀습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
