@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 23] Closing Out an Order-Identification Gap and Putting the Task Doc on a Diet&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-23_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 23] Closing Out an Order-Identification Gap and Putting the Task Doc on a Diet&quot;</h1>
+<p class="subtitle">I patched a leftover hole in the execution layer, and reined in a task-tracking document that had been growing out of control.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Closing out yesterday's loose end</h2>
+<p>One thing from yesterday was still unresolved: the new degrade-guard smoke test had come back failed last night.</p>
+<p>This morning I tracked down why. The safeguard itself was fine — the test script just wasn't releasing the server it had borrowed when it finished, so the next run couldn't grab it and came back as a failure.</p>
+<p>Fixing that cleanup step closed this out.</p>
+<h2>Making sure "is this really my order" holds up</h2>
+<p>This bot runs multiple strategies under a single brokerage account, all placing orders concurrently. So every time it pulls back an order result, it needs separate logic to work out whether that order actually came from itself.</p>
+<p>That logic was part of <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">a redesign of the order-execution and safety layer</a>(new tab) I did a while back. One piece of it had been deferred at the time, flagged as "a bigger task that depends on the broker's query format changing first."</p>
+<p>Looking at it again today, that premise turned out to be wrong. The broker's query format didn't need to change at all — I just needed to attach a date I already had on hand to the response.</p>
+<p>Here's why it mattered: brokerage order numbers can be reused by a different account the next day. If I identify "my orders" by number alone, an order number I used yesterday could collide with a different order carrying the same number today, and get misclassified.</p>
+<p>So I changed the matching key from the order number alone to a (trading date, order number) pair. Older records without a date still fall back to matching by number alone, so nothing that already worked broke.</p>
+<h2>Putting a runaway task document on a diet</h2>
+<p>This project keeps every in-progress task in a single tracking document, and over the past several days that document had ballooned past several thousand lines.</p>
+<p>It was getting slow just to skim, and finished work was tangled up with open items, making it harder every day to tell what actually still needed doing.</p>
+<p>So today, after getting outside advisory input, I restructured it. Decision rationale worth keeping for later reference — the "we decided not to do this" kind — moved into its own document. Completed work moved into a separate archive. The main document now holds only what's still open.</p>
+<p>The result cut the document's length down by more than tenfold.</p>
+<p>I'd done this kind of cleanup once before, but without any standing rule against it, the document ballooned right back within a month. This time I didn't stop at cleanup — I added a check script that warns me if the document crosses a length threshold again, and flags sections that have sat closed-out for too long without being archived.</p>
+<h2>Also today</h2>
+<p>An experiment to curb a strategy's turnover, which I'd been watching for a few days, finished its observation window today and got a final verdict. It fell short of the target, so I'm holding off on expanding it to the live account for now.</p>
+<p>A small addition also went into an internal statistical validation tool: a new field that accounts for how often two signals would agree purely by chance, so it can separate a coincidental match from a meaningful one.</p>
+<h2>What's next</h2>
+<p>Today followed the same pattern as yesterday: rather than patching what looked broken on the spot, I went back to check why a given assumption existed in the first place before touching anything.</p>
+<p>That's exactly what let the order-identification fix turn out much simpler than expected, once the wrong assumption about needing a broker-side change was out of the way.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260923] 주문 식별 로직 마무리와 비대해진 작업 문서 다이어트&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-23_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260923] 주문 식별 로직 마무리와 비대해진 작업 문서 다이어트&quot;</h1>
+<p class="subtitle">실행 계층의 남은 구멍 하나를 메우고, 계속 불어나던 작업 추적 문서를 관리 가능한 크기로 되돌렸습니다.</p><h2>어제 사고의 뒷정리</h2>
+<p>어제 저녁 새로 만든 퇴화가드 검증이 실패로 찍힌 게 하나 남아 있었습니다.</p>
+<p>오늘 아침 원인을 찾아보니, 안전장치 자체는 멀쩡했습니다. 검증 스크립트가 끝나면서 빌려 쓰던 서버를 제대로 반납하지 않아, 다음 검증이 서버를 못 잡고 실패로 찍힌 것이었습니다.</p>
+<p>뒷정리 누락을 고쳐서 이 문제는 마무리됐습니다.</p>
+<h2>"이 주문이 내 주문인가"를 확실히 하다</h2>
+<p>이 봇은 하나의 계좌 아래 여러 전략이 동시에 주문을 낼 수 있는 구조입니다. 그래서 증권사에서 주문 체결 결과를 받아올 때마다 "이게 정말 내가 낸 주문인가"를 가려내는 로직이 따로 필요합니다.</p>
+<p>이 판별 로직은 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행/안전장치를 재설계</a>(새 창)할 때 설계 문서에 정리해뒀는데, 그중 한 조각은 "증권사 쪽 조회 방식이 먼저 바뀌어야 하는 더 큰 작업"이라며 뒤로 미뤄둔 채였습니다.</p>
+<p>오늘 다시 들여다보니 그 전제 자체가 틀려 있었습니다. 실제로는 증권사 쪽 조회 방식을 바꿀 필요가 없었고, 이미 알고 있는 날짜 정보를 응답에 붙이기만 하면 되는 문제였습니다.</p>
+<p>이게 왜 중요했냐면, 증권사 주문번호는 하루가 지나면 다른 계좌나 다른 사람이 같은 번호를 다시 받을 수 있습니다. 번호만으로 "내 주문"을 가려내면, 어제 냈던 내 주문번호와 오늘 남이 새로 받은 같은 번호가 겹쳐서 잘못 분류될 여지가 있었습니다.</p>
+<p>그래서 판별 기준을 주문번호 하나가 아니라 (거래일, 주문번호) 쌍으로 바꿨습니다. 옛날 방식으로 남아있는 기록은 이전처럼 번호만으로 판별하도록 안전하게 열화시켜서, 기존 동작을 깨지 않게 했습니다.</p>
+<h2>계속 불어나던 작업 문서 다이어트</h2>
+<p>이 프로젝트는 진행 중인 일을 전부 하나의 작업 문서에 기록해 왔는데, 며칠 사이 이 문서가 4천 줄을 훌쩍 넘어서 있었습니다.</p>
+<p>한 번 훑어보는 데도 오래 걸리고, 이미 끝난 일과 아직 남은 일이 뒤섞여 있어 다음에 뭘 해야 하는지 찾기가 점점 어려워지고 있었습니다.</p>
+<p>그래서 오늘 외부 자문을 받아 구조를 정리했습니다. 앞으로 다시 꺼내 볼 필요가 있는 "이건 하지 않기로 했다"류의 판단 근거는 전용 문서로 따로 빼고, 이미 완료된 작업 기록은 별도 아카이브로 옮기고, 본문에는 아직 안 끝난 일만 남겼습니다.</p>
+<p>그 결과 문서 길이가 열 배 넘게 줄었습니다.</p>
+<p>과거에도 한 번 이렇게 정리한 적이 있었는데, 그때는 규칙 없이 정리만 해서 한 달도 안 돼 다시 비대해졌던 전례가 있습니다. 그래서 이번에는 "정리"에서 끝내지 않고, 문서가 다시 일정 길이를 넘으면 스스로 경고하고 오래 방치된 항목을 자동으로 찾아주는 점검 스크립트를 함께 만들었습니다.</p>
+<h2>그 외</h2>
+<p>며칠 전부터 지켜보던 회전 억제 실험도 오늘 관측 기간을 다 채워 최종판정이 나왔습니다. 목표치까지는 못 미쳐서, 이번 결과로는 실계좌 확대를 보류하기로 했습니다.</p>
+<p>내부 통계 검증 도구에도 작은 개선이 하나 들어갔습니다. 두 지표가 우연히 맞아떨어질 확률까지 고려해서 "진짜 의미 있는 일치"만 골라내는 필드를 추가했습니다.</p>
+<h2>앞으로</h2>
+<p>오늘도 어제와 비슷한 패턴이 이어졌습니다. 눈에 띈 문제를 그 자리에서 고치기보다, 왜 그런 전제가 깔려 있었는지 다시 확인하고 나서야 손을 댔습니다.</p>
+<p>주문 판별 로직은 그 덕분에 "스키마 변경이 필요하다"는 잘못된 전제를 걷어내고 훨씬 간단하게 마무리할 수 있었습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
