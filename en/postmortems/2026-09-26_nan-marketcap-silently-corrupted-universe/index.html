@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Market-Cap Column Came Back All NaN - Why No Error Fired · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/index.html">한국어로 보기</a></p>
+<article>
+<h1>The Market-Cap Column Came Back All NaN - Why No Error Fired</h1>
+<p class="subtitle">When a sort key vanishes entirely, a sort function quietly hands back the original order instead</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Every morning, my automated trading system pulls the largest stocks by market capitalization from two domestic markets and uses that list as the day's trading universe.</p>
+<p>One morning last week, that list changed almost entirely overnight. And one stock that had no business being on it slipped in — and actually got bought.</p>
+<h2>What happened</h2>
+<p>I found out by accident. Someone asked, "why did we buy this stock?" — and only then did I realize something was off.</p>
+<p>Looking at the logs, most of the top names in both markets had been swapped out that morning. There was no reason for market-cap rankings to shift that drastically in a single day.</p>
+<p>There was no error in the logs. The refresh job had finished with its usual "completed successfully" status.</p>
+<h2>What I thought first, and why it was wrong</h2>
+<p>My first suspicion was an unusual market move. My second was a bug in the universe-construction logic.</p>
+<p>Both were wrong. I only found the real problem after tracing all the way back to where the data was actually fetched.</p>
+<h2>The real cause</h2>
+<p>That morning, the open-source library the system uses to fetch market data returned the market-cap column as entirely missing values (NaN) for every row.</p>
+<p>The logic that picks the top N stocks by market cap sorts on that column. When the sort key is entirely missing, the sort function doesn't raise an error.</p>
+<p>Instead, it hands back whatever order the raw data happened to already be in — in this case, something close to alphabetical/code order. The system took that result and treated it as "the top N by market cap," no questions asked.</p>
+<p>The end result was a universe full of stocks that had nothing to do with actual market capitalization, and one of them made it all the way through to a trading signal and an actual buy on the live account. Fortunately it wasn't a directional loss — just a small transaction cost from a trade that never should have had a signal behind it.</p>
+<h2>The fix</h2>
+<p>To make sure the same failure couldn't slip through silently again, I added validation in several independent layers.</p>
+<p>The first layer validates at ingestion. When fetching market data, the system now checks what fraction of stocks have a valid market-cap value, and rejects the entire source if too many are missing. If the live feed gets rejected, it falls back to the most recent clean cached snapshot instead.</p>
+<p>The second layer is an anomaly tripwire. If the universe's membership changes by an abnormal amount in a single day, that alone is treated as a red flag — the update gets held back and the previous state is kept. This exists to catch contamination that somehow slipped past the first layer for any reason.</p>
+<p>The third layer is a final sanity check right before the result is actually used, after it has already passed the first two.</p>
+<p>The recovery itself was a matter of rolling back to the last known-good state. But partway through, another process that hadn't been restarted yet re-contaminated the universe using the old logic — which meant the recovery order had to change to "restart every process first, then restore state," not the other way around.</p>
+<h2>The general lesson</h2>
+<p><strong>When a sort key column goes entirely missing, sorting doesn't fail — it produces a plausible-looking fake result.</strong> No error means the logs look clean. If a ranking or ordering step depends on external data, "the sort finished" and "the sort finished meaningfully" are two different claims.</p>
+<p><strong>An external data source can pass its schema check and still be empty.</strong> A column that exists, with the right type, but is entirely null won't get caught by a typical schema validator. You need a separate check on the actual distribution or valid-value ratio of the data.</p>
+<p><strong>One layer of input validation isn't always enough.</strong> This recurred even after input validation was in place, which is why a separate anomaly layer — watching for "the output changed by way too much" — was added on top. When the cause of a contamination is hard to pin down in advance, monitoring the symptom (an abnormal magnitude of change) tends to be more reliable than trying to enumerate every possible cause.</p>
+<p><strong>Recovery order is itself something to verify.</strong> While rolling back a contaminated state, any other process still running on the old logic can re-contaminate it. If multiple processes share the same state, recovery has to bundle "roll back the state" together with "make sure every consumer of that state is on the new code" — not treat them as separate steps.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

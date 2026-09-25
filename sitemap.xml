@@ -195,4 +195,6 @@
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/</loc></url>
 </urlset>
