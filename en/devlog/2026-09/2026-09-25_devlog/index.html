@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 25] Making News Collection Real-Time and Shipping a Standby-GPU Safeguard&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-25_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 25] Making News Collection Real-Time and Shipping a Standby-GPU Safeguard&quot;</h1>
+<p class="subtitle">A structural change to news collection solved what a simple time shift couldn&#x27;t, and a safeguard for running the standby GPU full-time shipped to production today.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Solving yesterday's leftover problem</h2>
+<p>Yesterday I shifted the nightly run time to try to get holiday news into the next analysis, but it didn't work — the news-gathering logic had its collection window pinned to the last trading date from the start, so the time shift alone couldn't fix it.</p>
+<p>Today I decoupled that collection window from the trading-date cutoff itself. Instead of ending at "the last trading day," the news window now ends at "the run time itself."</p>
+<p>I finished the implementation, tests, and an offline dry run. The dry run confirmed the cutoff actually moves along with the run time as intended.</p>
+<p>It isn't live yet, though. I'm bundling the deploy with another restart planned later this week, and the first real effect won't be observable for a few more days after that.</p>
+<p>I also added a rollback switch — dropping a single marker file reverts to the old behavior instantly if anything goes wrong.</p>
+<h2>A safeguard for running the standby GPU full-time</h2>
+<p>Right now one main card handles the core nightly work, and the standby card only gets used for occasional experiments. There's a goal to eventually run the standby card full-time alongside the main one, and yesterday's design review turned up a risky spot.</p>
+<p>Part of the existing code handles low-memory situations by broadly clearing related processes, and that pattern could end up killing the standby card's processes while cleaning up after the main job.</p>
+<p>Today I rewrote that into a per-card locking structure and shipped it to the resident services. Instead of locking everything as one unit regardless of which card is involved, each card now tracks its own occupancy independently.</p>
+<p>The deploy is done, but I still need to watch it hold up under real traffic — the next few days of regularly scheduled jobs running through this new path will be the actual confirmation.</p>
+<h2>Holding off on the US after-hours snapshot signal</h2>
+<p>I've been recording a partial overnight snapshot around the time the US market opens, and today I checked whether it was actually worth feeding into the next-day analysis.</p>
+<p>The validation came back without a statistically meaningful signal, at either the market level or the per-stock ranking level.</p>
+<p>So I'm not injecting it into the analysis pipeline for now — just continuing to record it. I left the door open to re-check once more data accumulates.</p>
+<h2>Also today</h2>
+<p>An outside code review went back through recent changes and caught something serious: a safeguard meant to trigger when the standby card misbehaves could, under certain conditions, have also halted the main card's normal work.</p>
+<p>Fortunately it was caught before it hit production, and I fixed it right away. The same review turned up a dozen or so lower-priority issues, most of which I addressed too.</p>
+<p>I also fixed a noisy-alert issue where a regular timer would fire on market holidays for no reason. I added a holiday check ahead of the relevant jobs, so they now skip quietly on holidays and run normally on trading days.</p>
+<h2>What's next</h2>
+<p>Today was about actually finishing the two loose ends from yesterday — the news real-time change and the standby-card safeguard.</p>
+<p>Both are freshly deployed, though, so I'll need to watch them over the next week or two to confirm they hold up in production. The US after-hours signal was another case of validating first and deciding to wait.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

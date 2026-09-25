@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260925] 뉴스 수집 범위 실시간화와 보조 카드 안전장치 배포&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-25_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260925] 뉴스 수집 범위 실시간화와 보조 카드 안전장치 배포&quot;</h1>
+<p class="subtitle">어제 시각 조정만으로는 풀리지 않던 문제를 오늘 뉴스 수집 구조 자체를 바꿔서 풀었고, 보조 카드 상시운용을 위한 안전장치도 실제로 배포했습니다.</p><h2>어제 못 푼 문제를 오늘 풀었다</h2>
+<p>어제는 야간 실행 시각을 옮겨서 휴장일 뉴스를 다음 분석에 반영해보려다가, 뉴스를 모으는 쪽 로직이 애초에 수집 범위를 거래일 기준으로 딱 고정해두고 있어서 목적을 못 이뤘다고 정리했습니다.</p>
+<p>오늘은 그 수집 범위 자체를 거래일 기준에서 떼어내는 작업을 했습니다. 뉴스 창의 끝을 "마지막 거래일"이 아니라 "실행 시각 그 자체"로 잡도록 구조를 바꿨습니다.</p>
+<p>구현과 테스트, 오프라인 사전 실행까지 다 마쳤습니다. 사전 실행에서 기준 시각이 실제로 실행 시점에 맞춰 움직이는 것도 확인했습니다.</p>
+<p>다만 실전 배포는 아직입니다. 이번 주 예정된 다른 재시작 작업과 묶어서 한 번에 올릴 계획이고, 첫 실질적인 효과는 그 뒤 며칠이 더 지나야 확인할 수 있습니다.</p>
+<p>문제가 생기면 표식 파일 하나만 만들면 바로 예전 동작으로 되돌릴 수 있게 안전장치도 같이 넣었습니다.</p>
+<h2>보조 카드 상시운용을 위한 안전장치</h2>
+<p>지금은 메인 카드 한 장이 매일 밤 핵심 작업을 도맡고, 보조 카드는 가끔 실험용으로만 씁니다. 이 보조 카드를 상시로 같이 굴리려는 목표가 있어서, 어제 설계 자문을 받다가 위험한 지점을 하나 발견했습니다.</p>
+<p>기존 코드 일부가 "메모리가 부족하면 관련 프로세스를 넓게 정리한다"는 방식으로 짜여 있어서, 메인 작업을 정리하는 과정에서 보조 카드 쪽 프로세스까지 함께 죽을 수 있는 지점이었습니다.</p>
+<p>오늘 이 부분을 카드별로 따로 잠그는 구조로 고쳐서 실제 상주 서비스에 배포했습니다. 어느 카드를 쓰든 상관없이 전체를 하나로 묶어 잠그던 예전 방식과 달리, 이제는 카드마다 독립적으로 점유 여부를 확인합니다.</p>
+<p>배포는 끝났지만 아직 실전에서 이 잠금이 정상적으로 걸리고 풀리는 걸 지켜보는 단계가 남아 있습니다. 며칠 안에 정기적으로 도는 작업들이 이 구조를 실제로 거쳐가는 걸 보고 최종 확인할 예정입니다.</p>
+<h2>미국장 부분세션 신호는 아직 안 쓰기로 했다</h2>
+<p>미국 증시가 열리는 시점에 국내 밤 시간대 부분 시세를 기록해오던 게 있었는데, 이걸 다음 분석에 실제로 반영할지 검증했습니다.</p>
+<p>검증 결과, 시장 전체 흐름이든 종목별 순위든 통계적으로 유의미한 신호를 찾지 못했습니다.</p>
+<p>그래서 이 신호는 당장 분석 과정에 주입하지 않고, 계속 기록만 해두기로 했습니다. 나중에 표본이 더 쌓이면 다시 검증해볼 여지는 남겨뒀습니다.</p>
+<h2>그 외</h2>
+<p>외부 코드 리뷰를 통해 최근 변경 사항을 전부 다시 훑어봤습니다. 그 과정에서 심각한 문제를 하나 찾았습니다. 보조 카드가 이상 동작을 보일 때 작동하는 안전장치가, 특정 조건에서 메인 카드의 정상 작업까지 함께 정지시킬 수 있는 지점이었습니다.</p>
+<p>다행히 실전에서 터지기 전에 발견해서 바로 고쳤습니다. 이 외에도 중요도가 낮은 문제 십여 건을 같은 리뷰에서 찾아 대부분 반영했습니다.</p>
+<p>휴장일에 정기 타이머가 괜히 경보를 울리던 문제도 오늘 수선했습니다. 관련 작업들 앞에 휴장일 여부를 먼저 확인하는 단계를 추가해서, 휴장일에는 조용히 넘어가고 거래일에는 그대로 작동하도록 정리했습니다.</p>
+<h2>앞으로</h2>
+<p>오늘은 어제 발견한 두 가지 미완성 지점(뉴스 실시간화, 보조 카드 안전장치)을 실제로 구현까지 마무리한 하루였습니다.</p>
+<p>다만 둘 다 아직 배포 직후 상태라, 실전에서 제대로 도는지는 이번 주와 다음 주에 걸쳐 지켜봐야 합니다. 미국장 신호처럼 검증해보고 나서 보류로 결론 낸 것도 하나 있었습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
