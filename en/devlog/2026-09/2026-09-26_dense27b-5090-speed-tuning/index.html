@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Making a 27B Dense Model 2x Faster on One RTX 5090 - The Bottleneck Was the KV Cache, Not the Concurrency Setting · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/index.html">한국어로 보기</a></p>
+<article>
+<h1>Making a 27B Dense Model 2x Faster on One RTX 5090 - The Bottleneck Was the KV Cache, Not the Concurrency Setting</h1>
+<p class="subtitle">How I cut a 100-stock nightly batch from six-plus hours to under three, and why you shouldn&#x27;t fully trust that number</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I decided to use a 27B dense model for the nightly 100-stock analysis batch. I ran experiments on how fast it can go on a single RTX 5090, and this post summarizes where I've got to.</p>
+<p>The short version: I cut the production baseline of about 226 seconds per stock to about 102 seconds in a replay experiment. But that 102 is a single repetition on 24 stocks, so it isn't a production measurement yet. I'll write out those limits too.</p>
+<h2>What this batch actually does</h2>
+<p>For anyone who wants to reproduce the numbers, here's the workload first.</p>
+<p>Analyzing one stock takes 17 LLM calls (a multi-agent pipeline). The per-node averages look like this.</p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Avg input</th>
+<th>Avg output</th>
+<th>Avg latency (3 slots)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Market analyst</td>
+<td>13.3k tokens</td>
+<td>3.0k tokens</td>
+<td>68.4 s</td>
+</tr>
+<tr>
+<td>Sentiment analyst</td>
+<td>2.95k</td>
+<td>0.87k</td>
+<td>19.7 s</td>
+</tr>
+<tr>
+<td>Portfolio manager</td>
+<td>9.2k</td>
+<td>0.52k</td>
+<td>12.9 s</td>
+</tr>
+<tr>
+<td>Trader</td>
+<td>1.2k</td>
+<td>0.35k</td>
+<td>7.9 s</td>
+</tr>
+</tbody>
+</table>
+<p>The total per stock is about 188k input tokens and 25.8k output tokens. Breaking down the time, prefill is about 38 seconds and decode about 540 seconds, so decode is 93%. That's why I judged there was little room in prefill optimization.</p>
+<p>The node with the longest input is the Conservative Analyst. The largest input observed over nine production nights was 33,487 tokens (Bear 33,451, Bull 32,699), which is why I set the server's maximum length to 34,816. That's already tight, so I can't shrink it further. Anything over it fails the call with a 400 error.</p>
+<h2>Sampling settings</h2>
+<p>Sampling is temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5 — the model card's recommended values for non-thinking (reasoning-off) mode, used as-is.</p>
+<p>The nine production nights before 09-24 were different. I had overridden only the temperature to 0.8 on top of the checkpoint defaults (1.0/0.95/20), so the effective sampling was 0.8 / 0.95 / 20 / presence 0. In effect I changed three axes at once.</p>
+<p>The effect shows up most clearly in the output tail.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>9 production nights (29,630 calls)</th>
+<th>New-sampling blind run (1,700 calls)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Output p50 / p90 / p99</td>
+<td>1,530 / 2,837 / 5,148 tokens</td>
+<td>1,337 / 2,670 / 4,402 tokens</td>
+</tr>
+<tr>
+<td>Calls over 6,000 tokens</td>
+<td>104 (0.35%)</td>
+<td>2 (0.12%)</td>
+</tr>
+<tr>
+<td>Max output</td>
+<td>26,518 tokens</td>
+<td>9,291 tokens</td>
+</tr>
+</tbody>
+</table>
+<p>The presence penalty appears to have clipped the runaway tail. But since three axes changed at once, I couldn't separate which one deserves the credit.</p>
+<h2>The starting point was 21.7 hours on an XTX</h2>
+<p>I first ran this model on <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/" target="_blank" rel="noopener noreferrer">a single 7900 XTX</a>(new tab) two months ago. On llama.cpp with 4-bit quantization (Q4_K_M), 100 stocks took around 30 hours.</p>
+<p>Attaching a separate MTP (speculative decoding) head brought that down to about 21.7 hours, thanks to decode speed going from the mid-30s to the high-50s of tokens per second. That was still more than double my target of staying within roughly 10 hours, the window that fits overnight.</p>
+<p>I learned one thing then: comparing by wall-clock time alone gives wrong answers. One run was over-measured by more than 3 hours simply because it happened to produce longer outputs. After that I compared arms by prefill/decode throughput instead of wall-clock time.</p>
+<h2>Moving to the 5090 and changing the stack</h2>
+<p>Moving to the 5090, I also switched the serving stack from llama.cpp to vLLM. I use a 4-bit floating-point (NVFP4) checkpoint and compress the KV cache to fp8.</p>
+<p>The first production setting had 3 concurrent slots. Nine nights of production running on it measured about 226 seconds per stock, roughly 6.3 hours for 100 stocks. It cleared the target, but without much margin.</p>
+<p>Before that, my first attempt with 14 concurrent slots had failed on memory. Back then I only looked at the number and thought, "more slots will make it faster."</p>
+<h2>Raising concurrency made it 1.77x faster</h2>
+<p>This time I froze the input (a replay experiment) and changed only the settings. The 3-slot baseline ran all 100 stocks at 204.5 seconds per stock (5.68 hours).</p>
+<p>The 14-slot run took 115.8 seconds per stock (3.22 hours) on 28 stocks — 1.77x faster than baseline. Aggregate throughput went from 126 to 233 tokens per second.</p>
+<p>But the server logs looked odd. The number of requests actually running at once wasn't 14 — it was 6 to 9. The queue always held 5 to 9 waiting requests, and per-call latency went from a median of 32 seconds to 70.</p>
+<h2>The bottleneck was KV cache capacity, not slot count</h2>
+<p>The cause was KV cache capacity. Even with 14 slots configured, once the cache fills up, new requests can't get in. Cache utilization hit 100% at peak.</p>
+<p>This model isn't purely dense; it's a hybrid. Of its 64 layers, 48 use linear attention and only 16 use full attention, so KV accounting differs from a plain dense model. That's where the intuition "14 slots = 14x concurrency" breaks.</p>
+<p>So the concurrency number I configure is meaningless; what matters is the concurrency actually realized. If I hadn't looked at the number of running requests in the log, I would have wrongly recorded this as "14-way, 1.77x."</p>
+<h2>Adding MTP doubled it</h2>
+<p>Next was speculative decoding. This time I turned on the MTP head built into the model, in vLLM, with 2 speculative tokens. At the same time I reduced the slots to 8 and raised GPU memory utilization to 0.95.</p>
+<p>Running 24 stocks came to 102.0 seconds per stock (2.83 hours). That's 2.0x the baseline, and 12% faster than the 14-slot run without MTP. Aggregate throughput peaked at 437 tokens per second in the logs, with speculative-token acceptance of 65 to 79% depending on the window.</p>
+<p>In this run too, the configuration said 8 slots but realized concurrency was 4 to 6, and KV utilization hit 100% at peak. The bottleneck is still the KV cache. Breaking down the time, decode is about 93% of it, so there's little room in prefill-side optimizations.</p>
+<h2>Why you shouldn't trust this number</h2>
+<p>The setting I've adopted is this 102 seconds. But the number has clear limits.</p>
+<ul>
+<li><strong>Three axes changed at once.</strong> MTP, slot count, and memory utilization changed together, so MTP's own contribution can't be isolated.</li>
+<li><strong>The sample is small.</strong> It's 24 stocks with one repetition. The 2.83 hours for 100 stocks is an extrapolation.</li>
+<li><strong>I only verified it in the replay harness.</strong> I haven't run it on the actual production path even once. The first production night is next week.</li>
+<li><strong>I couldn't compare output quality.</strong> As the "Quality numbers" section below shows, even running the same input twice gives a low rate of overlapping grades, so a single run can't say anything about quality differences. The direction of the speedup is safe, but quality is a separate question.</li>
+</ul>
+<p>I also made one measurement mistake. Seconds per stock already reflects concurrency since it's wall-clock divided by stock count, yet I was about to divide by the slot count again. Dividing twice overstates speed by several times. Luckily review caught it.</p>
+<h2>Quality numbers</h2>
+<p>A speedup is meaningless if the output got worse, so here's what I know about quality too. The short version: <strong>I haven't been able to confirm quality yet.</strong></p>
+<ul>
+<li><strong>Grade distribution:</strong> the new-sampling blind run (100 stocks) gave Hold 66, Underweight 19, Overweight 15. In the earlier era Hold was 41 to 61%. Whether that's due to the sampling change or run noise can't be known without repeated runs.</li>
+<li><strong>Reproducibility:</strong> with the same input, the same checkpoint, and the same sampling, the 3-slot run and the 14-slot run scored the same 28 stocks. Grades matched on 14 of 28 (50%), and the Spearman correlation of scores was 0.12 (p=0.54). The two runs' grade distributions (Hold 20/5/3 vs 20/4/4) are practically identical.</li>
+<li><strong>Which stocks get a non-Hold grade:</strong> breaking down the 15 non-zero pairs, only 1 had both runs non-zero with the same sign, 0 had opposite signs, and 14 had a zero on one side. The distribution is the same, but which stocks receive the grade is nearly random from run to run. The self-reproducibility correlation I'd measured earlier was 0.04 to 0.53, with grade flips of 18.6%.</li>
+<li><strong>Relation to forward returns:</strong> forward RankIC for this combination (27B on the 5090) is <strong>zero measurements</strong>. In the ranges I've measured under other regimes, the correlation (IC) between this pipeline's grades and forward returns was indistinguishable from zero, on an extremely small sample.</li>
+</ul>
+<p>So after speeding up the batch, my plan is to draw each stock several times and use the average score. Measuring IC from a single run's grades would let noise swallow the statistical power.</p>
+<h2>What I tried and dropped</h2>
+<ul>
+<li><strong>Prefix caching:</strong> left off, because of isolation issues and a small upper bound from the time breakdown</li>
+<li><strong>Shrinking the context:</strong> impossible, since the largest production input is 33,487 tokens and 34,816 is already the limit</li>
+<li><strong>16 or 24 slots:</strong> pointless, since the KV cache was already the ceiling</li>
+<li><strong>Self-quantization (INT4, FP8 variants):</strong> put on hold because it either cut into KV headroom on the 5090 or hadn't been quality-verified</li>
+</ul>
+<h2>What's next</h2>
+<p>On the first production night next week I'll measure the actual 100-stock time and see how much it differs from the replay experiment's 2.83 hours. That difference is the real conclusion of this post.</p>
+<p>I plan to spend the leftover time on drawing each stock multiple times and averaging. I'll write a follow-up once the production result is in.</p>
+<p>My record of tuning a 35B MoE model on the R9700 the same way is in <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/" target="_blank" rel="noopener noreferrer">the next post</a>(new tab). The conclusions, from backend to concurrency to MTP, came out quite different.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

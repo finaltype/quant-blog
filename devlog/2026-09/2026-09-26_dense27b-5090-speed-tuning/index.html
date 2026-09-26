@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>27B dense 모델을 RTX 5090 한 장에서 2배 빠르게 - 병목은 동시성 숫자가 아니라 KV 캐시였다 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/index.html">Read in English</a></p>
+<article>
+<h1>27B dense 모델을 RTX 5090 한 장에서 2배 빠르게 - 병목은 동시성 숫자가 아니라 KV 캐시였다</h1>
+<p class="subtitle">100종목 야간 배치를 6시간대에서 3시간 안쪽으로 줄인 과정과, 그 숫자를 믿으면 안 되는 이유들</p><p>밤마다 도는 100종목 분석 배치에 27B dense 모델을 쓰기로 했습니다. 이 모델을 RTX 5090 한 장에서 얼마나 빠르게 돌릴 수 있는지를 실험했고, 지금까지의 결과를 정리합니다.</p>
+<p>결과부터 말하면, 프로덕션 기준이던 종목당 약 226초를 재생 실험에서 약 102초까지 줄였습니다. 다만 이 102초는 24종목, 반복 1회짜리 값이라 아직 프로덕션 실측이 아닙니다. 그 한계까지 같이 적겠습니다.</p>
+<h2>이 배치가 실제로 하는 일</h2>
+<p>숫자를 재현하려는 분들을 위해, 먼저 워크로드를 적어둡니다.</p>
+<p>종목 하나를 분석하는 데 LLM 호출이 17번 일어납니다(멀티 에이전트 파이프라인). 노드별 평균은 이렇습니다.</p>
+<table>
+<thead>
+<tr>
+<th>노드</th>
+<th>평균 입력</th>
+<th>평균 출력</th>
+<th>평균 지연(슬롯 3개)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Market 분석</td>
+<td>13.3k 토큰</td>
+<td>3.0k 토큰</td>
+<td>68.4초</td>
+</tr>
+<tr>
+<td>Sentiment 분석</td>
+<td>2.95k</td>
+<td>0.87k</td>
+<td>19.7초</td>
+</tr>
+<tr>
+<td>Portfolio Manager</td>
+<td>9.2k</td>
+<td>0.52k</td>
+<td>12.9초</td>
+</tr>
+<tr>
+<td>Trader</td>
+<td>1.2k</td>
+<td>0.35k</td>
+<td>7.9초</td>
+</tr>
+</tbody>
+</table>
+<p>종목당 합계는 입력 약 188k 토큰, 출력 약 25.8k 토큰입니다. 시간을 쪼개면 prefill이 약 38초, decode가 약 540초라서 decode가 93%입니다. 그래서 prefill 최적화의 여지가 작다고 판단했습니다.</p>
+<p>입력이 가장 길어지는 노드는 Conservative Analyst입니다. 프로덕션 9밤 동안 관측한 최대 입력이 33,487 토큰이었고(Bear 33,451, Bull 32,699), 그래서 서버의 최대 길이를 34,816으로 잡았습니다. 이미 빠듯해서 이 값을 더 줄일 수 없습니다. 넘으면 400 에러로 그 호출이 실패합니다.</p>
+<h2>샘플링 세팅</h2>
+<p>샘플링은 temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5입니다. 모델 카드의 non-thinking(추론 끔) 모드 권장값을 그대로 썼습니다.</p>
+<p>09-24 이전 프로덕션 9밤은 달랐습니다. 체크포인트 기본값(1.0/0.95/20)에 temperature만 0.8로 덮어서, 실효 샘플링이 0.8 / 0.95 / 20 / presence 0이었습니다. 세 축을 한꺼번에 바꾼 셈입니다.</p>
+<p>효과는 출력 꼬리에서 가장 선명했습니다.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>프로덕션 9밤(29,630호출)</th>
+<th>새 샘플링 블라인드 런(1,700호출)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>출력 p50 / p90 / p99</td>
+<td>1,530 / 2,837 / 5,148 토큰</td>
+<td>1,337 / 2,670 / 4,402 토큰</td>
+</tr>
+<tr>
+<td>6,000토큰 초과 호출</td>
+<td>104건(0.35%)</td>
+<td>2건(0.12%)</td>
+</tr>
+<tr>
+<td>출력 최대</td>
+<td>26,518 토큰</td>
+<td>9,291 토큰</td>
+</tr>
+</tbody>
+</table>
+<p>presence_penalty가 폭주하는 꼬리를 잘라낸 것으로 보입니다. 다만 세 축이 동시에 바뀌어서 어느 축 덕분인지는 분리하지 못했습니다.</p>
+<h2>출발점은 XTX에서 21.7시간이었다</h2>
+<p>이 모델을 처음 돌린 건 두 달 전 <a href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/" target="_blank" rel="noopener noreferrer">7900 XTX 한 장</a>(새 창)이었습니다. llama.cpp에 4비트 양자화(Q4_K_M)로 돌리자 100종목에 30시간 안팎이 걸렸습니다.</p>
+<p>여기에 MTP(투기적 디코딩) 별도 헤드를 붙이자 약 21.7시간으로 줄었습니다. 디코드 속도가 초당 35토큰대에서 57토큰대로 올라간 덕분입니다. 그래도 야간 창에 들어가는 목표(10시간 안쪽)의 두 배가 넘었습니다.</p>
+<p>이때 하나 배운 게 있습니다. 벽시계 시간만으로 비교하면 틀린다는 점입니다. 어떤 런은 출력이 길게 나온 만큼 3시간 넘게 과대 측정됐습니다. 그래서 그 뒤로는 벽시계 대신 prefill/decode 처리량으로 팔을 비교했습니다.</p>
+<h2>5090으로 옮기고 스택을 바꿨다</h2>
+<p>5090으로 옮기면서 서빙 스택도 llama.cpp에서 vLLM으로 바꿨습니다. 양자화는 4비트 부동소수(NVFP4) 체크포인트를 쓰고, KV 캐시는 fp8로 줄였습니다.</p>
+<p>첫 프로덕션 설정은 동시 처리 슬롯 3개였습니다. 이 설정으로 9밤 동안 돌린 프로덕션 실측이 종목당 약 226초, 100종목 기준 약 6.3시간이었습니다. 목표는 통과했지만 여유가 크지 않았습니다.</p>
+<p>그 전에 동시 슬롯을 14개로 크게 잡은 첫 시도는 메모리 부족으로 접었습니다. 이때는 숫자만 보고 "슬롯을 늘리면 빨라지겠지"라고 생각했습니다.</p>
+<h2>동시성을 늘렸더니 1.77배 빨라졌다</h2>
+<p>이번엔 같은 입력을 얼려서(재생 실험) 설정만 바꿔 비교했습니다. 슬롯 3개인 기준선은 100종목을 다 돌려 종목당 204.5초(5.68시간)가 나왔습니다.</p>
+<p>슬롯을 14개로 늘린 런은 28종목에서 종목당 115.8초(3.22시간)였습니다. 기준선의 1.77배 빠릅니다. 집계 처리량으로 보면 초당 126토큰에서 233토큰으로 올랐습니다.</p>
+<p>그런데 서버 로그를 보니 이상했습니다. 동시에 실제로 돌고 있는 요청이 14개가 아니라 6~9개였습니다. 대기열이 늘 5~9개 쌓여 있었고, 한 호출의 지연은 중앙값 기준 32초에서 70초로 늘었습니다.</p>
+<h2>병목은 슬롯 수가 아니라 KV 캐시였다</h2>
+<p>원인은 KV 캐시 용량이었습니다. 슬롯 설정이 14여도 캐시가 다 차면 새 요청이 들어가지 못합니다. 캐시 사용률이 최대 100%까지 찼습니다.</p>
+<p>이 모델은 완전한 dense가 아니라 하이브리드 구조입니다. 64개 층 중 48개가 선형 어텐션이고 16개만 전체 어텐션인데, 그래서 KV 계산이 단순한 dense와 다릅니다. "슬롯 14개 = 14배 동시성"이라는 직관이 여기서 깨집니다.</p>
+<p>그래서 설정한 동시성 숫자는 의미가 없고, 실제로 실현된 동시성을 봐야 한다는 걸 배웠습니다. 로그에서 Running 요청 수를 보지 않았다면 "14-way로 1.77배"라고 잘못 기록할 뻔했습니다.</p>
+<h2>MTP를 붙였더니 2배가 됐다</h2>
+<p>다음은 투기적 디코딩입니다. 이번엔 모델에 내장된 MTP 헤드를 vLLM에서 켜고, 투기 토큰은 2개로 했습니다. 동시에 슬롯을 8개로 줄이고 GPU 메모리 사용률을 0.95로 올렸습니다.</p>
+<p>24종목을 돌린 결과 종목당 102.0초(2.83시간)가 나왔습니다. 기준선의 2.0배이고, MTP 없이 슬롯 14개인 런보다도 12% 빨랐습니다. 집계 처리량은 로그 최댓값 기준 초당 437토큰까지 갔고, 투기 토큰 수용률은 창별로 65~79%였습니다.</p>
+<p>이 런에서도 설정은 슬롯 8개인데 실현 동시성은 4~6개였고 KV 사용률은 최대 100%였습니다. 병목이 여전히 KV라는 뜻입니다. 시간을 쪼개 보면 디코드가 약 93%라서, prefill 쪽 최적화는 여지가 작습니다.</p>
+<h2>이 숫자를 믿으면 안 되는 이유</h2>
+<p>지금 채택한 설정은 이 102초입니다. 하지만 이 숫자에는 한계가 분명합니다.</p>
+<ul>
+<li><strong>세 축이 동시에 바뀌었습니다.</strong> MTP, 슬롯 수, 메모리 사용률을 한 번에 바꿨기 때문에 MTP 하나의 기여는 분리할 수 없습니다.</li>
+<li><strong>표본이 작습니다.</strong> 24종목이고 반복이 1회뿐입니다. 100종목 2.83시간은 환산값입니다.</li>
+<li><strong>재생 하네스에서만 검증했습니다.</strong> 실제 프로덕션 경로에서는 아직 한 번도 안 돌렸습니다. 첫 프로덕션 밤은 다음 주입니다.</li>
+<li><strong>결과 품질은 비교하지 못했습니다.</strong> 아래 "품질 쪽 수치"에 적었듯이 같은 입력을 두 번 돌려도 등급이 겹치는 비율이 낮아서, 단일 런으로는 품질 차이를 논할 수 없습니다. 속도의 방향은 안전하지만 품질은 별개의 문제입니다.</li>
+</ul>
+<p>측정 방식에서도 실수를 한 번 했습니다. 종목당 초를 이미 동시성이 반영된 벽시계로 계산했는데, 슬롯 수로 한 번 더 나누는 계산을 하려 했습니다. 이중으로 나누면 속도를 몇 배씩 과대평가합니다. 다행히 리뷰에서 걸렸습니다.</p>
+<h2>품질 쪽 수치</h2>
+<p>속도만 빨라지고 결과가 나빠졌다면 의미가 없으니, 지금 아는 만큼의 품질 수치도 적어둡니다. 결론부터 말하면 <strong>품질은 아직 확인하지 못했다</strong>입니다.</p>
+<ul>
+<li><strong>등급 분포:</strong> 새 샘플링의 블라인드 런(100종목)은 Hold 66, Underweight 19, Overweight 15였습니다. 이전 시대에는 Hold가 41~61%였습니다. 샘플링 변경 때문인지 런 노이즈인지는 반복 실험 없이 알 수 없습니다.</li>
+<li><strong>재현성:</strong> 같은 입력, 같은 체크포인트, 같은 샘플링으로 슬롯 3개 런과 14개 런이 같은 28종목을 채점했습니다. 등급이 일치한 건 14/28(50%)이었고 점수의 Spearman 상관은 0.12(p=0.54)였습니다. 두 런의 등급 분포(Hold 20/5/3 대 20/4/4)는 사실상 같습니다.</li>
+<li><strong>어느 종목이 비Hold를 받는가:</strong> 비영 등급 15쌍을 뜯어보면, 양쪽 모두 비영이고 부호가 같은 건 1건, 반대 부호는 0건, 한쪽만 0인 건 14건이었습니다. 분포는 같은데 어떤 종목이 등급을 받는지는 런마다 거의 무작위라는 뜻입니다. 이전에 잰 자기 재현 상관은 0.04~0.53, 등급 뒤집힘은 18.6%였습니다.</li>
+<li><strong>전방 수익률과의 관계:</strong> 이 조합(5090 27B)의 forward RankIC는 <strong>0건 측정</strong>입니다. 지금까지 다른 체제에서 잰 범위에서는 이 파이프라인의 등급과 전방 수익률의 상관(IC)이 0과 구별되지 않았고, 표본이 극히 작았습니다.</li>
+</ul>
+<p>그래서 배치 속도를 올린 뒤의 계획은 종목 하나를 여러 번 뽑아 평균 점수를 쓰는 것입니다. 단일 런의 등급으로 IC를 재면 검출력이 노이즈에 먹힙니다.</p>
+<h2>시도했다가 접은 것들</h2>
+<ul>
+<li><strong>prefix 캐싱:</strong> 격리 문제와 시간 분해상 상한이 작아서 끈 채로 뒀습니다</li>
+<li><strong>컨텍스트 축소:</strong> 프로덕션 입력 최대가 33,487 토큰이라 34,816에서 더 줄일 수 없었습니다</li>
+<li><strong>슬롯 16개, 24개:</strong> KV 캐시가 이미 상한이라 의미가 없었습니다</li>
+<li><strong>자가 양자화(INT4, FP8 계열):</strong> 5090에서 KV 여유가 줄거나 품질 검증이 안 돼서 보류했습니다</li>
+</ul>
+<h2>앞으로</h2>
+<p>다음 주 첫 프로덕션 밤에 실제 100종목 시간을 재보고, 그 값이 재생 실험의 2.83시간과 얼마나 다른지 확인합니다. 그 차이가 이 글의 진짜 결론입니다.</p>
+<p>남는 시간은 종목 하나를 여러 번 뽑아 평균을 내는 쪽에 쓸 계획입니다. 프로덕션 결과가 나오면 후속 글로 정리하겠습니다.</p>
+<p>같은 방식으로 R9700에서 35B MoE 모델을 튜닝한 기록은 <a href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/" target="_blank" rel="noopener noreferrer">다음 글</a>(새 창)에 있습니다. 백엔드부터 동시성, MTP까지 결론이 꽤 다르게 나왔습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
