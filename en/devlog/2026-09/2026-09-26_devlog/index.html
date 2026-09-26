@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 26] Retiring self-consistency checks and catching a test that was polluting the live ledger&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-26_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 26] Retiring self-consistency checks and catching a test that was polluting the live ledger&quot;</h1>
+<p class="subtitle">I fully turned off a measurement I decided was wasting resources, and in the process found a test suite that had been writing fake rows into the live trading ledger.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Retiring the self-consistency check</h2>
+<p>Self-ρ is a measurement that reruns the same model on the same input to see how stable the output is. It ran automatically in several places — at the tail of nightly batches, during an afternoon window, and once a month across the full universe.</p>
+<p>But I recently reconfirmed that the LLM's sampling temperature itself is a source of output variance. Once that's true, running a repeated-stability check on autopilot in the same spots stops being worth the resources it costs.</p>
+<p>So today I built a single switch file that cuts off every automatic entry point into this measurement at once, and deployed it. The batch-tail run, the afternoon window, the monthly full-universe run, and the related alert all now pass through that one switch.</p>
+<p>I didn't delete the code, and a manual path is still there for when I want to run it by hand. Reverting is just deleting that one switch file.</p>
+<p>A few judgment calls did depend on this measurement — things like the comparison baseline used to validate a hardware swap or a model swap. There's no standing time series for that anymore, so if I need that kind of judgment again, I'll have to design a small dedicated measurement for it separately.</p>
+<h2>A test suite had been polluting the live ledger</h2>
+<p>While working through a follow-up from today's code review, I found that certain tests had actually been writing fake rows into the file the live service uses to track trades.</p>
+<p>Comparing the file's contents before and after a test run confirmed it had genuinely changed. An error that showed up at test teardown had been misread, until now, as a transient write conflict with a resident process touching the same file.</p>
+<p>This matters because a separate monitor reads that file's recent entries to judge whether a certain execution path is "still alive." Fake rows mixed in could have been quietly distorting that judgment.</p>
+<p>The fix was to isolate the tests so they write to a temporary location instead of the real file. I also filtered the fake rows that had accumulated out of the live ledger, backing up the prior state before touching anything.</p>
+<h2>Added premarket quote capture on a new venue</h2>
+<p>There's a trading venue that's active before the regular market opens, and today I built a feature that pulls quotes from it through a real brokerage account query and just logs them — no orders yet.</p>
+<p>It samples the top tickers a handful of times during the premarket window and saves the results. For now it's purely observational.</p>
+<p>Starting next week, I'll watch how consistently this data collects and how close it tracks the actual opening price, before deciding whether to keep it running longer.</p>
+<h2>Also today</h2>
+<p>The trading calendar had a bug where, past roughly a year out, it fell outside its known date range and fell back to guessing open/closed by day-of-week alone — I extended that range much further out to fix it, and also added a known 2028 election-day market closure.</p>
+<p>I also increased the sample size and timeout budget for the performance-tuning batch on owner instruction. The tuning details themselves are covered in two other posts published today (on <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/" target="_blank" rel="noopener noreferrer">27B dense model tuning</a>(new tab) and <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/" target="_blank" rel="noopener noreferrer">35B MoE model tuning</a>(new tab)).</p>
+<h2>What's next</h2>
+<p>Today was a day of re-examining "should this really keep running on autopilot" — one measurement got turned off, and one new one got turned on.</p>
+<p>The self-ρ retirement and the ledger cleanup are both done. The premarket capture just went live, so next week I'll look at a few days of real data before deciding on the next step.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
