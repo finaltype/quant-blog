@@ -58,7 +58,12 @@
 <tr>
 <td>RTX 5090 ×1</td>
 <td>32GB</td>
-<td>See below</td>
+<td>27B dense: about <strong>226 s/stock (6.3h)</strong> in production. In a replay experiment after tuning, <strong>102 s/stock (2.83h)</strong> — <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/" target="_blank" rel="noopener noreferrer">tuning post</a>(new tab)</td>
+</tr>
+<tr>
+<td>AMD R9700 ×1 (backup path, tuned 09-24)</td>
+<td>32GB</td>
+<td>35B MoE: <strong>172 s/stock (4.79h)</strong> — <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/" target="_blank" rel="noopener noreferrer">tuning post</a>(new tab)</td>
 </tr>
 <tr>
 <td>RTX 5090 + AMD R9700 ×1 (mixed vendor, tensor-split)</td>
@@ -74,6 +79,8 @@
 <p>The model running in production every night is <strong>Qwen3.6-35B-A3B (MoE, 3B active)</strong>, GGUF <strong>Q4_K_M</strong> quantization. Weights are 20.75GiB + 1.16GiB of KV/compute buffer = 21.91GiB in actual use (91% of the XTX's 24GB). The vLLM server runs on port 8200 with <code>max-num-seqs 14</code>, fp8 KV cache, prefix caching off, temperature 0.8, thinking mode off — this is the frozen production command.</p>
 <p>At the same time, I'm evaluating whether to adopt <strong>Qwen3.8-27B (dense)</strong>. Same conditions (fp8 KV cache, prefix caching off, temp 0.8, thinking off), but <code>max-num-seqs</code> is dropped to 3 — dense has different memory/compute characteristics than MoE, so concurrency has to be lower for stability.</p>
 <p>MTP (speculative decoding) is always on. Acceptance rate is <strong>50.1%</strong> for our MoE model, <strong>66.95%</strong> for the 27B dense model in an external measurement, and anywhere from 81-97% in other external measurements — it varies a lot by model and settings.</p>
+<p><em>(Updated 2026-09-26)</em> Here are values I've since measured myself. On vLLM, the 27B dense on the 5090 had 65-79% acceptance depending on the window, with 2 speculative tokens. The 35B MoE on the R9700, by contrast, sat around 50% regardless of backend or concurrency, and MTP actually hurt at two or more concurrent slots (1.58x slower at 3 slots).</p>
+<p>What's actually running has changed too. The main path is the 27B dense on a single 5090 under vLLM (NVFP4, fp8 KV, <code>max-num-seqs 8</code>, 2 MTP speculative tokens, 0.95 GPU memory), and the backup path is the 35B MoE on the R9700 under llama.cpp Vulkan (Q4_K_M, 4 concurrent slots, MTP off). The tuning is written up in the <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/" target="_blank" rel="noopener noreferrer">27B post</a>(new tab) and the <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/" target="_blank" rel="noopener noreferrer">35B MoE post</a>(new tab).</p>
 <h2>Prefill/decode measurements — 27B dense</h2>
 <p>Same 27B dense model, roughly 12.7k prefill tokens per call, limited to cards I've actually run myself (at the time of writing I hadn't tested an AMD R9700 myself, so it only appears as a cited reference in the public-benchmark section below — for the numbers from actually buying and testing one, see the update at the end):</p>
 <table>
@@ -97,6 +104,24 @@
 <td>118 t/s (aggregate throughput)</td>
 <td>~6.3h</td>
 <td>one complete 100-stock pass used for today's ranking — see "Today's real ranking run" below</td>
+</tr>
+<tr>
+<td>RTX 5090, vLLM NVFP4, 3 concurrent slots <em>(added 09-26)</em></td>
+<td>126 t/s (aggregate, ~42 per stream)</td>
+<td>5.68h (204.5 s/stock)</td>
+<td>Baseline from replaying 100 stocks on frozen input with the same 27B dense. Nine production nights measured 226 s/stock</td>
+</tr>
+<tr>
+<td>RTX 5090, 14 concurrent slots <em>(added 09-26)</em></td>
+<td>233 t/s (aggregate, ~27 per stream)</td>
+<td>3.22h (115.8 s/stock)</td>
+<td>28 stocks. Configured 14, but realized concurrency was 6-9 — the KV cache is the limit</td>
+</tr>
+<tr>
+<td>RTX 5090, MTP + 8 slots <em>(added 09-26)</em></td>
+<td>up to 437 t/s (aggregate, log peak)</td>
+<td><strong>2.83h (102.0 s/stock)</strong></td>
+<td>24 stocks, one repetition. MTP, slots, and memory utilization changed together, so MTP's own contribution can't be isolated</td>
 </tr>
 </tbody>
 </table>
@@ -155,6 +180,26 @@
 <td>RX 7900 XTX, MoE (10-day avg)</td>
 <td>71.6</td>
 <td>Normal full nightly batch</td>
+</tr>
+<tr>
+<td>RTX 5090, 27B dense, 3 slots <em>(added 09-26)</em></td>
+<td>126</td>
+<td>100-stock replay baseline (~42 per stream)</td>
+</tr>
+<tr>
+<td>RTX 5090, 27B dense, 14 slots <em>(added 09-26)</em></td>
+<td>233</td>
+<td>28-stock replay (~27 per stream)</td>
+</tr>
+<tr>
+<td>RTX 5090, 27B dense, MTP + 8 slots <em>(added 09-26)</em></td>
+<td>up to 437</td>
+<td>A log <strong>peak</strong>, not an average, so not directly comparable to the two rows above</td>
+</tr>
+<tr>
+<td>R9700, 35B MoE, Vulkan 4 slots <em>(added 09-26)</em></td>
+<td>185</td>
+<td>Summed decode from the benchmark harness (~46 per stream)</td>
 </tr>
 </tbody>
 </table>
@@ -230,6 +275,7 @@
 </table>
 <p>The self-QWK band observed historically on the XTX was 0.08-0.21, so this value (0.1198) falls within it. The grade distribution skews toward "Hold" (71-80%), and QWK mechanically comes out lower when one grade dominates, so the raw agreement rate (56-61%) needs to be read alongside it.</p>
 <p>Self-QWK for dense hasn't been measured yet (planned for this weekend). <strong>The metric that actually decides adoption isn't self-QWK — it's forward RankIC</strong> (the correlation between predicted and actual return ranking), and there are zero measurements of that so far. In other words, right now there's only a qualitative expectation that dense will perform better; whether it actually does is still unverified.</p>
+<p><em>(Progress as of 2026-09-26)</em> After this post, the 27B dense was adopted on August 28, switched to Flash-Next on September 6, and switched again on September 26 to the 27B dense re-tuned for speed (MTP + 8 slots). Forward RankIC for this combination is still zero measurements.</p>
 <h2>Daily token volume</h2>
 <p>This project has an <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI pipeline that analyzes stocks with a local LLM</a>(new tab).</p>
 <p><strong>Normal weekday average (MoE only, no side-by-side comparison running)</strong>: about 5,200 calls, roughly 55 million input tokens, roughly 7.5 million output tokens.</p>
@@ -292,9 +338,24 @@
 <td><strong>~610 t/s</strong></td>
 <td><strong>~124 t/s</strong> (summed across 4 slots)</td>
 </tr>
+<tr>
+<td>RTX 5090 ×1 <em>(added 09-26, replay experiment)</em></td>
+<td>27B dense (NVFP4, MTP + 8 slots)</td>
+<td><strong>102.0s (2.83h)</strong></td>
+<td>—</td>
+<td>up to 437 t/s (aggregate)</td>
+</tr>
+<tr>
+<td>AMD R9700 ×1 <em>(added 09-26, 12-stock replay)</em></td>
+<td>35B MoE (Q4_K_M, Vulkan, 4 slots)</td>
+<td><strong>172.4s (4.79h)</strong></td>
+<td>~2,650-3,000 t/s</td>
+<td>~185 t/s (summed across 4 slots)</td>
+</tr>
 </tbody>
 </table>
 <p>Adding a second card actually made the per-ticker time longer — that's not a hardware regression, it's that the model itself changed from something lighter than this post's MoE (3B active, 46-minute completion) to something heavier (6B active), while still being faster than this post's dense candidate. The full story — three quantization swaps and a full day of concurrency/batch-size tuning on this mixed-GPU setup — is written up in a <a href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/" target="_blank" rel="noopener noreferrer">separate post</a>(new tab).</p>
+<p><em>(Updated 2026-09-26)</em> The 5090's 227 s/stock in the table above was later tuned on slot count and MTP down to 102 s in a replay experiment (see the <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/" target="_blank" rel="noopener noreferrer">27B tuning post</a>(new tab)). And the R9700 was tuned not for mixed serving but as a standalone backup path running the 35B MoE (see the <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/" target="_blank" rel="noopener noreferrer">tuning post</a>(new tab)). The Flash-Next mixed setup was production from September 6 to 25, and the main path now is the 27B dense on a single 5090.</p>
 </article>
 <footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
 </body>

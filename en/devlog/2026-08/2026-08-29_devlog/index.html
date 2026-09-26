@@ -33,7 +33,7 @@
 <p>This bot uses a locally hosted LLM to analyze stocks.</p>
 <p>For a while now I've been comparing the model currently in production against a candidate with a different architecture (a dense model in the 27B range).</p>
 <p>The overnight production batch has been running clean, and a consistency metric I track across repeated runs on the same stock set landed back in the normal range I'd already established.</p>
-<p>So today I made the switch to the new model official.</p>
+<p>So today I made the switch to the new model official. (The speed tuning of this 27B dense model is written up later in <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/" target="_blank" rel="noopener noreferrer">a separate post</a>(new tab).)</p>
 <p>While I was at it, I also fixed a piece of stale code.</p>
 <p>The alert message that reports which model is currently active had the old model's name hardcoded, so even after switching models it kept pointing at an already-retired model as "production."</p>
 <p>I changed it to read the currently active model dynamically, so the next model switch won't require touching this again.</p>
