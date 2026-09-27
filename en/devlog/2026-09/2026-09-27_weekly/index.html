@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 22-27] Stacking Safety Nets While Re-Checking Whether Fixes Actually Worked&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-27_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 22-27] Stacking Safety Nets While Re-Checking Whether Fixes Actually Worked&quot;</h1>
+<p class="subtitle">From a server degeneration guard to a dead-slot detector on GPU, several safety layers went up this week — and repeatedly, re-checking whether a fix actually achieved its goal turned up a wrong premise underneath.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Two threads alternated through this week.</p>
+<p>One was stacking new safety nets: a server degeneration guard, per-card GPU locking, a dead-slot detector, and test isolation all landed this week.</p>
+<p>The other was a repeated lesson that "fixed" and "achieved the actual goal" aren't the same thing. More than once, code changes passed tests cleanly, but tracing through one more time turned up a wrong premise underneath.</p>
+<h2>Monday: closing out an incident, building a new safety net the same day</h2>
+<p>Last week's news-input gap finally cleared that morning after the previous day's fix ran to completion. Days with missing input still linger in the moving average and affect near-term calls, so that caveat got noted in the verdict text while the deeper fix was pushed past the next market holiday.</p>
+<p>Right after, a separate problem surfaced. A local inference server that had been running for a long time slipped into a "degenerate" state — repeating the same character over and over — and tickers that should have scored normally got stamped with the vendor's default "hold" instead.</p>
+<p>A detect-isolate-recover system went up the same day: when the degeneration pattern is caught, that result is dropped from scoring, the server auto-restarts, and only the affected ticker gets retried. Thousands of past incident logs were replayed against the detector beforehand to confirm no false positives.</p>
+<p>A different kind of call got made the same day. An experimental strategy already excluded from the live account was 49 days into a pre-set 60-trading-day observation window. Rather than peek at the interim result and call it early, the plan held — stopping based on interim results is a statistical trap in itself.</p>
+<h2>Tuesday: clearing out two wrong premises</h2>
+<p>Multiple strategies can place orders under one account simultaneously, so every fill needs a check for "is this actually my order." That logic had been deferred during the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">execution/safety-layer redesign</a>(new tab), with a note that the brokerage-side query method would need to change first.</p>
+<p>Looking again, that premise turned out to be wrong. No query-method change was needed — just attaching a date that was already known — and the matching key was simplified from order-number-alone to a (trading-date, order-number) pair.</p>
+<p>The same day, the running work-tracking doc that had grown past 4,000 lines got a diet: completed items moved to an archive, "we decided not to do this" rationale moved to its own doc, cutting the working doc's length by more than tenfold.</p>
+<p>Since an earlier cleanup attempt had regrown within a month with no guardrails, this time a checker script was added that warns itself once the doc crosses a length threshold again or an item sits stale too long.</p>
+<h2>Wednesday: a fix that didn't achieve its own goal</h2>
+<p>The overnight run time got shifted to "the evening before the next trading day," aiming to fix a gap where news published during market holidays wasn't reflected in the next analysis. Code, tests, and the commit all went through.</p>
+<p>Getting a second opinion afterward, the news-collection logic itself turned out to hard-cap its window at "through the last trading day" regardless of when the run fired — so holiday news stayed outside the window no matter how late the run started. What the commit actually bought was later GPU occupancy timing; reaching the real goal needed a separate fix decoupling the collection window from trading-day boundaries.</p>
+<p>A design review also happened for running the secondary GPU card continuously alongside the main one. The current all-in-one lock meant secondary-card work stalled whenever the main card was busy, and worse, existing memory-cleanup code that "broadly clears related processes when memory is low" could end up killing secondary-card processes too.</p>
+<p>On the secondary card's serving config, a performance number cited earlier turned out to have been measured under an entirely different scenario. So instead of rushing that config change, updating a build that hadn't been refreshed in over two months got prioritized first.</p>
+<h2>Thursday: actually fixing what Wednesday couldn't</h2>
+<p>The news-collection window got decoupled from trading-day boundaries for real — its end point now tracks the actual run time instead of "the last trading day." Implementation, tests, and an offline dry run all completed; live rollout is planned alongside other scheduled restarts.</p>
+<p>The secondary-card safety fix also shipped to production. Wednesday's risk (cleanup killing secondary-card processes) was resolved with per-card independent locking.</p>
+<p>A code review that day caught something more serious: the safety mechanism that responds to secondary-card anomalies could, under certain conditions, also halt the main card's normal work. That got caught and fixed before it hit production, along with a dozen or so lower-priority issues from the same review.</p>
+<p>A partial overnight price signal from U.S. market hours was also validated this day — no statistically significant signal found, so it stays logged but unused for now.</p>
+<h2>Friday: turning off waste, finding contamination</h2>
+<p>The self-ρ measurement — rerunning the same model on the same input to gauge stability — got fully retired. Once it was re-confirmed that sampling temperature itself swings results, running this repeated measurement on autopilot stopped making sense. The code stayed, but every automated entry point now routes through a single kill-switch file.</p>
+<p>Code-review follow-up surfaced something heavier: certain tests were writing fake rows directly into the live trading ledger file, and errors that used to appear at test teardown had been misattributed to "concurrent write conflicts." A separate monitor reads that same file's recent entries to judge "is the service alive," so fake rows could have skewed that judgment. The fix isolates tests to a temp path, and the fake rows already mixed in were backed up and removed.</p>
+<p>A new pre-market price capture also went live, observe-only for now. Its stability and closeness to actual opening prices will get checked over the coming days before deciding whether to keep it.</p>
+<h2>Saturday: the real bottleneck and a dead slot</h2>
+<p>A few days earlier, the backup GPU had been tuned to cap concurrency at 4 requests. Testing at a larger scale this weekend, running at 6-8 concurrent requests occasionally made whole tickers vanish. Saturday tracked both issues to their root causes.</p>
+<p>The throughput plateau wasn't about slot count — it was about how many expert sub-networks get activated as concurrency rises in this mixture-of-experts model, each one requiring its weights to be freshly loaded. More concurrent requests meant more weight-loading time, canceling out the gain — different physics from a dense model, where adding concurrency reliably helps. That ruled out pushing concurrency further; quantization and kernel efficiency moved up as the next levers to try.</p>
+<p>The vanishing tickers traced to one slot going bad after a single abnormally long-running request, staying stuck in that state afterward. The same pattern had been seen once before on the live-trading path but never diagnosed; narrowing the reproduction conditions this time cracked it. A detector went in — commit only, no remediation yet, with an actual restart action planned for after this weekend. In testing it caught two corrupted runs cleanly with no false positives on two clean runs.</p>
+<p>The same investigation also caught a live-trading watchdog that was mistakenly active during replay experiments with historical data, repeatedly killing replay processes since no live signal ever arrived there. That got disabled.</p>
+<hr />
+<p>The thread running through this week was re-checking cause and premise instead of patching on the spot. Realizing the overnight-timing fix hadn't achieved its goal, clearing the wrong premise behind order matching, and tracing the GPU bottleneck to weight loading instead of slot count were all the same pattern.</p>
+<p>At the same time, several unattended-safety layers went up this week — detect-isolate-recover, per-card locking, dead-slot detection, test isolation. Next week continues with the live rollout of the news-collection window change, wiring a restart action into the dead-slot detector, and reviewing kernel-profiling results.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
