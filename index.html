@@ -19,6 +19,7 @@
 <h1>Quant Trading Bot Devlog</h1>
 <h2>개발일지</h2>
 <ul>
+<li><a href="devlog/2026-09/2026-09-27_devlog/index.html">&quot;[260927] R9700 백업 GPU, 병목 원인과 죽은 슬롯 감지기&quot;</a> · <a href="en/devlog/2026-09/2026-09-27_devlog/index.html">EN</a><div class="sub">백업 경로가 왜 동시 요청을 늘려도 안 빨라지는지 원인을 찾았고, 슬롯이 죽어서 응답이 폭주하는 문제를 잡아내는 감지기를 만들었습니다.</div></li>
 <li><a href="devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/index.html">R9700에서 35B MoE 모델을 돌려본 기록 - 백엔드, 동시성, MTP를 하나씩 재봤습니다</a> · <a href="en/devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/index.html">EN</a><div class="sub">Vulkan이 이겼고, 동시 슬롯은 4개가 무릎이었고, MTP는 단일 요청에서만 도움이 됐습니다</div></li>
 <li><a href="devlog/2026-09/2026-09-26_devlog/index.html">&quot;[260926] self-ρ 측정 전면 퇴역과 테스트발 원장 오염 발견&quot;</a> · <a href="en/devlog/2026-09/2026-09-26_devlog/index.html">EN</a><div class="sub">자원 낭비로 판단한 측정 하나를 완전히 껐고, 그 과정에서 테스트가 실거래 원장에 가짜 기록을 남기고 있던 걸 찾아 정리했습니다.</div></li>
 <li><a href="devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/index.html">27B dense 모델을 RTX 5090 한 장에서 2배 빠르게 - 병목은 동시성 숫자가 아니라 KV 캐시였다</a> · <a href="en/devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/index.html">EN</a><div class="sub">100종목 야간 배치를 6시간대에서 3시간 안쪽으로 줄인 과정과, 그 숫자를 믿으면 안 되는 이유들</div></li>
