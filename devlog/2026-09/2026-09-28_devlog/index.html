@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260928] R9700 백업 GPU 자가치료 배선과 동시요청 상향 재검토&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-28_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260928] R9700 백업 GPU 자가치료 배선과 동시요청 상향 재검토&quot;</h1>
+<p class="subtitle">죽은 슬롯을 고치는 코드를 실전에 붙였고, 동시 요청을 더 늘리자는 판단이 틀린 전제 위에 있었다는 걸 확인했습니다.</p><h2>어제 만든 감지기에 조치를 붙이는 날</h2>
+<p><a href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_devlog/" target="_blank" rel="noopener noreferrer">어제</a>(새 창) 죽은 슬롯을 잡아내는 감지기를 만들어뒀습니다.</p>
+<p>다만 그때는 감지만 하고 아무 조치도 취하지 않는 상태로 묵혀뒀습니다. 오늘은 여기에 실제 복구 동작을 연결하는 날이었습니다.</p>
+<p>감지된 죽은 슬롯을 지우고 다시 쓸 수 있게 만드는 자가치료 로직을 붙였고, 밤새 재현 실험을 리쥼(중단된 지점부터 재개)으로 돌려 100번 전부 정상 처리되는 걸 확인했습니다.</p>
+<h2>동시 요청을 더 늘리자는 논리가 틀린 전제 위에 있었다</h2>
+<p>이번 주 초 이 백업 경로에서 이상한 패턴이 관측됐습니다. 여러 종목 그룹(샤드)이 동시에, 비슷한 지점에서 한꺼번에 무너지는 것처럼 보였습니다.</p>
+<p>이 패턴을 보고 "동시 처리 개수를 지금보다 더 늘리면 한 그룹이 무너져도 피해가 줄어들 것"이라는 가설이 나왔습니다.</p>
+<p>로그를 절대 시각 기준으로 다시 복원해서 들여다보니 전제가 틀렸습니다. 이 서버는 요청이 들어올 때마다 그때그때 빈 처리창(슬롯)을 골라 배정하는 방식이라, 종목 그룹과 처리창이 고정으로 묶여 있지 않습니다.</p>
+<p>즉 "네 그룹이 동시에 무너졌다"는 관측은 사실 "처리창 하나가 한 번 죽었는데, 그 순간 마침 네 그룹 모두가 그 처리창에 걸려 있는 걸 동시에 목격한" 것이었습니다.</p>
+<p>원인을 다시 짚어보니 동시 처리 개수를 늘리는 쪽은 신뢰성 측면에서 이득이 없고, 오히려 처리창 하나가 죽었을 때 그걸 알아채는 데 걸리는 시간이 더 길어질 수 있다는 계산이 나왔습니다. 그래서 동시 처리 개수 상향은 보류로 결론 냈습니다.</p>
+<h2>조사 과정에서 발견한 진짜 문제 두 가지</h2>
+<p>동시 처리 개수 상향 자체는 보류했지만, 이 조사 과정에서 훨씬 실질적인 문제 두 가지를 찾았습니다.</p>
+<p>하나는 오늘 새로 붙인 자가치료 로직이 정식 기동 경로에 실제로 연결돼 있지 않았다는 점입니다. 지금까지는 수동으로 띄워둔 임시 프로세스에 의존하고 있었을 뿐이라, 그 임시 프로세스가 없으면 치료가 전혀 작동하지 않는 상태였습니다.</p>
+<p>다른 하나는 감지기 쪽 상태 기록 방식의 결함이었습니다. 슬롯 하나를 고쳐서 다시 살려도, 감지기 내부 기록이 초기화되지 않아 같은 슬롯이 나중에 또 죽어도 다시 감지하지 못하는 구조였습니다.</p>
+<p>두 문제 다 오늘 안에 코드로 수선해서 배포했습니다. 자가치료 로직이 정식 기동 경로 양쪽(서버를 재사용하는 경우와 새로 띄우는 경우)에서 자동으로 함께 켜지도록 바꿨고, 슬롯을 고친 직후에는 그 슬롯의 감지 기록도 같이 초기화하도록 했습니다.</p>
+<h2>백업 GPU의 다음 갈림길을 미리 정해뒀다</h2>
+<p>이 백업 경로는 원래 메인 GPU가 못 쓰게 됐을 때를 대비한 보조 장치입니다.</p>
+<p>다음 주말(10월 3일) 즈음 이 백업 경로를 그대로 유지할지, 아니면 다른 하드웨어 구성으로 순서를 바꿔 옮길지 결정해야 하는 시점이 옵니다.</p>
+<p>그날 가서 다시 고민하는 대신, 오늘 판단 기준을 미리 문서로 정해뒀습니다. 앞으로 며칠간 이 경로가 실제로 안정적으로 돌아가는지를 지표로 관찰하고, 그 결과에 따라 미리 정한 규칙대로 자동으로 결론이 나도록 만들었습니다.</p>
+<h2>앞으로</h2>
+<p>다음은 오늘 배선한 자가치료가 실제 야간 운영에서 처음 작동하는 걸 확인하는 일입니다. 오늘 밤 로그에 치료 동작이 정상적으로 찍히는지가 첫 검증 지점입니다.</p>
+<p>그 다음은 이번 주 내내 백업 경로의 안정성을 지켜보며 다음 주말의 갈림길 판단에 쓸 데이터를 쌓는 일이 됩니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

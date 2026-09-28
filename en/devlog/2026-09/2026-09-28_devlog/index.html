@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260928] R9700 Backup GPU - Wiring Self-Healing In and Rechecking the Concurrency Bump&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-28_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260928] R9700 Backup GPU - Wiring Self-Healing In and Rechecking the Concurrency Bump&quot;</h1>
+<p class="subtitle">I wired an actual fix action onto yesterday&#x27;s dead-slot detector, and found that raising concurrent requests further was based on a wrong premise.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Attaching a fix to yesterday's detector</h2>
+<p><a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-27_devlog/" target="_blank" rel="noopener noreferrer">Yesterday</a>(new tab) I built a detector that catches a dead slot on the backup GPU path.</p>
+<p>At the time it only detected — it took no action. Today was about wiring an actual recovery action onto it.</p>
+<p>I hooked up self-healing logic that erases a detected dead slot and makes it usable again, then ran a resumed overnight replay test all the way through — 100 out of 100 completed cleanly.</p>
+<h2>The case for raising concurrency was built on a wrong premise</h2>
+<p>Earlier this week, an odd pattern showed up on this backup path: several stock groups (shards) appeared to collapse at nearly the same point, all at once.</p>
+<p>That led to a hypothesis: if concurrent requests were raised further, damage from one group collapsing would be spread thinner and hurt less.</p>
+<p>Reconstructing the logs on an absolute timeline showed the premise was wrong. This server picks whichever slot is free at the moment a request comes in — slots aren't permanently tied to a given stock group.</p>
+<p>So "four groups collapsed at the same time" was really "one slot died once, and all four groups happened to be routed through that same slot at that moment, and all witnessed it together."</p>
+<p>Once that was clear, the math no longer favored raising concurrency — no reliability gain, and possibly a longer detection window before a dead slot gets noticed. So the concurrency bump stayed shelved.</p>
+<h2>Two real bugs turned up during the investigation</h2>
+<p>Shelving the concurrency bump wasn't the main outcome. The investigation surfaced two more concrete problems.</p>
+<p>First, the self-healing logic added today wasn't actually wired into the real startup path. It had only been running as a manually launched temporary process — without that process, healing simply wouldn't happen.</p>
+<p>Second, the detector's own state tracking had a bug. After a slot was fixed and revived, its internal record never got reset, so if the same slot died again later, it wouldn't be caught a second time.</p>
+<p>Both got fixed and shipped the same day. Self-healing now starts automatically on both real startup paths (server reuse and fresh launch), and fixing a slot now resets that slot's detection record too.</p>
+<h2>Pre-committing the next fork in the road for the backup GPU</h2>
+<p>This backup path exists as a fallback for when the main GPU becomes unavailable.</p>
+<p>Around next weekend (October 3rd), there's a decision point coming up: keep this backup path as-is, or switch the hardware order around.</p>
+<p>Instead of deliberating on the day, I wrote down the decision rule in advance today. Over the coming days I'll watch how reliably this path actually runs, and the outcome will follow the pre-committed rule automatically.</p>
+<h2>What's next</h2>
+<p>Next is confirming that today's self-healing wiring actually fires during real overnight operation — the first check is whether tonight's logs show the healing action running as expected.</p>
+<p>After that, it's watching this backup path's reliability all week to build up the data needed for next weekend's decision.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
