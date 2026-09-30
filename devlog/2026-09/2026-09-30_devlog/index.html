@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260930] 모의계좌 장부대조 잔차 원인 규명과 방치된 경보 정리&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-30_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260930] 모의계좌 장부대조 잔차 원인 규명과 방치된 경보 정리&quot;</h1>
+<p class="subtitle">9일 전 전혀 다른 종목 체결이 엉뚱한 매도에 잘못 붙었던 사고를 찾아냈고, 한 달 넘게 매일 울리던 미사용 경보 항목도 함께 정리했습니다.</p><h2>원장과 브로커가 계속 어긋나 있었다</h2>
+<p><a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">모의계좌</a>(새 창) 하나에서 내부 원장과 실제 브로커 잔액을 맞추는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">장부대조</a>(새 창) 결과가 계속 어긋나 있었습니다.</p>
+<p>며칠 전까지는 "일시적인 오탐이고 저절로 풀렸다"고 판단하고 넘어갔던 항목입니다.</p>
+<p>이번에 다시 들여다보니 그 판단 자체가 틀렸습니다. 잔차는 한 번도 줄어든 적이 없었고, 계좌는 안전장치 때문에 며칠째 아무것도 사지도 팔지도 못하는 상태로 멈춰 있었습니다.</p>
+<h2>9일 전 다른 종목의 체결이 엉뚱하게 붙었다</h2>
+<p>원인을 끝까지 추적해보니, 이 모의계좌가 연결된 외부 모의서버 자체에 결함이 있었습니다.</p>
+<p>하루 주문이 많으면 조회 결과 일부가 잘려나가고, 주문 번호는 날짜가 바뀌면 처음부터 다시 매겨지는 서버였습니다.</p>
+<p>우리 쪽 코드는 특정 주문번호를 찾을 때 최근 며칠을 거슬러 올라가며 뒤지도록 짜여 있었는데, 이때 종목과 매매 방향을 대조하지 않았습니다.</p>
+<p>그 결과 한 종목을 매도한 주문의 체결 확인 과정에서, 번호가 우연히 겹친 9일 전 전혀 다른 종목의 매수 체결을 그대로 가져다 붙여버렸습니다. 수량도 원래 주문보다 훨씬 많은 수량으로 잘못 기록됐습니다.</p>
+<p>이 오류로 원장 현금이 실제보다 꽤 크게 부풀려졌습니다. 잔차 감시 장치가 이를 감지해 신규 매수를 막았고, 기존에 들고 있던 종목들도 안전하게 전량 정리해버렸습니다. 그 뒤로 이 계좌는 아무것도 사고팔지 않는 상태로 며칠째 방치돼 있었던 겁니다.</p>
+<h2>왜 방어선이 안 걸렸나</h2>
+<p>체결가가 주문가와 크게 다르면 걸러내는 장치는 이미 있었습니다. 그런데 이번엔 체결가가 자릿수 기준으로는 그럴듯한 범위 안에 들어와서 통과해버렸습니다.</p>
+<p>체결 수량이 원래 주문 수량보다 훨씬 많다는 것도 대조하는 장치가 없었습니다. 종목 자체가 다르다는 것도 마찬가지였습니다.</p>
+<p>세 겹의 방어선 중 어느 것도 "종목과 방향이 맞는지"는 보고 있지 않았던 셈입니다. 정정과 함께 이 부분을 채우는 가드를 별도로 설계해뒀고, 실행은 오너 승인을 받은 뒤 진행하기로 했습니다.</p>
+<h2>미사용 경보 항목도 함께 정리했다</h2>
+<p>같은 날 별도로, 한 달 넘게 매일 경보를 울리던 등록 항목 하나를 등록부에서 퇴역시켰습니다.</p>
+<p>이 항목은 애초에 한 번만 쓰고 임무가 끝난 판정기였는데, 나중에 "매일 도는 정기 작업"으로 등록만 되고 실제 스케줄러에는 걸린 적이 없었습니다.</p>
+<p>지금 평가 대상인 계좌는 코드 구조상 이 판정기 자체를 통과할 수 없는 상태라, 경보는 영원히 못 지날 조건을 향해 매일 무의미하게 울리고 있었습니다. 등록부에서 완전히 제거하고 관련 테스트를 정리했습니다.</p>
+<h2>오탐과 진짜 문제를 가르는 기준</h2>
+<p>이번에 다시 확인한 교훈은, 경보가 울렸다가 조용해졌다고 해서 원인까지 해소된 건 아니라는 점입니다.</p>
+<p>며칠 전엔 "이번 라운드에 차단이 안 걸렸다"는 표면적인 사실만 보고 문제가 자연히 풀렸다고 판단했습니다. 실제로는 계좌가 매수 자체를 못 하는 상태라 차단이 걸릴 일도 없었던 것뿐이었습니다.</p>
+<p>겉으로 조용한 것과 실제로 해결된 것은 다르다는 걸 다시 한번 확인한 하루였습니다.</p>
+<h2>앞으로</h2>
+<p>원장 정정 자체는 오너 승인을 기다리는 중입니다.</p>
+<p>승인이 나면 잘못 붙은 체결을 걷어내고, 위에서 짚은 종목·방향 대조 가드부터 우선 붙일 계획입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

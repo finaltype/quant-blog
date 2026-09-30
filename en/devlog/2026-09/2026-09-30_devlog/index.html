@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260930] Tracing a Paper-Account Reconciliation Gap, and Retiring a Dead Alert&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-30_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[260930] Tracing a Paper-Account Reconciliation Gap, and Retiring a Dead Alert&quot;</h1>
+<p class="subtitle">A fill from a completely different stock, placed nine days earlier, had gotten glued onto the wrong sell order — and I also retired a registry entry that had been alarming pointlessly for over a month.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The ledger and the broker kept disagreeing</h2>
+<p>One of my <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">paper accounts</a>(new tab) had a <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">reconciliation</a>(new tab) gap between the internal ledger and the actual broker balance that just wouldn't close.</p>
+<p>A few days earlier I'd written this off as a temporary false alarm that resolved on its own.</p>
+<p>Looking again, that call was wrong. The gap had never actually shrunk, and the account had been sitting frozen for days, unable to buy or sell anything because of a safety trip.</p>
+<h2>A fill from a different stock, nine days old, got glued on</h2>
+<p>Tracing it to the end, the root cause was a flaw in the external paper-trading server this account talks to.</p>
+<p>On busy days, part of its order-history response gets truncated, and order numbers reset back to small values every new day.</p>
+<p>Our own code, when looking up a specific order number, scans backward through recent days — but never checked whether the stock symbol or trade direction actually matched.</p>
+<p>As a result, while confirming the fill for a sell order on one stock, it pulled in the fill from a buy order on a completely different stock, placed nine days earlier, just because the order numbers happened to collide. The quantity recorded was also far larger than the original order.</p>
+<p>That mistake inflated the ledger's cash balance well beyond reality. The reconciliation monitor caught the gap, blocked new buys, and safely liquidated everything the account was holding. From that point on, the account sat idle — unable to trade — for days without anyone noticing the real cause.</p>
+<h2>Why none of the safeguards caught it</h2>
+<p>There was already a guard that rejects fills whose price is way off from the order price. This time the fill price happened to land within a plausible range by order of magnitude, so it passed.</p>
+<p>There was no check comparing filled quantity against the original order quantity. Nor was there any check that the stock symbol itself matched.</p>
+<p>None of the three layers of defense were actually looking at whether the symbol and direction lined up. I've designed a guard to close that gap, but I'm holding off running the actual ledger correction until I get sign-off.</p>
+<h2>A dead alert, retired the same day</h2>
+<p>Separately, on the same day, I retired a registry entry that had been firing an alert every single day for over a month.</p>
+<p>This entry had originally been a one-shot check meant to run once and be done. Later it got registered as a "runs daily" job, but never actually got wired into the scheduler.</p>
+<p>The account it was supposed to evaluate is structurally incapable of ever passing that check — so the alert had been firing pointlessly every day, toward a condition it could never clear. I pulled it out of the registry entirely and cleaned up the related tests.</p>
+<h2>Quiet isn't the same as resolved</h2>
+<p>The lesson I re-learned here: an alert going quiet doesn't mean the underlying cause got fixed.</p>
+<p>A few days ago I'd looked at the surface fact — "no block triggered this round" — and concluded the problem had resolved itself. In reality, the account simply couldn't buy anything in the first place, so there was nothing left to block.</p>
+<p>Quiet on the surface and actually resolved turned out to be two different things.</p>
+<h2>What's next</h2>
+<p>The ledger correction itself is waiting on sign-off.</p>
+<p>Once approved, I'll strip out the misattributed fill and prioritize shipping the symbol/direction guard described above.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
