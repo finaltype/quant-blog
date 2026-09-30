@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 2026] Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09_monthly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 2026] Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying&quot;</h1>
+<p class="subtitle">This month&#x27;s progress was expanding live trading to a shared account and doubling up on GPU capacity, while I kept finding defects in the measurement tools themselves — benchmarks, reports, safety devices</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>September started with a ledger corruption incident, moved through expanding live trading to a shared account, turned into a run of doubting the measurement tools themselves, and closed with an attempt at GPU redundancy that failed before it recovered.</p>
+<h2>The ledger got corrupted again — this time the broker's own data was the cause</h2>
+<p>Early in the first week, an entire round of the paper-trading validation track vanished without a trace.</p>
+<p>Digging into the cause, I found the broker's API had been sending fill-average-price values far smaller than the real ones. That distorted value accumulated in the ledger, and the baseline-reset logic mistook it for a fund transfer, falsely tripping the kill switch. I had another AI advise on the correction sequence and expected values beforehand, and the actual fix matched that advice down to the decimal.</p>
+<p>The same week also surfaced a resident ranking process that hadn't been restarted after a code change and had been quietly running on stale code for days — an early sign of a pattern that would repeat all month: things that kept running while nothing was actually being checked.</p>
+<p>Later that week I picked up a second GPU purely for validation work. The goal wasn't to replace the main production card, but to run a locally validated model offline in a fully isolated environment. An attempt to combine both cards to boost throughput turned out to hurt under real concurrent load, so I scrapped it and went back to the original, simple allocation scheme.</p>
+<h2>Expanding to a shared account kept exposing the same missing account identifier</h2>
+<p>The second week's centerpiece was expanding live trading to a shared account — one where personal funds and bot funds coexist.</p>
+<p>That structure required new logic: computing buying power net of personal cash, and making sure sells never touch personally held shares. Fund transfers between accounts are ledger-only conversions, not real bank transfers. I wrote up the background separately in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">broker abstraction and safety-device design</a>(new tab).</p>
+<p>The same root cause produced three separate bugs this week. Because account identifiers weren't tracked per-account but shared globally, fund conversion silently stopped firing, a just-migrated holding got sold off again, and a value from the paper-trading track leaked into the live-account kill-switch threshold, falsely flagging a large loss. All three were caught before the weekend.</p>
+<p>The real cause of weeks of intermittent GPU-recognition failures also came to light this week. It wasn't a power-saving feature — it was the display-manager process crashing and restarting, which handed off GPU access permissions to a different system account under multi-GPU contention. I fixed it structurally and verified it with a reboot.</p>
+<h2>A string of defects in the measurement tools themselves</h2>
+<p>The third week was about confirming, over and over, that a measurement tool can be just as wrong as the thing it measures.</p>
+<p>On Monday, an external market-data feed sent empty market-cap values for every name, and the system failed to notice — it just treated the raw, unsorted order as a "ranked by market cap" list. I added a three-layer defense: source check, refresh check, final confirmation.</p>
+<p>The same week I also found a bug that excluded account-transfer amounts from the principal calculation while including them in the valuation, inflating reported returns; a test-code bug that spammed the production Telegram channel with alerts; and a broker query contract that silently swallowed partial failures, which I rewrote to raise explicit errors.</p>
+<p>On Wednesday I discovered the AI report model's sampling settings had been wrong for weeks. A prior A/B test's parameter had been silently dropped before it ever reached the server, and a separately running mode was paired with the wrong sampling defaults. It was a finding that forced me to question whether the <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI ensemble pipeline</a>(new tab)'s consensus logic had even been getting trustworthy input in the first place.</p>
+<p>On Friday, a newly built performance-measurement tool turned out to have its own bugs — it summed concurrently processed time as if it were sequential, wildly overstating GPU usage, and it used a response timeout so short that normal in-flight requests got misclassified as failures. Fixing that misclassification flipped a ranking: a setting I'd judged "slower" turned out to actually be faster.</p>
+<h2>The first time I overrode a pre-registered rule</h2>
+<p>That same weekend, a two-day temperature (sampling) A/B experiment wrapped up. The direction was clear, but the magnitude stayed inconclusive even after an independent AI re-analysis.</p>
+<p>The next day, I overrode the pre-registered rule even though it said "reject." My reasoning: the old setting had never actually been a validated baseline — it was just an accident of defaults — and one of the judging criteria rested on an assumption that didn't fit this system. Once I supplied that corrected premise, the advisory AI's recommendation flipped from "revert" to "keep" as well.</p>
+<p>I documented the override in full — the original rule text, its actual verdict, why I overrode it, and who approved it — and locked in a fixed date for re-review. Afterward it also came out that the input data used for that experiment had been degraded, with two external sources silently dead, so the next re-review will run on clean data.</p>
+<h2>Week four: layering safety devices and re-checking premises</h2>
+<p>In the fourth week, I properly fixed the news-collection problem that last week's patch had only papered over. An external review revealed that moving the nightly batch's execution time hadn't touched the real cause — the collection window itself was still tied to trading-day logic — so this time I decoupled the collection window from trading-day logic entirely.</p>
+<p>A local inference server got stuck repeating the same token and mis-graded one stock with a default rating; the same day I built a detect-isolate-recover system and validated it against thousands of historical logs with zero false positives. A separate device that only tracked reproducibility through repeated measurements got retired this week, since sampling temperature was already confirmed to move the results — making that measurement meaningless.</p>
+<h2>The final week: GPU redundancy collapsed on its first real run, then recovered</h2>
+<p>The switch to a dense-27B model as the main production model wrapped up this week, and the secondary GPU I'd picked up earlier was wired in as a backup path running a different model family in parallel.</p>
+<p>On the second night after wiring it in, all four processing slots on that backup path died within an hour. The self-healing logic I'd rushed to add the day before barely worked, and the GPU sat idle for hours after falling short of half the target.</p>
+<p>The next day, retracing the cause, I misdiagnosed it twice. First I suspected an unrelated external data error; then I suspected the restart logic added the day before, only to confirm it had never even fired. The real cause was forgetting to disable the market-hours GPU auto-shutoff safety device during a manual resume — a repeat of a mistake I'd made once before.</p>
+<p>That incident made clear that slot-level self-healing alone wasn't enough, so I added an escalation: if a healed slot dies again, restart the whole server. After that, all 100 stocks processed cleanly with no retries needed.</p>
+<p>On the last day, I found that a ledger-reconciliation residual on another account in the <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">paper-trading validation track</a>(new tab), which I'd previously dismissed as "resolved on its own," had actually never shrunk at all — a safety device had simply frozen all trading on that account, leaving no chance for the residual to shrink. It was a fitting close to the month's recurring lesson: a quiet alert doesn't necessarily mean a solved problem.</p>
+<hr />
+<p>Two threads ran through September.</p>
+<p>One was visible progress — expanding live trading to a shared account and doubling up on GPU capacity.</p>
+<p>The other was discovering, again and again, that the measurement tools meant to support that progress — a benchmark's time accounting, a report's sampling settings, the ledger-reconstruction logic — could be wrong themselves, and fixing each one as it turned up.</p>
+<p>Overriding a pre-registered rule and watching GPU redundancy collapse on its first run before recovering both came from the same place. This month's conclusion wasn't just about the system's answers, but about continuing to question the measurement and judgment frameworks that produce them.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
