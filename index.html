@@ -105,6 +105,7 @@
 </ul>
 <h2>Postmortems</h2>
 <ul>
+<li><a href="postmortems/2026-10-03_order-dependent-test-pollution/index.html">순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염</a> · <a href="en/postmortems/2026-10-03_order-dependent-test-pollution/index.html">EN</a><div class="sub">단독으로 돌리면 통과하고 전체 스위트에서만 실패하던 테스트, 범인은 다른 파일의 몽키패치였습니다</div></li>
 <li><a href="postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/index.html">시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까</a> · <a href="en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/index.html">EN</a><div class="sub">정렬 기준값이 통째로 사라지면, 정렬 함수는 조용히 원래 순서를 돌려준다</div></li>
 <li><a href="postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/index.html">LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유</a> · <a href="en/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/index.html">EN</a><div class="sub">상위 함수에 값을 넘겼다는 것과, 그 값이 실제로 서버에 도착했다는 것은 다른 문장이었습니다</div></li>
 <li><a href="postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/index.html">증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다</a> · <a href="en/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/index.html">EN</a><div class="sub">KIS(한국투자증권)에서 3주 넘게 안 나던 종류의 버그가 NH증권 Open API를 붙이자마자 연달아 터진 이유</div></li>

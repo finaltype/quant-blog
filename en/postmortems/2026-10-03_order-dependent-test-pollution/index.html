@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An Order-Dependent Test Failure - Traced to a Monkeypatch Nobody Restored · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-10-03_order-dependent-test-pollution/index.html">한국어로 보기</a></p>
+<article>
+<h1>An Order-Dependent Test Failure - Traced to a Monkeypatch Nobody Restored</h1>
+<p class="subtitle">A test passed in isolation and only failed inside the full suite. The culprit was a monkeypatch in another file</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>One particular test kept failing whenever I ran the full regression suite. Run that same test alone, and it always passed.</p>
+<p>It reproduced a second time in the same week. That ruled out coincidence — something was systematically wrong.</p>
+<h2>The symptom</h2>
+<p>The failing test checked one of the safety gates around fund allocation (I won't go into the specific decision logic here).</p>
+<p>Run the whole test suite together, and this test failed. Run it alone, and it passed. Even checking out the pre-change baseline with <code>git stash</code> and running the suite, it passed.</p>
+<p>It looked like a classic flaky test. My first guess was timing, a random seed, or some network dependency.</p>
+<h2>First approach — cast a wide net and try to reproduce by combination</h2>
+<p>I suspected something touching global state or module-level objects. I shortlisted six files that swapped entries in <code>sys.modules</code>, touched a shared account object, or dealt with in-kind transfers and money-path logic.</p>
+<p>I ran those six files in every combination I could think of, trying to reproduce the failure. 166 combinations later, still nothing.</p>
+<p>But that process did surface one more clue. The value that showed up on failure was a flat round number — and it had nothing to do with the actual computation this test was supposed to verify (a difference between two legitimate input values). It wasn't a value a logic bug could produce. It looked exactly like a literal constant some monkeypatch had planted.</p>
+<h2>The actual cause</h2>
+<p>I reran the full regression suite in its real execution order and narrowed it down from there.</p>
+<p>A test in a completely different file was monkeypatching a module-level function that returns an account snapshot, hardcoding it to that same round number. The problem: nothing ever restored it afterward.</p>
+<p>In <code>unittest</code>, once a test replaces a module-level function, every other test file that runs afterward in the same process sees that same replaced function — there's no isolation between test modules unless something explicitly tears it down. Only when this test happened to run earlier in the suite did the later safety-gate test end up reading the leftover planted value instead of a real computed one, and fail.</p>
+<p>That also explained why running it alone always passed: the test that caused the pollution simply never ran first.</p>
+<h2>The fix</h2>
+<p>I added <code>addCleanup</code> calls in both files to restore the original function.</p>
+<p>The test doing the patching now saves the original function first, and registers a cleanup to restore it once the test finishes — pass or fail. I added the same kind of guard on the consuming side too, as a second line of defense in case a similar restoration gets missed somewhere else in the future.</p>
+<p>After the fix, I reran the full suite in its actual execution order and confirmed the failure no longer reproduced.</p>
+<h2>Generalizing</h2>
+<p><strong>Every monkeypatch needs a matching teardown.</strong> The moment a test directly overwrites a module attribute or global object, if you don't register a restore via <code>addCleanup</code> (or your framework's equivalent teardown hook), that change outlives the test. It survives in the process and gets inherited by whatever runs next.</p>
+<p><strong>"Passes alone, fails in the full suite" is almost always shared mutable state leaking between tests.</strong> Before chasing timing or randomness, check whether some test is mutating global or module-level state, and whether anything restores it afterward — that's the faster path.</p>
+<p><strong>The failure value itself is a clue.</strong> If what comes back on failure isn't a plausible wrong computation but a suspiciously clean literal — the kind of number someone would type into a mock — treat that as a sign of contamination before assuming a logic bug. Recognizing that the number here couldn't possibly come out of the real formula was the turning point in this investigation.</p>
+<p><strong>Reproducing the real execution order beat a wide bisect.</strong> I first tried bisecting across a shortlist of "files likely to touch global state," 166 combinations deep, and got nowhere. What actually worked was running the full regression in the order it actually runs. A guessed-at subset of candidates was less reliable than reproducing the exact sequence where the failure actually occurs.</p>
+<p>More detail on this fund-allocation safety-gate layer is in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">the live-account deployment writeup</a>(new tab).</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

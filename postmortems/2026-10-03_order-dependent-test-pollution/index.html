@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염 · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-10-03_order-dependent-test-pollution/index.html">Read in English</a></p>
+<article>
+<h1>순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염</h1>
+<p class="subtitle">단독으로 돌리면 통과하고 전체 스위트에서만 실패하던 테스트, 범인은 다른 파일의 몽키패치였습니다</p><p>전체 회귀 테스트를 돌릴 때마다 특정 테스트 하나가 가끔 실패했습니다. 그런데 그 테스트만 따로 돌리면 항상 통과했습니다.</p>
+<p>같은 주에 두 번째로 재현됐습니다. 우연이 아니라 뭔가 숨어 있는 패턴이라는 뜻이었습니다.</p>
+<h2>증상</h2>
+<p>문제의 테스트는 자금 배분 안전장치 하나를 검증하는 테스트였습니다(세부 판정 로직은 이 글에서 다루지 않습니다).</p>
+<p>전체 테스트 파일을 한꺼번에 묶어 실행하면 이 테스트가 실패했습니다. 같은 테스트를 단독으로 실행하면 통과했습니다. <code>git stash</code>로 변경 전 기준선에서 돌려도 통과했습니다.</p>
+<p>전형적인 "플레이키 테스트"처럼 보였습니다. 타이밍 문제이거나, 랜덤 시드 문제이거나, 네트워크 의존성 문제일 거라고 생각했습니다.</p>
+<h2>처음 접근 — 넓게 의심하고 조합으로 재현 시도</h2>
+<p>전역 상태나 모듈 객체를 만지는 파일이 범인일 거라 짐작했습니다. <code>sys.modules</code>를 교체하거나 공유 계좌 객체, 인카인드 이전, 머니패스 계열을 다루는 파일 여섯 개를 추렸습니다.</p>
+<p>그 여섯 개를 여러 조합으로 묶어 실행하면서 재현을 시도했습니다. 166가지 조합을 돌렸는데, 재현되지 않았습니다.</p>
+<p>이 시점에서 가설 하나를 더 얻었습니다. 실패했을 때 나온 값이 <code>5천만</code>이었는데, 이 테스트가 원래 기대하는 계산 결과(정상 입력값들의 차)와는 전혀 달랐습니다. 로직이 틀려서 나올 수 있는 값이 아니라, 어딘가의 몽키패치가 박아 넣은 리터럴 상수 그 자체였습니다.</p>
+<h2>진짜 원인</h2>
+<p>전체 회귀를 실제 실행 순서 그대로 다시 돌리면서 범인을 좁혔습니다.</p>
+<p>다른 테스트 파일에 있는 한 테스트가, 계좌 스냅샷을 돌려주는 모듈 함수를 <code>5천만</code>이라는 값으로 몽키패치하고 있었습니다. 문제는 그 패치를 끝나고 되돌리는 코드가 없었다는 점이었습니다.</p>
+<p>unittest에서는 테스트 하나가 모듈 전역 함수를 교체해버리면, 그 다음에 실행되는 다른 테스트 파일도 같은 프로세스 안에서 그 교체된 함수를 그대로 보게 됩니다. 이 테스트가 먼저 실행된 순서에서만, 뒤에 도는 안전장치 테스트가 진짜 계산값 대신 남겨진 <code>5천만</code>을 읽어서 실패한 겁니다.</p>
+<p>단독으로 돌리면 통과하는 이유도 이걸로 설명됐습니다. 오염을 일으키는 테스트가 먼저 실행되지 않으니까요.</p>
+<h2>어떻게 고쳤는지</h2>
+<p>두 파일 모두에 <code>addCleanup</code>으로 원본 함수를 복원하는 코드를 추가했습니다.</p>
+<p>몽키패치를 거는 테스트는 원본 함수를 저장해두고, 테스트가 끝나면(성공하든 실패하든) 원래 함수로 되돌리도록 등록했습니다. 패치된 값을 읽는 쪽 테스트에도 같은 방식으로 방어선을 추가했습니다 — 혹시 또 다른 곳에서 비슷한 복원 누락이 생기더라도 한쪽에서는 막히도록.</p>
+<p>수선 후에는 실제 실행 순서 그대로 전체 스위트를 다시 돌려서 재현되지 않는 걸 확인했습니다.</p>
+<h2>일반화하면</h2>
+<p><strong>몽키패치에는 항상 teardown이 짝으로 붙어야 합니다.</strong> 테스트 함수 안에서 모듈 속성이나 전역 객체를 직접 덮어쓸 때, <code>addCleanup</code>(또는 해당 프레임워크의 teardown 훅)으로 원복을 등록하지 않으면 그 변경은 테스트가 끝나도 프로세스에 남습니다. 다음 테스트가 그 잔재를 그대로 물려받습니다.</p>
+<p><strong>"단독으론 통과, 묶으면 실패"는 거의 항상 테스트 간 공유 가변 상태 문제입니다.</strong> 타이밍이나 랜덤성을 의심하기 전에, 먼저 전역/모듈 레벨 상태를 건드리는 테스트가 있는지, 그 상태를 되돌리는 코드가 있는지부터 확인하는 게 더 빠른 길이었습니다.</p>
+<p><strong>실패값 자체가 단서입니다.</strong> 실패했을 때 나온 수치가 "그럴듯하게 틀린 계산 결과"가 아니라 "누군가 테스트에서 박아 넣은 것 같은 깔끔한 리터럴"이라면, 로직 버그 가설보다 오염 가설을 먼저 세우는 게 낫습니다. 이번에도 그 숫자가 실제 계산식으로는 나올 수 없는 값이라는 걸 알아챈 게 결정적인 전환점이었습니다.</p>
+<p><strong>넓은 bisect보다 실행 순서 재현이 먼저였습니다.</strong> 처음엔 "전역 상태를 만질 것 같은 파일들"을 모아 조합을 돌렸는데 166가지를 시도해도 재현되지 않았습니다. 결국 범인을 찾은 방법은 전체 회귀를 실제 순서 그대로 돌리는 것이었습니다. 추측으로 좁힌 후보 조합보다, 실제로 실패가 일어나는 그 순서를 그대로 재현하는 쪽이 더 믿을 수 있는 디버깅 경로였습니다.</p>
+<p>이 자금 배분 안전장치 계층에 관한 더 자세한 설계는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실전 계좌 적용편</a>(새 창)에 정리해뒀습니다.</p>
+</article>
+<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
