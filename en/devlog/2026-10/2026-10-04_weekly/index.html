@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Sep 28-Oct 4] Backup GPU Self-Healing Collapses, Paper-Trading Fill Mismatch Traced&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-04_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Sep 28-Oct 4] Backup GPU Self-Healing Collapses, Paper-Trading Fill Mismatch Traced&quot;</h1>
+<p class="subtitle">Backup GPU self-healing collapsed completely on its first night in production and got redesigned, and a paper-trading ledger residual turned out to trace back to a fill mismatch from nine days earlier.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>This week kept circling back to the gap between "shipped" and "actually works in production."</p>
+<p>Backup-GPU self-healing passed 100 reproduction runs clean, then collapsed completely on its first production night. A paper-trading ledger residual that had been written off as "a transient false positive that resolved itself" turned out not to have resolved at all. Both were cases of mistaking quiet surfaces for actual resolution.</p>
+<h2>Monday: wiring self-healing, dropping a wrong hypothesis</h2>
+<p>Recovery logic finally got attached to the dead-slot detector built <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-27_devlog/" target="_blank" rel="noopener noreferrer">last week</a>(new tab). An overnight reproduction run passing all 100 attempts cleanly brought enough confidence to call it settled.</p>
+<p>The same day, a hypothesis that "raising concurrency would reduce blast radius during an incident" got tested against the logs and the premise turned out wrong. Ticker groups and processing slots aren't fixed to each other, so "four groups collapsed at once" was really one slot dying at a moment when four groups happened to be assigned to it. Raising concurrency got shelved, and two real defects surfaced by this investigation — self-healing never wired into the production startup path, and the detector's internal state never resetting after a slot was repaired — got fixed and shipped instead.</p>
+<h2>Tuesday: the self-healing wired in Monday night collapsed</h2>
+<p>On its first production night, one slot died and within an hour all four processing slots were dead. Self-healing fired over 200 times but barely recovered anything, and the overnight run stopped having filled less than half its target.</p>
+<p>Getting a second opinion from another AI on root cause, Monday's call to hold off on raising concurrency turned out unrelated to this incident. The actual problem was deciding that clearing and reviving a dead slot alone would be enough, which pushed a full server-restart fallback out of scope. Taking that feedback, a call pattern that let one ticker hang for a long stretch got removed, and an escalation path got added — restart the whole server if a healed slot dies again quickly — among five fixes that day.</p>
+<p>The morning resume surfaced a separate problem. Restarting manually without disabling a regular-hours safety switch stopped four processing units partway through — the same mistake as a past incident. Missing tickers got backfilled from a logged last-known value, which turned out to belong to a run from days earlier rather than that day, so those tickers ended up re-run in isolation instead.</p>
+<h2>Wednesday: tracing a paper-trading residual back nine days</h2>
+<p>A reconciliation residual on one <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">paper-trading</a>(new tab) account, previously written off as "a transient false positive that resolved itself," turned out not to have resolved at all on re-examination. The residual had never shrunk, and the account had been frozen out of trading by a safety guard for days.</p>
+<p>The root cause was a defect in the external paper-trading server itself. Order numbers reset from scratch each day on that server, and the fill-lookup code searched back across recent days by number alone without cross-checking ticker or direction, pulling in a fill from a completely different ticker nine days earlier. Price-range validation had passed and there was simply no check comparing quantity or ticker, so a dedicated ticker/direction guard got designed alongside the correction itself.</p>
+<p>The same day, an alert registration that had fired pointlessly every day for over a month got retired for good — it had been set up for a condition the current account structure could never satisfy.</p>
+<h2>Sunday: concurrency increase shelved, a missing output-token cap found</h2>
+<p>Two higher concurrency tiers went into smoke testing to push model-serving throughput further, and both failed. Only a moderate single-tier increase combined with other serving-config tweaks passed, so that's the setting staying in place for now.</p>
+<p>Code review turned up a side effect from the recent move of the backup serving path to a different GPU combination. The watchdog that checks whether the main process is alive judges by process name alone, and once the backup path started spawning similarly-named processes, the watchdog could mistake a healthy backup for the main process and kill it. Several related defects surfaced in the same review and got fixed together.</p>
+<p>A ticker analysis that afternoon finished only after producing output several times longer than normal. The first instinct was that the output-token cap needed loosening, but a second opinion from another AI landed on the opposite conclusion.</p>
+<p>The current serving config had no output-token cap at all, so the model kept generating until it filled the context window instead of stopping — the reverse of what the instinct suggested. The fix lands a new, modest cap rather than a higher one.</p>
+<hr />
+<p>The thread running through this week was telling apart "gone quiet" from "actually resolved." Self-healing passing reproduction tests and then collapsing live, a ledger residual going unflagged without being fixed, and both first instincts about concurrency and token caps pointing the wrong direction are all the same pattern.</p>
+<p>Next week watches whether the five fixes on the backup GPU path actually hold up before revisiting hardware priority, alongside the paper-trading ledger correction, the ticker/direction guard, and landing the output-token cap.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

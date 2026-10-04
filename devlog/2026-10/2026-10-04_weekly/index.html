@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[260928~261004] 백업 GPU 자가치료 전멸과 모의계좌 체결 오매칭 원인 규명&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-04_weekly/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[260928~261004] 백업 GPU 자가치료 전멸과 모의계좌 체결 오매칭 원인 규명&quot;</h1>
+<p class="subtitle">백업 GPU 자가치료가 실전 첫날 밤 전멸하면서 복구 로직을 다시 설계했고, 모의계좌 잔차의 9일 전 체결 오매칭 원인도 끝까지 추적해 찾아냈습니다.</p><p>이번 주는 "배포까지 끝냈다"와 "실전에서 실제로 작동한다"가 다르다는 걸 거듭 확인한 한 주였습니다.</p>
+<p>백업 GPU 경로의 자가치료 로직이 재현 실험 100번을 통과하고도 실전 첫날 밤 전멸했고, 모의계좌의 장부 잔차는 "저절로 풀렸다"는 판단이 틀렸다는 게 드러났습니다. 둘 다 표면의 조용함과 실제 해소를 혼동했던 사례였습니다.</p>
+<h2>월요일, 자가치료를 배선하고 틀린 가설을 접었다</h2>
+<p><a href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_devlog/" target="_blank" rel="noopener noreferrer">지난주</a>(새 창) 만들어둔 죽은 슬롯 감지기에 실제 복구 동작을 붙였습니다. 밤새 재현 실험을 100번 돌려 전부 정상 처리되는 걸 확인하고 나서야 안심했습니다.</p>
+<p>같은 날 "동시 처리 개수를 늘리면 장애 피해가 줄어든다"는 가설도 검증했는데, 로그를 절대 시각으로 복원해보니 전제 자체가 틀려 있었습니다. 종목 그룹과 처리창이 고정으로 묶여 있지 않아서, "네 그룹이 동시에 무너졌다"는 관측은 사실 처리창 하나가 죽은 순간을 네 그룹이 동시에 목격한 것이었습니다. 그래서 동시 처리 개수 상향은 보류하고, 대신 이 조사에서 드러난 두 가지 실질적 결함(자가치료가 정식 기동 경로에 안 연결돼 있던 점, 감지기 기록이 복구 후에도 초기화되지 않던 점)을 고쳐서 배포했습니다.</p>
+<h2>화요일, 전날 밤 배선한 자가치료가 전멸했다</h2>
+<p>정식 운영 첫날 밤, 슬롯 하나가 죽더니 한 시간 만에 처리창 네 개가 전부 죽었습니다. 자가치료가 200번 넘게 발동했지만 거의 살려내지 못했고, 전체 작업은 목표치의 절반도 못 채운 채 멈췄습니다.</p>
+<p>다른 AI에게 원인 분석을 맡겨 자문을 구했는데, "동시 처리 개수를 늘리지 말자"던 월요일의 판단은 이번 사고와 무관하다는 결론이 나왔습니다. 대신 "슬롯만 지우고 되살리면 충분하다"고 보고 서버 재시작 폴백을 미뤄둔 판단이 문제였다고 짚었습니다. 이 지적을 받아 한 종목에 오래 붙잡히게 만들던 호출 패턴을 없애고, 치료한 슬롯이 금방 다시 죽으면 서버 자체를 재시작하도록 격상하는 로직을 새로 붙이는 등 다섯 가지를 고쳤습니다.</p>
+<p>아침 재개 과정에서는 또 다른 문제가 겹쳐 나왔습니다. 수동 재개 시 정규장 안전장치를 끄는 옵션을 빠뜨려 네 개 처리 단위가 멈춰버렸는데, 이는 과거에 겪었던 것과 같은 실수였습니다. 빠진 종목을 채우려고 로그의 마지막 값을 썼다가 그 값이 며칠 전 실행분이었다는 것도 뒤늦게 알아채, 결국 해당 종목만 따로 떼어 다시 돌려서 확정했습니다.</p>
+<h2>수요일, 모의계좌 잔차의 9일 전 원인을 찾았다</h2>
+<p><a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">모의계좌</a>(새 창) 하나의 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">장부대조</a>(새 창) 잔차를 "일시적 오탐이고 저절로 풀렸다"고 넘겼던 판단이 틀렸다는 걸 다시 확인했습니다. 잔차는 줄어든 적이 없었고, 계좌는 안전장치 때문에 며칠째 매매가 멈춰 있었습니다.</p>
+<p>원인은 외부 모의서버의 결함이었습니다. 주문번호가 날짜마다 처음부터 다시 매겨지는 서버인데, 체결 확인 코드가 종목과 매매 방향을 대조하지 않은 채 번호만으로 과거 체결을 찾다가 9일 전 전혀 다른 종목의 체결을 잘못 가져다 붙였습니다. 체결가 범위 검증은 통과했고 수량·종목 대조 장치 자체가 없었다는 게 드러나, 정정과 별도로 종목·방향 대조 가드를 설계해뒀습니다.</p>
+<p>같은 날 한 달 넘게 매일 무의미하게 울리던 경보 등록 항목 하나도 함께 퇴역시켰습니다. 애초에 통과할 수 없는 조건을 향해 영원히 울리고 있던 경보였습니다.</p>
+<h2>일요일, 동시성 상향 보류와 출력 토큰 상한의 부재</h2>
+<p>모델 서빙의 동시요청수를 더 올려보려 두 단계를 스모크 테스트에 넣었는데 둘 다 통과하지 못했습니다. 적당히 한 단계만 올리고 다른 설정을 같이 조정한 구성만 통과해서, 당장은 그 설정으로 유지하기로 했습니다.</p>
+<p>최근 백업 경로를 다른 그래픽카드 조합으로 옮긴 일이 곁가지 문제를 하나 남겼다는 것도 코드 리뷰에서 드러났습니다. 메인 프로세스 감시 로직이 이름만 보고 판단하는 구조라, 백업이 비슷한 이름의 프로세스를 띄우면서 멀쩡한 백업을 메인으로 오인해 강제종료할 수 있는 상태가 됐습니다. 이 문제와 비슷한 결함 여러 건을 같은 리뷰에서 함께 고쳤습니다.</p>
+<p>오후에는 어떤 종목 분석 하나가 평소보다 몇 배나 긴 출력을 뱉고서야 끝난 걸 발견했습니다. "출력 토큰 상한을 더 풀어줘야 하나" 싶었지만, 다른 AI에게 자문을 구한 결론은 정반대였습니다.</p>
+<p>지금 서빙 설정에는 출력 토큰 상한이 애초에 걸려 있지 않아 모델이 멈추지 못하고 컨텍스트 창을 다 채울 때까지 계속 생성하고 있었던 겁니다. 상한을 올리는 대신 적당한 수준에서 새로 낮게 거는 쪽으로 방향을 잡았습니다.</p>
+<hr />
+<p>이번 주를 관통한 건 "조용해진 것"과 "실제로 해소된 것"을 구분하는 작업이었습니다. 자가치료가 재현 실험을 통과했다고 안심했다가 실전에서 전멸한 것, 장부 잔차가 안 걸렸다고 문제가 풀린 줄 알았던 것, 증상을 보고 세운 첫 직감(동시성은 올려야, 토큰 상한은 풀어야)이 둘 다 반대 방향이었던 것 모두 같은 패턴입니다.</p>
+<p>다음 주는 백업 GPU 경로의 다섯 가지 처방이 실제로 버텨주는지 지켜보며 하드웨어 우선순위를 다시 정할 시점이고, 모의계좌 장부 정정과 종목·방향 대조 가드 적용, 출력 토큰 상한 반영도 이어집니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
