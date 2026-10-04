@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261004] 동시성 올리기 스모크와 출력 토큰 상한 부재 발견&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-04_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261004] 동시성 올리기 스모크와 출력 토큰 상한 부재 발견&quot;</h1>
+<p class="subtitle">모델 서빙 처리량을 올리려 동시요청수를 단계적으로 올려봤는데 스모크 테스트에서 걸렸고, 그 와중에 출력 쪽에 애초에 토큰 상한이 없었다는 걸 알게 됐습니다.</p><h2>처리량을 더 올려보기로 했다</h2>
+<p>지금 쓰는 35B 모델의 동시요청수(흔히 np라고 부르는 값)를 더 올려서 처리량을 높여보기로 했습니다.</p>
+<p>기존 값에서 한 단계, 두 단계 더 올린 설정 두 가지를 같이 스모크 테스트에 넣었습니다.</p>
+<p>결과는 둘 다 통과하지 못했습니다. 하나는 전체 처리 시간 기준에서, 다른 하나는 개별 요청 지연 기준에서 각각 걸렸습니다.</p>
+<p>대신 기존 값보다 적당히 한 단계만 올리고 다른 서빙 설정값을 같이 조정한 구성으로 재시도했고, 이건 스모크를 통과했습니다. 당장은 이 설정으로 가고, 더 올리는 시도는 보류했습니다.</p>
+<h2>백업 경로 전환이 감시 로직에 구멍을 냈다</h2>
+<p>최근 백업 서빙 경로를 다른 그래픽카드 조합으로 옮겼는데, 그 전환이 예상 못한 곁가지 문제를 하나 만들어냈습니다.</p>
+<p>메인 프로세스가 죽었는지 감시하는 로직이 프로세스 이름만 보고 판단하고 있었는데, 백업 경로가 비슷한 이름의 프로세스를 띄우기 시작하면서 감시 로직이 백업을 메인으로 오인할 수 있는 상태가 됐습니다.</p>
+<p>최악의 경우 감시 로직이 멀쩡히 돌고 있는 백업을 메인인 줄 알고 강제종료할 수 있었습니다. 코드 리뷰에서 이 문제를 포함해 비슷한 종류의 결함 여러 건을 같이 찾아 고쳤습니다.</p>
+<p>재실행용 스크립트 하나도 비슷한 이유로 손을 봤습니다. 백업 경로가 이제 메인과 같은 그래픽카드를 쓰게 됐으니, 둘을 동시에 띄우려는 옛 방식의 재실행을 막는 가드를 추가했습니다.</p>
+<h2>출력이 끝나지 않고 계속 생성되는 현상을 발견했다</h2>
+<p>오후에 스모크 로그를 들여다보던 중, 어떤 종목 분석 하나가 평소보다 압도적으로 긴 출력을 뱉고 나서야 끝난 걸 발견했습니다.</p>
+<p>평소 정상적인 응답은 길어야 수천 토큰 수준인데, 이 건은 그 몇 배를 훌쩍 넘는 분량이었습니다. 처음엔 "출력 토큰에 걸려있는 상한을 더 넉넉하게 풀어줘야 하나" 싶었습니다.</p>
+<p>AI에게 원인 분석을 맡겨 자문을 구했는데, 결론은 정반대였습니다. 지금 서빙 설정에는 출력 토큰 상한이 애초에 걸려 있지 않다는 겁니다.</p>
+<p>상한이 없으니 모델이 멈추지 못하고 남은 컨텍스트 창을 다 채울 때까지 계속 생성한 거였고, 그렇게 비대해진 출력이 다음 단계로 넘어가면서 컨텍스트 초과 오류를 냈습니다. "상한을 올려야 한다"는 직감이 맞는 문제의식에서 출발했지만, 레버를 반대로 당기고 있었던 셈입니다.</p>
+<p>AI는 상한을 올리는 대신 적당한 수준에서 새로 낮게 걸어두는 쪽을 권고했습니다. 정상 응답은 전혀 건드리지 않으면서 폭주하는 출력만 끊어내는 값이었습니다.</p>
+<p>같은 자리에서 분석 중간에 쓰는 도구 호출 경로에서도 별도 결함을 하나 더 찾았습니다. 특정 조건에서 폴백 경로를 타면 서버가 오류를 돌려주는 경우가 있었는데, 지금까지는 발생 빈도가 낮아서 눈에 띄지 않았던 것뿐이었습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 겪은 두 가지 일 모두 "증상을 봤을 때의 첫 직감"이 실제 원인과 반대 방향이었다는 공통점이 있습니다.</p>
+<p>동시성은 더 올리면 좋을 것 같았지만 스모크가 먼저 한계를 보여줬고, 출력은 상한을 더 풀어야 할 것 같았지만 실제로는 상한 자체가 없는 게 문제였습니다.</p>
+<p>둘 다 숫자를 섣불리 바꾸기 전에 측정과 자문을 거쳤기 때문에 방향을 잘못 잡은 채로 그냥 넘어가지 않을 수 있었습니다.</p>
+<h2>앞으로</h2>
+<p>동시성은 지금 통과한 설정으로 당분간 유지하고, 더 올리는 건 나중에 다시 시도합니다.</p>
+<p>출력 상한을 낮게 거는 수선과 도구 호출 결함 수선은 내일 휴장일 낮에 다시 스모크를 돌려 통과하면 같은 재시작에 같이 반영하고, 못 넘기면 다음으로 미루기로 했습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

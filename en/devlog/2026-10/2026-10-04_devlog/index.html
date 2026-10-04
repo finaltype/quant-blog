@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261004] A Concurrency-Scaling Smoke Test, and Discovering There Was No Output Token Cap&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-04_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[261004] A Concurrency-Scaling Smoke Test, and Discovering There Was No Output Token Cap&quot;</h1>
+<p class="subtitle">I tried to raise the serving concurrency for more throughput and the smoke tests caught it, and along the way I found out the output side had no token cap at all.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Trying to push throughput higher</h2>
+<p>I decided to try raising the concurrency level (often called "np," the number of requests served in parallel) for the 35B model currently in use, to push throughput higher.</p>
+<p>I put two higher settings into the smoke test alongside the current one — one step up, and two steps up.</p>
+<p>Neither passed. One failed on total run time, the other on individual request latency.</p>
+<p>Instead, I retried with a configuration that raised the setting by just one modest step while also adjusting a couple of other serving parameters, and that one passed. For now I'm sticking with that setting, and the bigger jump is on hold.</p>
+<h2>The backup-path switch left a gap in the monitor</h2>
+<p>I'd recently moved the backup serving path to a different GPU pairing, and that move created an unexpected side issue.</p>
+<p>The watchdog logic that checks whether the main process has died was judging purely by process name. Once the backup path started spawning processes with a similar name, the watchdog could mistake the backup for the main process.</p>
+<p>In the worst case, the watchdog could have force-killed a perfectly healthy backup process, thinking it was the main one. Code review caught this along with several similar issues, and all of them got fixed.</p>
+<p>I also patched a rerun script for the same underlying reason — now that the backup path shares a GPU with the main one, I added a guard against the old pattern of launching both at once.</p>
+<h2>A runaway output that never stopped generating</h2>
+<p>Going through the smoke logs in the afternoon, I noticed one stock analysis call that finished only after producing a vastly longer output than usual.</p>
+<p>A normal response tops out at a few thousand tokens; this one blew past that by several multiples. My first instinct was that the output token cap needed to be loosened.</p>
+<p>I asked an AI to dig into the root cause, and the conclusion was the opposite. The current serving configuration had no output token cap set at all.</p>
+<p>With nothing to stop it, the model kept generating until it filled the remaining context window, and that bloated output then triggered a context-overflow error in the next stage. My instinct about the problem was right, but I had the lever pointed the wrong way.</p>
+<p>The AI's recommendation was to set a new, lower cap instead of raising anything. The value it suggested wouldn't touch any normal response, only the runaway ones.</p>
+<p>In the same pass, I found a separate bug in the tool-calling path used mid-analysis. Under a specific fallback condition, the server would return an error — something that had been too rare to notice until now.</p>
+<h2>Why this matters</h2>
+<p>Both incidents today share the same shape: my first instinct about the cause ran in the opposite direction from the real one.</p>
+<p>Concurrency looked like it should go up, but the smoke test hit a wall first. The output looked like it needed a looser cap, but the real problem was that there was no cap at all.</p>
+<p>In both cases, measuring first and getting a second opinion before changing a number kept me from running in the wrong direction.</p>
+<h2>What's next</h2>
+<p>Concurrency stays at the setting that passed for now; the bigger jump gets revisited later.</p>
+<p>The lower output cap and the tool-call fix will get a fresh smoke test tomorrow during the market holiday — if it passes, both ship with the same restart; if not, they wait.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
