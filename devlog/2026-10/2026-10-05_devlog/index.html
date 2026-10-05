@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261005] 출력 토큰 상한 적용과 주문 장부대조 가드 확장&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-05_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261005] 출력 토큰 상한 적용과 주문 장부대조 가드 확장&quot;</h1>
+<p class="subtitle">어제 발견한 출력 토큰 상한 부재 문제를 두 서빙 경로 모두에 적용해 배포했고, 주문 장부대조 안전장치도 두 단계 더 늘렸습니다.</p><h2>어제 발견한 문제를 오늘 고쳤다</h2>
+<p>어제 저녁, 출력 토큰 상한이 애초에 걸려 있지 않다는 걸 발견했습니다.</p>
+<p>오늘은 그 수선을 실제로 적용하는 날이었습니다. 메인 서빙 경로와 백업 서빙 경로 두 곳 모두에 적당한 출력 상한을 새로 걸고, 도구 호출 경로의 결함도 같이 수선했습니다.</p>
+<p>적용 전에 두 차례 스모크 테스트를 돌렸습니다. 대부분 항목은 통과했는데, 유독 한 지표(동시 요청이 밀려서 끼어드는 빈도)만 두 번 다 기준을 넘겼습니다.</p>
+<p>원인을 들여다보니 이 지표는 메모리 점유 특성과 연결된 구조적인 값이라, 이번에 바꾼 상한이나 도구 호출 수선과는 무관해 보였습니다. 다른 AI에게 2차 소견을 구했고, 같은 결론이었습니다.</p>
+<p>이 기준 자체가 애초에 근거 없이 "0이어야 한다"로 정해져 있었다는 것도 같이 드러났습니다. 기존 프로덕션 로그를 봐도 매일 밤 비슷한 수준으로 발생하고 있었습니다.</p>
+<p>최종적으로는 이 지표만 예외로 두고 나머지 기준은 모두 통과했다는 근거로 적용을 결정했습니다. 다만 기준을 결과 보고 그 자리에서 낮추지는 않았고, 정식 기준값 재측정은 다음 휴장일로 미뤘습니다.</p>
+<h2>주문 장부대조 가드를 두 단계 더 늘렸다</h2>
+<p>실거래 전환 이후 계속 늘려온 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 체결 장부대조 안전장치</a>(새 창)에 오늘 두 단계를 더 추가했습니다.</p>
+<p>하나는 체결 수량이 원래 주문 수량을 초과하는 경우를 걸러내는 가드이고, 다른 하나는 하루 마감 시점에 원장 수량이 음수가 되는 비정상 상태를 감사하는 가드입니다.</p>
+<p>같은 자리에서 조회 결과가 거부됐을 때 그 기록을 그냥 버리지 않고 별도 대기열에 쌓아두는 장치도 같이 넣었습니다. 나중에 같은 문제가 반복되는지 추적하기 위해서입니다.</p>
+<p>이 변경은 별도 작업 공간에서 구현한 뒤 AI에게 코드리뷰를 맡겼습니다. 중요도가 있는 지적 세 건이 나와서 모두 반영한 다음 본 작업 공간에 합쳤습니다.</p>
+<p>지적 중 하나는 테스트가 실제 환경이 아니라 테스트를 실행하는 날짜에 의존하고 있어서, 휴장일에 돌리면 일부 테스트가 조용히 건너뛰어지는 문제였습니다. 날짜를 테스트 안에서 고정하도록 고쳤습니다.</p>
+<h2>그 외 — 관측 공백 하나를 메웠다</h2>
+<p>메인 모델 서빙 과정에서 끼어들기가 얼마나 자주 일어나는지는 그동안 따로 기록하고 있지 않았습니다.</p>
+<p>오늘 가벼운 외부 수집기 하나를 새로 띄워서, 서빙 프로세스 자체를 건드리지 않고 바깥에서 주기적으로 상태를 긁어 쌓아두도록 했습니다. 이번에 기준 논란이 됐던 지표도 이걸로 앞으로는 수치로 추적할 수 있습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 두 가지 변경 모두 "통과 못 한 기준 하나를 어떻게 다룰 것인가"라는 같은 질문을 마주했습니다.</p>
+<p>출력 상한 쪽은 기준 자체가 처음부터 틀렸다는 걸 근거와 함께 확인한 뒤에만 넘어갔고, 넘어가면서도 재측정 절차를 따로 못박아 뒀습니다.</p>
+<p>주문 가드 쪽은 반대로, AI 리뷰에서 나온 지적을 전부 받아들이고서야 합쳤습니다. 둘 다 "일단 돌아가니 넘어가자"로 처리하지 않았다는 점이 같습니다.</p>
+<h2>앞으로</h2>
+<p>출력 상한을 건 두 서빙 경로는 내일 새벽 첫 실전 가동에서 끊기는 응답이나 도구 호출 오류가 나오는지 지켜봅니다.</p>
+<p>주문 장부대조 가드도 내일 첫 거래 라운드와 마감 시점에 신규 가드들이 정상적으로 0건을 유지하는지 확인합니다.</p>
+<p>기준 재측정은 다음 휴장일에 진행하기로 했습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
