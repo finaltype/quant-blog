@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261006] 종목 분류기 오분류 수선과 모의계좌 장부대조 보정&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-06_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261006] 종목 분류기 오분류 수선과 모의계좌 장부대조 보정&quot;</h1>
+<p class="subtitle">거래정지가 아닌 종목을 거래정지로 오판해 매수를 막던 버그를 찾아 고치고, 모의 거래 계좌의 장부대조 잔차 원인도 추적해 정정했습니다.</p><h2>매수를 막아온 분류기 버그를 찾았다</h2>
+<p>오늘 오전, 평소보다 매수가 잘 안 들어가는 종목들이 눈에 띄어서 원인을 들여다봤습니다.</p>
+<p>트레이딩 시스템에는 거래정지·상장폐지 종목을 걸러내는 분류기가 따로 있습니다. 확인해보니 이 분류기가 실제로는 정상 거래 중인 종목 몇 개를 "거래정지"로 잘못 읽어서 계속 매수를 막고 있었습니다.</p>
+<p>원인은 공시 문구 해석 오류였습니다. 거래정지를 "취소"한다는 공시였는데, 취소 문구를 못 알아보고 그대로 정지 상태로 읽어들인 경우가 있었습니다.</p>
+<p>상장폐지 관련 의안이 올라왔다는 공시를 실제 상장폐지로 오인한 경우도 있었습니다. 게다가 한 번 정지로 분류되면 해제를 알리는 신호가 따로 없어서, 구조적으로 영영 묶여 있게 되는 결함도 같이 발견했습니다.</p>
+<p>이게 정책의 문제인지 단순 버그인지 판단이 필요해서 서로 다른 AI 둘에게 각각 자문을 구했습니다. 둘 다 "이건 정책이 아니라 데이터 해석 버그"라는 같은 결론을 내렸습니다.</p>
+<p>당일 영향부터 먼저 걷어내기 위해 임시 패치로 오분류된 종목들의 매수를 다시 열어줬습니다. 그리고 저녁에는 원인이 된 해석 로직 자체를 고친 정식 수선을 병합하고 상주 프로세스에 배포했습니다.</p>
+<p>수선을 적용한 뒤에는 전체 종목을 다시 한 번 스캔해서, 같은 문제가 다른 곳에 숨어 있지 않은지도 확인했습니다.</p>
+<h2>장부대조 잔차의 원인을 추적했다</h2>
+<p>같은 날 저녁에는 다른 문제가 터졌습니다. 모의 거래 계좌 하나의 장부대조 잔차가 경보 기준을 넘어서, 다음 날 신규 매수가 자동으로 차단되는 상태가 됐습니다.</p>
+<p>들여다보니 보유 종목의 수량과 평가금액은 원장과 브로커 쪽이 정확히 일치했습니다. 잔차는 거의 전부 현금 쪽에서만 나오고 있었습니다.</p>
+<p>거래가 많았던 날일수록 잔차가 더 크게 늘어나는 패턴이 보였습니다. 그래서 원장에 적용해둔 수수료율이 실제보다 낮게 잡혀 있어서, 거래할 때마다 조금씩 현금이 새어나가고 있는 것으로 추정했습니다.</p>
+<p>모의서버 쪽에서 수수료 상세 내역을 직접 들여다볼 방법이 없어서 완전히 확정하지는 못했습니다. 다만 추정한 수수료율을 원장에 반영하고, 그동안 쌓인 잔차를 한 번 정정하는 쪽으로 처리하기로 했습니다.</p>
+<p>적용한 뒤 장부대조를 다시 돌려서 잔차가 정상 범위로 돌아온 걸 확인하고 재시작했습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 두 사건 모두 "숫자가 안 맞는다"는 작은 신호에서 시작했습니다.</p>
+<p>하나는 데이터 해석 버그였고, 다른 하나는 비용 가정이 틀어진 문제였습니다. 성격은 다르지만 둘 다 바로 손대지 않고 먼저 원인을 끝까지 추적했습니다.</p>
+<p>분류기 쪽은 다른 AI의 교차 자문을 거쳐 "정책이 아니라 버그"라는 판단을 먼저 받은 뒤에야 고쳤습니다. 장부대조 쪽도 추정이 맞는지 확신이 들 때까지 수치를 따라간 뒤에 정정했습니다.</p>
+<h2>앞으로</h2>
+<p>분류기 수선이 내일 새 스냅샷에도 잘 반영되는지, 오늘 오분류됐던 종목들이 계속 정상 거래로 읽히는지 확인합니다.</p>
+<p>모의 거래 계좌의 장부대조 잔차도 내일 첫 라운드부터 정상 범위를 유지하는지 지켜봅니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
