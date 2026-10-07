@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261007] 현금 부분충전 매수 적용과 프롬프트 A/B 실험 사전등록&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-07_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261007] 현금 부분충전 매수 적용과 프롬프트 A/B 실험 사전등록&quot;</h1>
+<p class="subtitle">현금이 모자라면 주문을 통째로 거부하던 동작을 가용 현금만큼 줄여 사는 방식으로 바꿔 배포했고, 성급히 반영할 뻔한 아이디어 둘은 접고 대신 제대로 된 사전등록 A/B 실험 틀을 세웠습니다.</p><h2>현금이 모자랄 때 주문을 통째로 버리지 않기</h2>
+<p>오전에 오너 지시로 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행 계층</a>(새 창)의 동작 하나를 바꿨습니다.</p>
+<p>그동안은 매수 주문을 넣을 때 계좌 현금이 주문 금액에 조금이라도 모자라면 그 주문을 통째로 거부했습니다. 그러면 살 수 있었던 만큼의 현금까지 그냥 놀게 됩니다.</p>
+<p>바꾼 동작은 간단합니다. 현금이 모자라면 주문을 버리는 대신, 가용 현금이 허용하는 수량으로 줄여서 그만큼만 사도록 했습니다.</p>
+<p>이건 "예수금을 놀리지 말자"는 평소 원칙과도 맞닿아 있습니다. 캡은 속도를 조절하는 장치일 뿐이고, 남는 현금을 일부러 쌓아두는 게 목표가 아니기 때문입니다.</p>
+<p>오전 중에 수선을 병합해서 상주 프로세스에 배포했습니다. 그리고 오후 두 라운드에서 실제로 수량이 줄어든 부분충전 매수가 들어가는 걸 확인했습니다.</p>
+<h2>성급히 반영할 뻔한 아이디어 둘을 접었다</h2>
+<p>오후에는 며칠 전부터 고민하던 다른 주제로 넘어갔습니다. 특정 가격 정보를 판단 파이프라인에 반영하는 방안을 몇 가지 검토하고 있었습니다.</p>
+<p>후보가 넷 있었는데, 그중 둘은 지금 당장 반영하기엔 근거가 약했습니다. 하나는 <a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">여러 모델의 합의로 종목을 판단하는 층</a>(새 창)을 건드리는 변경이었고, 다른 하나는 주문을 내보내는 실행 쪽 변경이었습니다.</p>
+<p>판단이 애매해서 다른 AI에게 자문을 구했습니다. 돌아온 권고는 "이 둘은 지금 접고, 재개할 조건을 명시한 가드로 남겨두라"였습니다.</p>
+<p>그래서 두 아이디어는 일단 폐기하되, 어떤 증거가 나오면 다시 꺼낼지를 가드 문장으로 못박아 두는 쪽으로 정리했습니다. 넷 중 가장 위험이 낮은 하나(동작은 안 바꾸고 진단용 수치 열만 추가하는 것)만 받아들였습니다.</p>
+<h2>바꾸기 전에 제대로 재볼 틀부터 만들었다</h2>
+<p>접은 아이디어들 대신, 진짜로 효과가 있는지 궁금했던 프롬프트 변경 하나는 "일단 적용하고 눈으로 보자"가 아니라 제대로 된 실험으로 확인하기로 했습니다.</p>
+<p>그래서 A/B 실험을 사전등록(pre-registration) 방식으로 설계하기 시작했습니다. 가설·측정지표·합격 기준을 결과를 보기 전에 미리 적어두는 방식입니다.</p>
+<p>이렇게 해두면 나중에 결과를 보고 나서 기준을 슬쩍 낮추는 일을 막을 수 있습니다. 며칠 전에도 "통과 못 한 기준을 결과 보고 그 자리에서 낮추지 않는다"는 원칙을 한 번 지킨 적이 있는데, 사전등록은 그걸 아예 절차로 박아두는 셈입니다.</p>
+<p>구현은 격리된 작업 공간 몇 개에서 나눠 진행했습니다. 실험을 돌리는 러너, 경로가 제대로 연결됐는지 검증하는 단계, 전체 흐름을 최소 형태로 엮은 뼈대, 그리고 결과를 읽어내는 판독 스크립트를 각각 만들었습니다.</p>
+<p>판독 스크립트에는 순열검정(permutation test)을 넣어서, 관측된 차이가 우연으로 설명되는 수준인지 통계적으로 따지도록 했습니다. 지표의 부호가 일관되는지, 그리고 이 변경이 해롭지는 않은지(무해성)도 함께 보도록 했습니다.</p>
+<p>설계는 아직 동결하지 않았습니다. 동결 전에 채워야 할 항목 몇 개를 남겨두고, 공동 판정 날짜만 미리 잡아뒀습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 두 작업은 성격이 많이 달랐지만 결은 같았습니다.</p>
+<p>현금 부분충전은 "현금을 놀리지 말자"는 원칙에서 나온 작고 구체적인 수선이었습니다.</p>
+<p>실험 쪽은 반대로, 바로 반영하고 싶은 걸 참고 접는 일이었습니다. 근거가 약한 아이디어 둘은 재개 조건만 남기고 접었고, 나머지 하나는 적용부터 하지 않고 재볼 틀을 먼저 세웠습니다.</p>
+<h2>앞으로</h2>
+<p>부분충전 매수가 내일 첫 라운드부터도 의도대로 들어가는지 지켜봅니다.</p>
+<p>A/B 실험은 남은 항목을 채워 설계를 동결한 뒤, 며칠 뒤 한 번의 통제된 비교 실행으로 돌리고 공동 판정으로 마무리할 계획입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
