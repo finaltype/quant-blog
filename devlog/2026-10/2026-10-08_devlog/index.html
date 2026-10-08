@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261008] 계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-08_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261008] 계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다&quot;</h1>
+<p class="subtitle">원래 주말로 미뤄뒀던 입출금 장부 처리(머니패스)를 오너 지시로 오늘 당겨 구현했는데, 코드 리뷰가 잡은 치명적 버그가 로직이 아니라 &quot;실패 안내 문구&quot;에 있었습니다.</p><h2>미뤄뒀던 "머니패스"를 오늘로 당겼다</h2>
+<p>이 시스템에는 실제 현금이 계좌에 들어오고 나가는 경우를 다루는 경로가 있습니다. 입금이나 출금이 생기면 그걸 장부에 반영하고, 성과 측정의 기준선을 다시 맞춰야 합니다.</p>
+<p>왜 기준선을 다시 맞춰야 하냐면, 외부에서 들어온 현금을 트레이딩으로 번 돈으로 착각하면 안 되기 때문입니다. 반대로 빠져나간 돈을 손실로 잡아도 안 됩니다.</p>
+<p>이 작업은 원래 이번 주말 작업 창으로 미뤄둔 항목이었습니다. 몇 주 전 코드 리뷰에서 지적받은 치명 항목 하나와 중요 항목 몇 개를 묶어 처리하기로 예약돼 있었습니다.</p>
+<p>그런데 오늘 아침 오너가 "지금 진행하면 안 되냐"고 물어서, 주말 창을 앞당겨 오늘 구현부터 배포까지 끝냈습니다.</p>
+<h2>멱등성 — 같은 입금을 두 번 넣지 않기</h2>
+<p>핵심은 "같은 입출금은 정확히 한 번만 장부에 반영한다"입니다.</p>
+<p>재시도가 일어나도, 중간에 프로세스가 죽었다 살아나도, 같은 사건이 두 번 기록되면 안 됩니다. 그래서 입출금마다 고유한 식별자를 붙이고, 이미 처리된 식별자는 다시 들어와도 무시하도록 했습니다.</p>
+<p>이건 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행·안전장치 계층</a>(새 창)에서 쓰던 멱등성 패턴과 같은 결입니다.</p>
+<p>또 장부 반영이 실패하면 그 뒤 단계로 그냥 넘어가지 않고 호출한 쪽을 멈추게 했습니다. 어중간하게 반쯤 반영된 상태로 다음 라운드가 돌면 더 위험하기 때문입니다.</p>
+<p>구현 자체는 격리된 작업 공간에서 먼저 하고, 테스트를 붙여 통과시킨 뒤 메인에 병합하는 순서로 갔습니다.</p>
+<h2>리뷰가 잡은 치명적 버그는 "안내 문구"에 있었다</h2>
+<p>구현을 끝내고 다른 AI에게 델타 코드 리뷰를 맡겼습니다. 돌아온 결과에 치명 등급 하나가 있었는데, 위치가 뜻밖이었습니다.</p>
+<p>버그는 로직이 아니라, 장부 반영이 실패했을 때 사람에게 보여주는 안내 문구에 있었습니다. 그 문구가 "다시 실행해 보라"는 쪽으로 읽히게 돼 있어서, 그대로 따라 하면 같은 입금이 두 번 들어갈 수 있었습니다.</p>
+<p>멱등성은 코드로 막아놨는데, 정작 사람을 두 번 실행하게 유도하는 문장이 그 방어를 우회하는 셈이었습니다.</p>
+<p>그래서 실패했을 때의 안내를 "무조건 재실행"이 아니라 "먼저 상태를 확인하고, 장부에 행이 없는 걸 재확인한 다음에, 그때만 재실행하라"는 순서로 바꿨습니다. 상태를 확인하는 전용 명령도 따로 만들었습니다.</p>
+<p>수선한 걸 다시 리뷰에 넣었더니 치명 항목은 사라졌습니다.</p>
+<h2>배포할 때 상주 프로세스를 전부 재시작해야 했던 이유</h2>
+<p>오후에 오너 지시로 배포했습니다. 그런데 배포에 조건이 하나 붙어 있었습니다 — 관련 상주 프로세스를 전부 같이 재시작할 것.</p>
+<p>하나라도 옛날 코드를 든 채 살아 있으면, 그 프로세스가 아까 그 치명적 동작을 다시 일으킬 수 있기 때문입니다.</p>
+<p>그래서 관련된 상주 프로세스 다섯 개를 한꺼번에 재시작했고, 전부 정상 상태인 걸 확인한 뒤 마무리했습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 일에서 제일 기억에 남는 건, 치명적 버그가 코드가 아니라 문장에 있었다는 점입니다.</p>
+<p>멱등성 같은 방어는 코드로 아무리 잘 짜도, 사람에게 "다시 해보세요"라고 말하는 한 줄이 그 방어를 통째로 무력화할 수 있습니다. 돈이 실제로 드나드는 경로라 더 그렇습니다.</p>
+<p>배포 조건도 같은 맥락입니다. 고쳐서 병합까지 해놔도, 옛 코드를 든 프로세스가 하나 남아 있으면 고치기 전 상태가 그대로 재발합니다.</p>
+<h2>앞으로</h2>
+<p>배포 직후라, 오늘 남은 라운드들의 기록에서 입출금 장부 처리 쪽 오류가 0건으로 유지되는지 지켜봅니다. 며칠간 더 관찰할 계획입니다.</p>
+<p>리뷰에서 치명은 사라졌지만 아직 반영하지 않은 제안 몇 개가 남아 있어서, 그건 이후에 하나씩 볼 예정입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
