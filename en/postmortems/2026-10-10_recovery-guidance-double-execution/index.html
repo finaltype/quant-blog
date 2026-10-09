@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Error-Recovery Guidance Caused a Double-Execution Bug · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-10-10_recovery-guidance-double-execution/index.html">한국어로 보기</a></p>
+<article>
+<h1>How Error-Recovery Guidance Caused a Double-Execution Bug</h1>
+<p class="subtitle">The happy path passed hundreds of tests — the real critical bug was hiding in the &quot;what to do when it fails&quot; instructions</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I rewrote the path where money actually moves as a saga. A capital event — a deposit or withdrawal reflecting into the account's book — gets split into several steps, and if something fails midway, a compensation step rolls it back.</p>
+<p>I finished the implementation and ran a code review. The most critical defect turned out to be nowhere near the execution logic I'd sweated over — it was somewhere else entirely.</p>
+<p>This post is about that "somewhere else." This path is part of the order-execution and safety layer, not the stock-picking logic, and I wrote up its full design separately in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">the live-account post</a>(new tab).</p>
+<h2>What happened</h2>
+<p>For one capital event to land in the book, it goes through roughly these steps: declare the event, execute it, record it in the ledger, then re-anchor the day's reference net asset value.</p>
+<p>The problem was when the recording step failed somewhere in the middle. You end up in a half-finished state — the event was declared, but no row made it into the ledger.</p>
+<p>For exactly that case, I'd embedded "here's what to do" recovery guidance in several places. The code review flagged that guidance itself as the critical defect.</p>
+<p>All four of those messages pushed the operator the same way: "run it again." But that re-run path was not idempotent. The same deposit could be applied twice.</p>
+<h2>What I thought at first</h2>
+<p>Honestly, I assumed the risk lived in the execution logic. I'd attached more than twenty new tests to the happy path, and several hundred related suites were passing.</p>
+<p>So I asked the review to focus on rare execution-failure cases. I expected it to surface a race condition or a partial failure — some edge I'd missed.</p>
+<p>The AI I handed the review to pointed somewhere else entirely. The most dangerous thing, it said, was the recovery text a human reads <em>after</em> a failure.</p>
+<p>At first I felt a little defensive. That's a string, not code — right? But the more I sat with it, the more the point held.</p>
+<p>Nobody reads recovery guidance in normal times. It only gets read once something has already gone wrong. And that moment is exactly when a stressed operator follows the instructions literally.</p>
+<p>In other words, the recovery guidance wasn't "documentation" — it was effectively part of the execution path. And that path pointed at a non-idempotent retry, so the double-execution was a latent bug baked into the code.</p>
+<h2>The real cause</h2>
+<p>Thinking it through, the defect wasn't one thing — it was three layers.</p>
+<p>First, the re-run path itself wasn't idempotent. There was no key to decide "has this capital event already been booked?", so a second run simply booked it again.</p>
+<p>Second, the guidance lumped together two failure situations with opposite correct responses. An event created by an automated sweep should only be <em>closed</em> and never re-credited, while an event that genuinely failed to record needs to be completed. One message covered both — which means it was guaranteed to prescribe the wrong action for one of them.</p>
+<p>Third, the ordering was wrong. The flow let you re-run <em>before</em> checking whether a ledger row already existed.</p>
+<p>Stack those three, and the most natural human reaction — "I'm nervous, let me just run it one more time" — led straight to a double deposit.</p>
+<h2>How I fixed it</h2>
+<p>The core principle was one line: <strong>when it's ambiguous, don't guess — fail closed.</strong></p>
+<p>If a capital event is in an ambiguous partial-failure state (declared, no ledger row, not re-anchored), the round gate records nothing. It then blocks that round's trading sleeve entirely until the event is explicitly resolved.</p>
+<p>A blocked round can be revived later; a double deposit is hard to undo. So when in doubt, I chose to stop.</p>
+<p>Next, I put an idempotency key on the recording step. Each operation now carries a unique identifier, so re-running the same event makes the second attempt a no-op. Instead of hoping the human does the right thing, I made the retry safe by construction.</p>
+<p>I also split the guidance by failure type. Sweep events now say "resolve only, never manually credit," and genuinely unrecorded events enforce an order: resolve → re-confirm no ledger row exists → only then re-run.</p>
+<p>Finally, I added a command to inspect a specific capital event's current state directly. So the operator checks ground truth with their own eyes instead of trusting what the message says.</p>
+<p>On re-review, critical findings dropped to zero. Deployment did come with one extra condition — restart every resident process that imports this path. If even one old-generation process lingered, that same double-application could come right back.</p>
+<h2>Generalizing</h2>
+<p>The lessons here apply far beyond trading.</p>
+<p><strong>Error messages and recovery runbooks are part of your safety surface.</strong> They're not documentation you bolt on later. They're read at the worst possible moment — after something has already failed — and followed literally. A "try again" sitting on a non-idempotent path is a latent double-execution bug.</p>
+<p><strong>Guard side-effecting paths with an idempotency key.</strong> Whether it's money or an external API call, take an operation identifier and make a retry a no-op. Don't make safety depend on "the human won't slip."</p>
+<p><strong>When state is ambiguous, don't guess — fail closed.</strong> Better to block and page a human than to be clever with compensation logic and get it wrong. A blocked job is recoverable; a side effect that already fired often isn't.</p>
+<p><strong>A pile of happy-path tests is not reassurance.</strong> This code passed hundreds of tests and still carried a critical defect, because the bug lived in the failure-and-recovery layer that tests rarely reach — specifically in the guidance text. Put the recovery paths, and their instructions, into the test scope.</p>
+<p><strong>Distinguish failures that look alike but need opposite responses.</strong> One generic message that fits both cases is, in fact, a bug for one of them.</p>
+<p>What I'd invested the most in was the execution logic — but what actually protected the system was redesigning "what to do when it fails." From now on, once a feature is built, I plan to review its recovery guidance as part of the feature itself.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
