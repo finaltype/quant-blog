@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Oct 5-11] Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-11_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Oct 5-11] Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework&quot;</h1>
+<p class="subtitle">The execution layer got touched almost daily — output caps, reconciliation guards, partial-fill buys, deposit/withdrawal handling — while the real discipline was building a framework that locks in criteria before seeing results, instead of shipping on instinct.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>This week extended the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order-execution and safety layer</a>(new tab) one step almost every day.</p>
+<p>Underneath all of it ran a rule of a different kind: nothing got handled with "it runs, so move on" or "ship it and watch."</p>
+<p>A criterion that failed didn't get lowered on the spot after seeing the result, weakly-grounded ideas got held back, and when numbers didn't line up the cause got traced all the way down before anything got touched.</p>
+<h2>Monday: how to handle a criterion that didn't pass</h2>
+<p>The week opened on a problem found the night before. Model serving had no output-token cap at all, so the model kept generating long instead of stopping.</p>
+<p>A modest cap got added to both the main and backup serving paths, and a defect in the tool-call path got fixed alongside it.</p>
+<p>In the pre-deploy smoke test, one metric exceeded its threshold both times. On inspection, that threshold had been set to "must be 0" with no basis from the start, and existing logs showed the same level every night anyway.</p>
+<p>So it got waved through — but the threshold didn't get lowered on the spot after seeing the result. A proper re-measurement got pinned to the next market holiday instead.</p>
+<p>The same day, the order-fill reconciliation guards grew by two more stages. One catches fills exceeding the original order quantity; the other catches a ledger quantity going negative at close.</p>
+<p>This one, by contrast, only got merged after all three findings from an AI code review were addressed. One of them was that a test depended on the day it ran, so some tests silently skipped on holidays — fixed by pinning the date inside the test.</p>
+<h2>Tuesday: two incidents that started from "the numbers don't match"</h2>
+<p>The next day was spent chasing two small signals each to their root.</p>
+<p>One was a set of tickers that were buying in less than usual. A classifier that filters out halted and delisted tickers had misread a disclosure and kept blocking a few normally-trading tickers as halted.</p>
+<p>It failed to recognize the cancellation wording in a disclosure that <em>cancelled</em> a halt, or mistook a disclosure about a delisting agenda item for an actual delisting. A structural defect surfaced too: once classified as halted, there was no release signal, so a ticker could stay locked forever.</p>
+<p>Whether this was policy or a bug was ambiguous, so two different AIs were each consulted. Both reached the same conclusion — a data-interpretation bug, not policy — and only after that verdict did the fix go in.</p>
+<p>The other incident broke in the evening. A reconciliation residual on one paper-trading account crossed the alert threshold, which automatically blocked new buys the next day.</p>
+<p>Holdings and valuation matched exactly, and the residual came almost entirely from cash. It grew larger on heavier-trading days, pointing to a commission rate set lower than reality in the ledger, leaking a little cash on each trade.</p>
+<p>There was no way to inspect the commission detail on the paper server directly, so it couldn't be fully confirmed. Still, the estimated rate got applied, the accumulated residual got corrected once, and after reconciliation returned to normal range the process was restarted.</p>
+<h2>Wednesday: resisting the urge to ship, building the framework first</h2>
+<p>Wednesday tied together two tasks of opposite character under the same thread.</p>
+<p>First, the behavior of rejecting a whole buy order whenever cash fell even slightly short of the order amount got changed. Now it shrinks the order to whatever quantity the available cash allows and buys just that much.</p>
+<p>This was a small, concrete fix rooted in the standing principle of not leaving cash idle. The cap is only a throttle; deliberately piling up leftover cash was never the goal.</p>
+<p>In the afternoon, the opposite happened — an idea wanted shipped got held back instead. There were four candidate ways to feed a particular piece of price information into the decision, and two of them were weakly grounded.</p>
+<p>One touched the <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">layer that decides tickers by consensus across models</a>(new tab); the other touched the order-execution side. The AI consultation's recommendation was to shelve both and leave them as guards with explicit resume conditions.</p>
+<p>So both got dropped with their resume conditions pinned as guard statements, and only the lowest-risk of the four was accepted — adding a diagnostic column without changing any behavior.</p>
+<p>The one prompt change whose effect was genuinely uncertain got routed through a pre-registered A/B experiment rather than "ship it and watch." Pre-registration means writing down the hypothesis, metrics, and pass criteria before seeing any result.</p>
+<p>That way, quietly lowering the bar after seeing the result becomes impossible. It bakes into procedure the same principle held once on Monday.</p>
+<p>The readout script got a permutation test to judge whether the observed difference is at a level chance could explain, along with checks on sign consistency across metrics and on harmlessness. The design isn't frozen yet — a few remaining items and a joint-decision date are what's left.</p>
+<h2>Thursday: the critical bug was in a sentence, not the code</h2>
+<p>The week's turning point was Thursday. Deposit/withdrawal ledger handling (the "money path"), originally pushed to the weekend work window, got pulled forward on the owner's instruction and taken from implementation through deployment the same day.</p>
+<p>The core of this path is "each deposit or withdrawal gets recorded in the ledger exactly once." External cash coming in must not be mistaken for trading profit, nor money going out for a loss.</p>
+<p>Even with retries, or a process dying and coming back mid-way, nothing can be recorded twice. So each deposit/withdrawal carries a unique identifier and already-processed ones get ignored — the same idempotency pattern the execution layer already used.</p>
+<p>After implementation, an AI delta code review turned up one critical-grade finding, and its location was unexpected.</p>
+<p>The bug wasn't in the logic but in the message shown to a human when ledger recording failed. That message read as "try running it again," and following it literally could enter the same deposit twice.</p>
+<p>Idempotency was guarded in code, yet a single sentence nudging a human to run it again bypassed that defense entirely.</p>
+<p>So the message got rewritten from "just rerun" to "first check the state, re-confirm there's no row in the ledger, and only then rerun," with a dedicated status-check command added. On re-review, the critical finding was gone.</p>
+<p>Deployment came with one condition: restart all the related resident processes together. If even one stayed alive holding old code, the pre-fix behavior could recur. So five got restarted at once and confirmed healthy before wrapping up.</p>
+<h2>The thread through the week</h2>
+<p>Almost all of this week's work sat on top of the execution and safety layer. Output caps, reconciliation guards, partial-fill buys, deposit/withdrawal handling — the paths where money actually moves got hardened a step at a time.</p>
+<p>Running underneath was the sense that defenses get breached at the edges. A threshold set with no basis, a single line telling a human "try again," a cost assumption set lower than reality — the holes weren't in the middle of the logic but around it.</p>
+<p>So the week's rule pointed one direction. A failed criterion gets waved through only after the basis is confirmed, with re-measurement pinned; weakly-grounded ideas get shelved with only their resume conditions kept; and before changing something, build a way to measure it properly first.</p>
+<p>Next week watches whether the new output cap, the new reconciliation guards, partial-fill buys, and deposit/withdrawal handling hold at zero errors across live rounds. The pre-registered A/B experiment, once its remaining items are filled and the design frozen, gets one controlled comparison run and a joint decision to close it out.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
