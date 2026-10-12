@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Running a 35B MoE Model on the R9700 - I Measured the Backend, Concurrency, and MTP One at a Time · Quant Trading Bot Devlog</title>
+<title>Qwen3.6-35B-A3B on an AMD R9700 with llama.cpp: Vulkan vs HIP, Concurrent Slots, and MTP Measured in tokens/s · Quant Trading Bot Devlog</title>
 <style>
   :root { color-scheme: light dark; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
@@ -27,8 +27,8 @@
 <header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
 <p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/index.html">한국어로 보기</a></p>
 <article>
-<h1>Running a 35B MoE Model on the R9700 - I Measured the Backend, Concurrency, and MTP One at a Time</h1>
-<p class="subtitle">Vulkan won, four concurrent slots was the knee, and MTP only helped with a single request</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h1>Qwen3.6-35B-A3B on an AMD R9700 with llama.cpp: Vulkan vs HIP, Concurrent Slots, and MTP Measured in tokens/s</h1>
+<p class="subtitle">Vulkan beat HIP, four concurrent slots was the knee, and MTP only helped with a single request</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>In my <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-04_gpu-purchase-r9700/" target="_blank" rel="noopener noreferrer">R9700 purchase review</a>(new tab) I promised to write up the results separately once I had them. This post is that promise.</p>
 <p>I measured which setup was fastest when running a 35B MoE model (Qwen3.6-35B-A3B, about 3B active parameters) on the R9700. It's currently dedicated to a backup path rather than serving as a main card, so I've verified speed only and haven't yet measured the quality of its outputs.</p>
 <h2>First, what is being compared with what</h2>

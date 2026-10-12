@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Making a 27B Dense Model 2x Faster on One RTX 5090 - The Bottleneck Was the KV Cache, Not the Concurrency Setting · Quant Trading Bot Devlog</title>
+<title>Qwen3.8-27B on a Single RTX 5090 with vLLM: NVFP4 + MTP Tuning Results and the KV Cache Bottleneck · Quant Trading Bot Devlog</title>
 <style>
   :root { color-scheme: light dark; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
@@ -27,8 +27,8 @@
 <header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
 <p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-26_dense27b-5090-speed-tuning/index.html">한국어로 보기</a></p>
 <article>
-<h1>Making a 27B Dense Model 2x Faster on One RTX 5090 - The Bottleneck Was the KV Cache, Not the Concurrency Setting</h1>
-<p class="subtitle">How I cut a 100-stock nightly batch from six-plus hours to under three, and why you shouldn&#x27;t fully trust that number</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h1>Qwen3.8-27B on a Single RTX 5090 with vLLM: NVFP4 + MTP Tuning Results and the KV Cache Bottleneck</h1>
+<p class="subtitle">Measured tokens/s while going from 3 to 14 concurrent slots to MTP + 8 slots: how I cut a 100-stock nightly batch from six-plus hours to under three, and why you shouldn&#x27;t fully trust that number</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>I decided to use a 27B dense model for the nightly 100-stock analysis batch. I ran experiments on how fast it can go on a single RTX 5090, and this post summarizes where I've got to.</p>
 <p>The short version: I cut the production baseline of about 226 seconds per stock to about 102 seconds in a replay experiment. But that 102 is a single repetition on 24 stocks, so it isn't a production measurement yet. I'll write out those limits too.</p>
 <h2>What this batch actually does</h2>
