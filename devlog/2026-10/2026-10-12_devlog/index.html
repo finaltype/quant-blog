@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261012] 미국장 시세 반영 A/B 테스트, 하루에 버그 세 개를 연달아 밟았다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-12_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261012] 미국장 시세 반영 A/B 테스트, 하루에 버그 세 개를 연달아 밟았다&quot;</h1>
+<p class="subtitle">프롬프트 한 줄을 추가할지 말지 가리는 실험을 돌렸는데, 실험 자체보다 실험을 돌리는 장치에서 결함이 세 번 터져 나왔습니다.</p><h2>프롬프트 한 줄을 넣을지 말지 가리는 실험</h2>
+<p>지난 며칠 설계해 둔 실험을 오늘 저녁 실제로 돌렸습니다.</p>
+<p>AI에게 주는 입력에 미국장 시세 정보를 한 줄 더 넣었을 때, 판단이 더 나아지는지 아니면 그냥 잡음만 늘어나는지를 확인하는 A/B 테스트입니다.</p>
+<p>같은 날짜·같은 종목을 두 가지 입력 조건으로 각각 돌려서 결과를 맞춰보는 방식입니다. 효과가 있다는 근거가 나와야만 실제로 반영할지 결정하기로 해뒀습니다.</p>
+<h2>버그 1 — 교집합이 아니라 합집합으로 종목을 잡고 있었다</h2>
+<p>이 실험은 이틀치 날짜를 동결해서 쓰는데, 각 날짜마다 입력이 확정된 종목 목록이 조금씩 다릅니다.</p>
+<p>처음 돌렸을 때, 한쪽 날짜에는 없는 종목이 목록에 끼어 들어가서 그 런이 통째로 거부됐습니다.</p>
+<p>종목 목록을 만드는 로직이 "두 날짜 중 하나라도 있으면 포함"으로 짜여 있었던 게 원인이었습니다. 두 날짜 모두에 있는 종목만 쓰도록, 교집합으로 바꿔서 고쳤습니다.</p>
+<h2>버그 2 — 재시도했더니 옛 결과를 그냥 재활용했다</h2>
+<p>첫 번째 버그를 고치고 다시 돌렸는데, 이번엔 런이 수상할 정도로 빨리 끝났습니다.</p>
+<p>알고 보니 같은 식별 태그로 재시도하면서, "중간에 끊긴 작업을 이어서 하는" 기능이 작동한 게 문제였습니다. 이 기능이 예전 시도에서 남은 산출물을 그대로 재사용해버린 겁니다.</p>
+<p>AI 호출이 실제로 일어나지 않았으니 이번 반복은 이전 반복과 똑같은 입력을 받은 셈이고, 그 상태로는 비교 실험 자체가 무의미해집니다.</p>
+<p>그래서 런을 새로 착수하기 전에 같은 태그의 옛 산출물을 먼저 격리하는 장치를 추가했습니다. 재개 기능과 반복 실험이 같은 태그를 공유할 때 생기는 충돌이었습니다.</p>
+<h2>버그 3 — 모델이 표식 문구를 의역해서 중복 검사가 오탐했다</h2>
+<p>세 번째로 걸린 건 결과 검증 단계였습니다.</p>
+<p>실험은 AI 응답에 특정 표식 문구가 몇 번 나오는지로 품질을 체크하는데, 이번엔 모델이 그 문구를 다른 말로 바꿔 쓰면서 검사가 "표식이 중복됐다"고 잘못 판정했습니다.</p>
+<p>표식 자체가 모호해서 모델이 비슷한 뜻으로 바꿔 쓸 여지가 있었던 게 원인이었습니다. 표식 문구를 더 구체적으로 다시 정의해서 재검증하니 정상 판정이 나왔습니다.</p>
+<p>세 버그 모두 사전 점검(실제 실행 전 가벼운 확인)에서는 안 잡혔다는 공통점이 있습니다.</p>
+<p>처음 런의 속도가 예상보다 빠르다는 사실 자체가 이상 신호였는데, 그걸 보고 나서야 두 번째 버그를 알아챘습니다.</p>
+<h2>그 옆에서 손본 것들</h2>
+<p>같은 날, 수치형 응답을 매일 점검하는 기준선도 다시 맞췄습니다.</p>
+<p>최근 2주치 데이터를 보니 평균값이 예전보다 많이 낮아져 있었습니다. 그런데 "특정 지표가 0이면 의심"이라는 옛 규칙은 평균이 높던 시절 기준이라, 요즘 수준에서는 닷새에 한 번꼴로 가짜 경보를 울리고 있었습니다.</p>
+<p>두 지표가 동시에 0일 때만 의심하도록 규칙을 바꿨습니다.</p>
+<p>거래소 로그인 비밀번호 만료 경고도 떠서, 우선 변경을 미루는 유예 신청으로 급한 불을 끄고 그사이 못 받아온 사흘치 데이터를 다시 채워 넣었습니다.</p>
+<p>낮 동안 쓰는 점검용 실행을 막는 시간대도 손봤습니다. 저녁 시간에 장이 끝난 뒤 다음 거래일 순위를 계산하는 작업이 있는데, 점검용 실행이 그 작업과 겹치지 않도록 거부 시간대 경계를 조정했습니다.</p>
+<p>이 시간대를 아예 야간으로 옮기는 게 낫지 않겠냐는 질문도 나와서 다른 AI에게 검토를 맡겼는데, 지금 구조를 유지하는 쪽이 낫다는 결론으로 정리됐습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 겪은 세 버그는 전부 "실험 설계"가 아니라 "실험을 돌리는 장치"에서 나왔습니다.</p>
+<p>날짜를 맞춰 동결하는 로직, 재시도와 재개 기능이 만나는 지점, 검증 문구의 모호함 — 셋 다 실험이 처음이라 미처 확인 안 된 구간이었습니다.</p>
+<p>사전 점검으로는 못 잡고 실제로 돌려봐야만 드러나는 종류의 결함이었다는 점도 공통이었습니다. 그래서 작은 이상 신호(런이 너무 빠르다 같은)를 바로 캐묻는 습관이 중요하다는 걸 다시 확인한 하루였습니다.</p>
+<h2>앞으로</h2>
+<p>오늘 밤 안에 계획된 실행 분량을 다 채우지 못해서, 남은 분량은 내일 저녁 같은 시간대에 이어서 돌립니다.</p>
+<p>결과가 다 모이면 통계적으로 의미 있는 차이가 나는지 판정하고, 그다음에야 실제 반영 여부를 결정합니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
