@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Oct 13] A GPU Driver Mismatch, Resolved by a Reboot With Nobody at the Keyboard&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-13_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Oct 13] A GPU Driver Mismatch, Resolved by a Reboot With Nobody at the Keyboard&quot;</h1>
+<p class="subtitle">An automatic update left the kernel module and the userspace library on different versions — recovery, from reboot to verification, ran unattended.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The GPU suddenly disappeared</h2>
+<p>An automatic system update rolled out a new GPU driver version this evening.</p>
+<p>The problem was it only half-applied. The library on disk was updated to the new version, but the module already loaded in the kernel was still the old one from this morning's boot.</p>
+<p>With the two versions out of sync, everything that needed the GPU stalled. A comparison experiment that happened to be running at the time got stuck right there.</p>
+<p>A reboot would bring everything in line with the new version on disk. But I needed to pick a time that wouldn't collide with scheduled overnight jobs, and I had to check first whether any virtual machine or backup job would get interrupted by it.</p>
+<h2>Making the reboot itself conditional</h2>
+<p>Instead of rebooting right away, I scheduled an automatic reboot that would only fire once a set of safety conditions were met.</p>
+<p>It checked that the virtual machine was off, that backups had finished, that it was before a certain cutoff time, and that nothing else was using the GPU at that moment. If even one condition wasn't met, it would skip the reboot and just send a notification for a human to check instead.</p>
+<p>A reboot would also cut the working session I was in. So everything that needed to happen afterward — confirming the driver versions now matched, and resuming the experiment that had stalled — was scheduled in advance to run unattended.</p>
+<p>In the end, I rebooted manually ahead of the scheduled time, but the verification and resume steps queued up behind it still fired correctly, so nothing double-rebooted.</p>
+<p>Once the versions matched, I ran a GPU workload to confirm the new driver was behaving normally, and the stalled experiment picked back up.</p>
+<h2>Drawing the whole system map for the first time</h2>
+<p>The same day, I put together a single diagram laying out, for the first time, the order in which money moves through this project and what safeguards sit where.</p>
+<p>The structure had been built piece by piece over several months, so there had never been one picture showing the whole thing at once.</p>
+<p>I had an AI go through that diagram end to end and look for monitoring blind spots that had gone unnoticed.</p>
+<p>A few turned up. For one, there's a spot where a scheduled pre-computation can fail and silently fall back to a different path — with no log entry and no alert when that happens. The failure itself is rare, but there was no way to notice it when it did happen.</p>
+<p>It also surfaced that one path for pulling external market data relies on a single source with no fallback, and that backups run daily but had never actually been restored even once as a test.</p>
+<p>Rather than fixing everything on the spot, I prioritized the list and queued it up to work through one at a time.</p>
+<h2>Why this mattered</h2>
+<p>Today's GPU incident wasn't hard to diagnose, but the key part was making sure recovery didn't need anyone at the keyboard.</p>
+<p>Gating the reboot on safety conditions, and pre-scheduling the verification and resume steps — that mattered especially because the window ran right up against the night's scheduled production jobs.</p>
+<p>Drawing the full system map for the first time was in the same spirit. Pulling together structure I only knew in pieces made blind spots visible that I'd normally miss.</p>
+<p>I'll work through them one at a time from here.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
