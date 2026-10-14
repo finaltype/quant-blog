@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Oct 14] A Real-Account Manual Intervention, Patched With Eight Safeguards in One Day&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-14_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Oct 14] A Real-Account Manual Intervention, Patched With Eight Safeguards in One Day&quot;</h1>
+<p class="subtitle">A buy block on a live account left cash piling up, so I traded manually through the broker app — and closed every gap that surfaced along the way, same day.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A buy block on the live account let cash pile up</h2>
+<p>On one sleeve of my <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">live account</a>(new tab), a loss-limiting safeguard tripped and blocked buys only.</p>
+<p>It's designed as a one-day de-risking measure that lifts automatically the next day. But with no buys going out that day, cash kept climbing every time a sell settled.</p>
+<p>Cash built up to a notably high share of the account by that point. Leaving it there would have wasted the whole day, so I lifted the block myself and ran a manual trading round.</p>
+<p>Some of the orders the system placed got rejected by the turnover limit, and one failure didn't even leave a reason in the logs. I ended up filling the gap by trading directly through the broker's app, but there was no procedure for booking those manual fills into the ledger — so for a while, the broker account and the internal ledger diverged noticeably. A manual booking script later closed that gap down to nearly nothing.</p>
+<h2>Turning the manual intervention itself into something worth monitoring</h2>
+<p>I had another AI review the whole incident and surface every gap the manual intervention had exposed.</p>
+<p>Eight came back, and I implemented and shipped all of them the same day.</p>
+<p>One was a bug where the system misread a manually started round as a "scheduled automatic run." I fixed it by cross-checking timer records against service state to tell manual intervention apart correctly.</p>
+<p>I also fixed the missing-reason problem for failed orders. Now the broker's rejection reason gets logged, and a single alert goes out per round if any order fails.</p>
+<p>I added a guard that requires an explicit override flag before a manual order can go out close to market close — it's blocked by default otherwise.</p>
+<p>I also built a standard procedure for booking manually executed app trades into the ledger. It used to run through a throwaway script; now a single formal command declares the fill.</p>
+<p>The three kinds of intervention — lifting the block, running a manual round, and trading through the app — all now land in the audit log, and the daily report flags any day that had manual intervention. I rewrote the runbook to match the exact steps I actually followed.</p>
+<p>Finally, I noticed that the turnover limit meant for automated trading actually got in the way during a manual catch-up like this, so I added an option to adjust that limit specifically for manual rounds. Other safeguards — per-position limits, the kill switch — stay untouched.</p>
+<h2>Also closed out today</h2>
+<p>A multi-day experiment came back inconclusive, so I closed it out rather than letting it drag on.</p>
+<p>One account sleeve had been running in a limited pilot state for a while; this incident gave the final push to retire it officially.</p>
+<p>I tried adding email as a second alert channel alongside Telegram, but decided the existing Telegram alerts were already enough and reverted it.</p>
+<h2>Why this matters</h2>
+<p>Today's incident wasn't really about a human stepping in to unblock and patch things manually — that part is expected to happen occasionally.</p>
+<p>The real problem was that it didn't leave a proper trail. Afterward, I had to piece together why it happened, what got rejected, and how far the ledger and the real account had drifted apart.</p>
+<p>All eight safeguards built today point the same direction: make the moment a manual intervention happens automatically log and alert itself, instead of leaving that to be reconstructed later.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
