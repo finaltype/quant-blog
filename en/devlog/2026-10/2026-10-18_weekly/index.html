@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Oct 12-18] Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-18_weekly/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Oct 12-18] Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored&quot;</h1>
+<p class="subtitle">Three incidents this week each got handled by hand — then followed by work to make sure the same intervention would next time be logged and alerted on automatically, or not need a human at all.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>Three situations this week needed a hand directly on the keyboard: an experiment infrastructure bug, a GPU driver mismatch, and a live-account buy block.</p>
+<p>Different in nature, but handled the same way each time.</p>
+<p>Putting out the immediate fire got separated from adding a device so the same thing wouldn't need a person next time — or would at least leave a trail — and both got done.</p>
+<h2>Monday: ran an experiment, and the harness broke three times</h2>
+<p>An experiment designed a few days earlier finally ran early this week — an A/B test checking whether adding one line of US-market price info to the model's input made judgment better or just added noise.</p>
+<p>Three bugs hit back to back as soon as it ran. The ticker list for each frozen date was built with a union instead of an intersection, a retry mechanism silently reused stale output from an earlier attempt, and an ambiguous marker phrase let the model paraphrase it, which a duplicate-check then misread as a real duplicate.</p>
+<p>None of the three showed up in the pre-run smoke check — they only surfaced once the run was actually underway. Not brushing off a small anomaly (the first run finishing suspiciously fast) is what caught the second bug.</p>
+<p>The same day, the daily sanity-check baseline for numeric responses got recalibrated too. An old rule that hadn't accounted for the recent drop in average values had been firing a false alarm roughly once every five days.</p>
+<h2>Tuesday: a GPU driver got tangled, and the whole architecture got drawn for the first time</h2>
+<p>An overnight auto-update applied a new GPU driver only halfway — the library on disk was the new version, but the module already loaded into the kernel was still the old one. The mismatch blocked every GPU job, including an experiment in progress.</p>
+<p>A reboot would fix it, but instead of doing it immediately, conditions got attached. An automatic reboot got scheduled to fire only once VMs were off, backups were done, and no GPU job overlapped — with the post-reboot version check and resuming the stalled experiment both pre-wired to run unattended.</p>
+<p>A manual reboot actually happened before the scheduled time, but the post-reboot check-and-resume routine still ran correctly, so it landed cleanly with no duplication.</p>
+<p>The same day, the whole <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">project</a>(new tab) — how money moves through it and what guards sit where — got drawn as a single diagram for the first time. The structure had been built piece by piece over many months, with no single picture of the whole thing until now.</p>
+<p>That diagram got handed to an AI for a full review to find monitoring blind spots. It flagged a point where a failed pre-computation silently falls back to another path with no log or alert, an external price-feed path with no fallback, and daily backups that had never actually been restored once. None of it got fixed on the spot — it went onto a prioritized list instead.</p>
+<h2>Wednesday: a live-account buy block forced a manual trade, and eight gaps got closed the same day</h2>
+<p>A loss-limiting safety device tripped on one sleeve of a <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">live account</a>(new tab), blocking buys only. It's a one-day device that releases automatically the next day, but within that day, cash kept piling up every time a sell settled.</p>
+<p>With cash sitting idle at a notable level and a full day at risk of being wasted, the block got lifted manually and a round got run by hand. Some orders then got rejected for hitting a turnover limit, one of them with no reason even logged — so the rest got filled by hand through the broker's own app.</p>
+<p>There was no standard procedure for reflecting those manual fills in the ledger, so the broker account and the ledger drifted apart noticeably for a while. A manual bookkeeping script later closed most of the gap.</p>
+<p>That incident got handed to an AI for a full review asking it to find every gap exposed by the manual intervention — eight came back, and all eight got implemented the same day. A bug that misclassified a manual trigger as a scheduled run got fixed, order failure reasons now get journaled and alerted, a manual order near market close requires an explicit opt-in flag, a proper command now reflects manual broker-app fills into the ledger, and all three kinds of intervention — lifting the block, running manually, and trading through the app — now show up in the audit trail and the daily report. An option to adjust the turnover limit for manual rounds only also got added.</p>
+<h2>Saturday: a 60-day experiment got closed by the criteria written down in advance</h2>
+<p>One position-sizing approach had been running shadow-only against a live account for over two months, never promoted. When it started, criteria for adopting it, extending the watch period, or dropping it had been written down ahead of time.</p>
+<p>Recomputing 60 days of data against those criteria showed the edge over the existing approach wasn't statistically meaningful enough, and didn't clear the bar for extending the watch either. Pushing the extension case through would have needed several more years of data — so instead of letting it drag on as "ambiguous," it got closed.</p>
+<p>Price-data tail corrections also wrapped up the same day. A lingering discrepancy against exchange-confirmed figures got reconciled, and whether it had affected actual trades got checked separately. The conclusion was "there was some effect, but at a level too small to detect cleanly" — so past scores didn't get recomputed, just logged.</p>
+<p>Tuesday's GPU driver incident also got its prevention closed out this day, by excluding the affected packages from auto-updates.</p>
+<h2>The thread through the week</h2>
+<p>All three incidents this week — the experiment bug, the GPU driver, the live-account buy block — ended only once a hand went in directly.</p>
+<p>What mattered more was what came after. The GPU incident got a reboot condition and resume routine wired in so it wouldn't need a person next time, and the live-account incident got the act of manual intervention itself turned into something automatically logged and alerted.</p>
+<p>Saturday's pre-registered judgment call ran on the same logic. Ambiguous data tempts a person to keep watching a little longer — a criterion written down in advance is what overrides that temptation.</p>
+<p>What the three incidents had in common is that the defenses break at the edges, not down the middle of the logic — in the execution environment a pre-check can't reach, in the moment a human steps in, at the boundary where a judgment turns ambiguous. Next week is for watching whether the devices added this week — the eight manual-intervention guards, the GPU reboot automation, the closed shadow experiment — actually hold quietly in practice.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

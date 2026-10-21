@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/index.html">한국어로 보기</a></p>
+<article>
+<h1>A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions</h1>
+<p class="subtitle">A bug I thought I&#x27;d fixed a month earlier came back with a completely different root cause</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>My automated trading system runs trading rounds on a fixed schedule during the day. Every so often, though, I need to kick off an extra round by hand.</p>
+<p>That usually happens when a safety mechanism has blocked buying for a while, and I want to lift it and resume trading manually. This safety mechanism and the manual-intervention procedure aren't part of the stock-picking logic — they belong to the order execution/safety layer, whose full design I've written up separately in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">the live-account post</a>(new tab).</p>
+<p>The code has to tell, every time it runs, whether this invocation is a scheduled automatic round or one I started by hand. That matters because there's a lateness guard that only applies to automatic rounds.</p>
+<p>An automatic round that starts much later than its scheduled time is a sign something broke in the timing, so blocking it makes sense. But if I just kicked off a round manually right now, calling it "late" doesn't mean anything.</p>
+<h2>What happened</h2>
+<p>I lifted a buying block that a safety mechanism had triggered, then started a round manually. The system classified this run as a scheduled round and applied the lateness guard, which blocked the orders.</p>
+<p>The stated reason was that the run was "much later than its originally scheduled time." For a round I had just started by hand, "late" wasn't a meaningful judgment at all.</p>
+<h2>What I thought at first</h2>
+<p>I'd fixed this exact classification logic once before, about a month earlier, for the same symptom. Back then the cause was that a value meaning "this is a scheduled run" had been hardcoded directly into the automation unit's configuration file.</p>
+<p>Once a value like that is baked into the unit config, it follows along even when I start that unit by hand. So that time, I ripped out the hardcoding and switched to a marker the OS itself injects at invocation time — an environment variable the scheduler only attaches when a timer wakes the job.</p>
+<p>I'd even written in the docstring, "if a human starts this manually, this marker is empty." So this time I suspected the same thing — that the environment variable had somehow gotten hardcoded somewhere again — and went digging through the config files.</p>
+<p>The config files were clean. The environment variable injection matched the documentation exactly. Something else was going on.</p>
+<h2>The actual root cause</h2>
+<p>Digging further, it turned out the assumption that this environment variable was "freshly set every time" was itself wrong.</p>
+<p>This was the OS's service manager at work. When a timer wakes a job for the first time in a day, it attaches a marker to that job saying "a timer woke you up."</p>
+<p>The problem was that this marker doesn't get cleared once the job goes back to inactive. And when the same timer fires again later that day — a second or third time — the marker doesn't get overwritten either.</p>
+<p>So after the automatic round ran once that morning, when I started the same job by hand in the afternoon, the "a timer woke me" marker from the morning was still there, inherited as-is. The code looked at only that marker and concluded "this is a scheduled run that a timer fired."</p>
+<p>The symptom was identical to the incident a month earlier — a manual run misclassified as scheduled. But the root cause was completely different.</p>
+<p>The earlier incident was about who had set the marker. This one was about the marker living far longer than expected — a quirk of how the OS itself behaves. My earlier fix only changed who sets the marker; it never checked how long that marker actually stays valid.</p>
+<h2>How I fixed it</h2>
+<p>My first idea was to measure how old the marker was, and discard it as an inherited stale marker if it was too old. The OS also hands back a timestamp for "when this marker was created," so this seemed workable.</p>
+<p>Once I actually logged real values while implementing it, this approach fell apart. That "created at" timestamp was also pinned to the very first firing of the day and never updated on subsequent firings.</p>
+<p>Measuring age against that value would have misjudged the second and third rounds that day — rounds a timer had genuinely, correctly fired — as "marker is old, so this must be manual." A fix tailored to one observed case (the day's first firing) would have broken other, perfectly valid cases. I caught this with real logs before shipping it.</p>
+<p>So I changed what I was comparing. On the timer side, there was a separate value — "the time of the last firing" — that does get updated on every single firing.</p>
+<p>I compared that value against the moment the service itself actually transitioned into an active state. If the gap between the two was short, a timer had genuinely just fired. If the gap was large, the old marker had been inherited by a manual run.</p>
+<p>I also picked a direction in advance for the case where neither value could be looked up or parsed. When the classification is ambiguous, it leans toward "scheduled (lateness guard applies)." Misreading a manual round as scheduled and getting blocked once is far less dangerous than misreading an automatic round as manual and silently skipping the safety guard.</p>
+<p>Even with that fail-safe leaning toward "blocked," I kept an escape hatch. Separate from the inference logic, there's an explicit value I can set myself to declare "this is manual" or "this is scheduled" — if that's set, it overrides any inference entirely.</p>
+<p>Finally, I logged the evidence behind each verdict — the gap between firing and starting, the restart count — as a single field in the execution record. The next time this class of misjudgment shows up, that one line should point straight at the cause instead of forcing a log hunt.</p>
+<h2>Generalizing from this</h2>
+<p><strong>If you're inferring "automatic or manual" from surrounding metadata, you have to verify that metadata's lifetime yourself.</strong> Whether it's an environment variable or a timestamp, the assumption that it's "freshly set every time" needs to be checked against real behavior, not documentation or intuition.</p>
+<p>Even the first fix in this story rested on an unverified assumption — "this marker is empty when a human runs it manually" — that turned out to be false.</p>
+<p><strong>A repeat of the same symptom doesn't mean the same root cause.</strong> On the surface this was the exact same bug (manual run misclassified as scheduled), but the layer where it actually broke was completely different.</p>
+<p>Looking only at the spot I'd patched before would have wasted time.</p>
+<p><strong>Verify external systems by observation, not documentation.</strong> What an OS or framework does internally is outside a developer's control.</p>
+<p>Instead of assuming "it must work this way," logging the real values is cheaper in the end.</p>
+<p><strong>A fix tailored to one observed case can break other cases.</strong> My first fix idea was designed around a single case — the day's first firing — and nothing else.</p>
+<p>Had I shipped it as-is, it would have misjudged the second and third firings that same day. Testing against multiple real cases before shipping is what caught it.</p>
+<p><strong>Decide in advance which way to lean when a classification is ambiguous.</strong> If one kind of misjudgment is less dangerous than the other, ambiguous cases should lean toward the safer one.</p>
+<p>And because that fail-safe will sometimes block a legitimate case, you need an explicit escape hatch that overrides the inference entirely.</p>
+<p>Since this incident, every time I write code that assumes an environment variable or timestamp gets freshly set on every invocation, I make it a habit to actually go verify that assumption with my own eyes at least once.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

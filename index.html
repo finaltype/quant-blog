@@ -19,6 +19,10 @@
 <h1>Quant Trading Bot Devlog</h1>
 <h2>개발일지</h2>
 <ul>
+<li><a href="devlog/2026-10/2026-10-21_devlog/index.html">&quot;[261021] 자동매매 성과 재점검 - 지수 대비 냉정한 판정과 돈 버는 구조 설계&quot;</a> · <a href="en/devlog/2026-10/2026-10-21_devlog/index.html">EN</a><div class="sub">지수보다 못하면 그만둘 이유가 있다는 질문을 AI 자문에게 던져 판정을 받고, 이어서 실제로 비용을 넘어서는 구조 설계안까지 받았습니다.</div></li>
+<li><a href="devlog/2026-10/2026-10-19_devlog/index.html">&quot;[261019] 증권사 경로 단일화 - 모의 계좌 비교 시스템을 새로 갈아끼웠다&quot;</a> · <a href="en/devlog/2026-10/2026-10-19_devlog/index.html">EN</a><div class="sub">오래 쓰던 모의 비교 트랙을 접고 새 시뮬레이션 브로커로 하루 만에 갈아탔고, 되돌리기 경로는 남겨뒀습니다.</div></li>
+<li><a href="devlog/2026-10/2026-10-18_weekly/index.html">&quot;[261012~261018] 실험 버그, GPU 사고, 실계좌 매수 차단 — 사람 개입을 감시 대상으로 만든 한 주&quot;</a> · <a href="en/devlog/2026-10/2026-10-18_weekly/index.html">EN</a><div class="sub">이번 주 터진 사고 세 건 모두 직접 손을 대서 넘겼는데, 그 뒤로 &quot;같은 개입이 다시 생기면 자동으로 기록·경보되게&quot; 만드는 작업이 매번 따라붙었습니다.</div></li>
+<li><a href="devlog/2026-10/2026-10-17_devlog/index.html">&quot;[261017] 60일 섀도 실험 종료 — 사전등록한 기준대로 접었다&quot;</a> · <a href="en/devlog/2026-10/2026-10-17_devlog/index.html">EN</a><div class="sub">통계적으로 기준을 못 넘긴 실험을 미리 정해둔 규칙대로 종료하고, 데이터 정정과 지난 장애 재발방지도 마무리했습니다.</div></li>
 <li><a href="devlog/2026-10/2026-10-14_devlog/index.html">&quot;[261014] 실전 계좌 수동 개입, 하루 만에 안전장치 8건으로 정리&quot;</a> · <a href="en/devlog/2026-10/2026-10-14_devlog/index.html">EN</a><div class="sub">실계좌 매수 차단으로 현금이 쌓여 직접 앱으로 매매했는데, 그 과정에서 드러난 구멍을 같은 날 전부 메웠습니다.</div></li>
 <li><a href="devlog/2026-10/2026-10-13_devlog/index.html">&quot;[261013] GPU 드라이버 버전 꼬임, 사람 없이 재부팅으로 넘긴 날&quot;</a> · <a href="en/devlog/2026-10/2026-10-13_devlog/index.html">EN</a><div class="sub">자동 업데이트가 커널 모듈과 라이브러리 버전을 어긋나게 만들었는데, 재부팅부터 복구 확인까지 전부 자동화해서 넘겼습니다.</div></li>
 <li><a href="devlog/2026-10/2026-10-12_devlog/index.html">&quot;[261012] 미국장 시세 반영 A/B 테스트, 하루에 버그 세 개를 연달아 밟았다&quot;</a> · <a href="en/devlog/2026-10/2026-10-12_devlog/index.html">EN</a><div class="sub">프롬프트 한 줄을 추가할지 말지 가리는 실험을 돌렸는데, 실험 자체보다 실험을 돌리는 장치에서 결함이 세 번 터져 나왔습니다.</div></li>
@@ -115,6 +119,7 @@
 </ul>
 <h2>Postmortems</h2>
 <ul>
+<li><a href="postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/index.html">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a> · <a href="en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/index.html">EN</a><div class="sub">한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다</div></li>
 <li><a href="postmortems/2026-10-10_recovery-guidance-double-execution/index.html">에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</a> · <a href="en/postmortems/2026-10-10_recovery-guidance-double-execution/index.html">EN</a><div class="sub">해피 패스는 수백 개 테스트를 통과했는데, 진짜 치명 결함은 &quot;실패했을 때 뭘 하라&quot;는 안내 문구 안에 있었다</div></li>
 <li><a href="postmortems/2026-10-03_order-dependent-test-pollution/index.html">순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염</a> · <a href="en/postmortems/2026-10-03_order-dependent-test-pollution/index.html">EN</a><div class="sub">단독으로 돌리면 통과하고 전체 스위트에서만 실패하던 테스트, 범인은 다른 파일의 몽키패치였습니다</div></li>
 <li><a href="postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/index.html">시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까</a> · <a href="en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/index.html">EN</a><div class="sub">정렬 기준값이 통째로 사라지면, 정렬 함수는 조용히 원래 순서를 돌려준다</div></li>

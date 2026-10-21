@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261021] 자동매매 성과 재점검 - 지수 대비 냉정한 판정과 돈 버는 구조 설계&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-21_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261021] 자동매매 성과 재점검 - 지수 대비 냉정한 판정과 돈 버는 구조 설계&quot;</h1>
+<p class="subtitle">지수보다 못하면 그만둘 이유가 있다는 질문을 AI 자문에게 던져 판정을 받고, 이어서 실제로 비용을 넘어서는 구조 설계안까지 받았습니다.</p><h2>지수보다 못한 거 아니냐고 물었다</h2>
+<p>실거래 계좌 누적 수익률을 보고 있으면 기분이 안 좋아지는 구간이 있습니다.</p>
+<p>그냥 지수를 사서 들고 있는 것보다 못하면, 이 시스템에 계속 자원을 넣을 이유가 없다는 생각이 들었습니다. 그래서 오늘 AI 자문에게 봐주는 것 없이 엄격하게 판정해 달라고 요청했습니다. 정지·축소·유지 중 어느 쪽이 맞는지, 증거가 말해줄 수 있는 것과 없는 것까지 구분해서 달라고 했습니다.</p>
+<p>돌아온 답은 체감과 조금 달랐습니다.</p>
+<p>미리 정해둔 비교 기준(지수 벤치마크)으로 보면 실제로는 열위가 아니었습니다. 다만 그렇다고 "종목을 잘 고르고 있다"는 증거도 없었습니다. 손실 대부분은 그냥 전체 시장이 안 좋았던 탓이고, 선택 자체의 기여는 거의 0에 가깝다는 판정이었습니다.</p>
+<p>반면 회전율에서 나오는 비용은 확정적으로 매일 빠져나가고 있었습니다. 그래서 자문은 "지금 당장 멈출 이유는 없지만, 앞으로 판단 기준에 스킬 증거와 상대 손실 한도를 더 명확히 못박아두자"는 쪽으로 결론을 냈습니다.</p>
+<h2>"감시 말고 실제로 돈 버는 구조를 내라"</h2>
+<p>첫 판정으로는 부족했습니다.</p>
+<p>멈출지 말지를 가르는 감시 규칙 말고, 비용을 떼고도 지수를 이길 수 있는 실제 구조를 설계해보라고 다시 요청했습니다. 3개월 넘게 쌓인 기록이 있으니 이 시스템의 강점과 약점을 이제는 구분할 수 있어야 한다는 전제였습니다.</p>
+<p>이번에 나온 제안은 자산을 두 층으로 나누는 구조였습니다.</p>
+<p>자본의 큰 부분은 지수를 그대로 복제하는 쪽에 묶어서, 적어도 지수보다 못할 위험 자체를 구조적으로 없앱니다. 나머지 작은 비중만 지금까지 관측에서 실제로 신호가 보였던 영역에 집중시키자는 제안이었습니다.</p>
+<p>그리고 그 작은 비중을 키우기 전에, 몇 가지 가설을 미리 정해두고 먼저 검증부터 하자는 절차도 함께 왔습니다. 결과를 보고 나서 기준을 끼워 맞추는 일을 막기 위한 장치입니다.</p>
+<p>두 자문 결과 모두 아직 코드에는 전혀 손대지 않았고, 오너의 승인을 기다리는 상태로 남겨뒀습니다.</p>
+<h2>그 외 — 작은 꼬리 하나 닫았다</h2>
+<p>최근 야간 배치의 지표 정정 꼬리가 예상 범위 안에서 움직이는지 보던 건이 있었는데, 오늘로 사흘 연속 정상 관측이 확인돼 마무리했습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘의 핵심은 "나쁘다"는 체감과 "증거가 말해주는 것"을 분리한 것입니다.</p>
+<p>누적 수익률만 보면 안 좋아 보이지만, 그게 시장 전체가 나빴기 때문인지 시스템의 선택이 나빴기 때문인지는 다른 질문입니다. 둘을 섞어서 판단하면 엉뚱한 곳을 고치게 됩니다.</p>
+<p>또 하나는 "멈출 것인가 계속할 것인가"라는 이분법에서 벗어난 것입니다.</p>
+<p>지수 추종으로 하방을 막아두고, 검증된 영역에만 작게 베팅하는 구조라면 두 선택지 사이에 길이 하나 더 있었습니다. 다만 이 길도 아직 제안일 뿐, 실제로 돈이 되는지는 승인과 검증을 거쳐야 압니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

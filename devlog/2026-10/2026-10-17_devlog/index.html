@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261017] 60일 섀도 실험 종료 — 사전등록한 기준대로 접었다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-17_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261017] 60일 섀도 실험 종료 — 사전등록한 기준대로 접었다&quot;</h1>
+<p class="subtitle">통계적으로 기준을 못 넘긴 실험을 미리 정해둔 규칙대로 종료하고, 데이터 정정과 지난 장애 재발방지도 마무리했습니다.</p><h2>60일 돌리던 실험을 사전등록한 규칙대로 접었다</h2>
+<p>얼마 전부터 포지션 크기를 조정하는 방식 하나를 실계좌에 넣지 않고 모의로만(섀도) 60일 넘게 돌리고 있었습니다.</p>
+<p>이 실험을 시작할 때 "얼마나 차이가 나야 채택하고, 얼마나 애매하면 더 지켜보고, 어느 선 밑이면 접는다"는 기준을 미리 적어뒀습니다. 숫자가 나온 다음에 기준을 끼워맞추지 않으려는 목적이었습니다.</p>
+<p>오늘 다른 AI에게 60일치 데이터를 다시 계산시켜서 그 기준에 대조해봤습니다. 기존 방식 대비 순수익 우위가 통계적으로 의미 있다고 보기엔 부족했고, "더 지켜본다"는 연장 조건에도 못 미쳤습니다.</p>
+<p>연장 조건 쪽을 억지로 살려보려면 지금 수준의 차이로는 몇 년치 데이터가 더 필요하다는 계산도 나왔습니다. 그 정도면 "애매해서 더 본다"가 아니라 "기준을 못 넘었다"로 보는 게 맞다고 판단해 실험을 접기로 했습니다.</p>
+<p>이 실험은 원래부터 모의 트랙에만 있었기 때문에 실계좌에는 영향이 없습니다. 접은 건 문서상 지위일 뿐이고, 관측 자체는 비용이 들지 않아서 계속 지켜볼 수 있게 남겨뒀습니다.</p>
+<h2>가격 데이터 꼬리 정정을 마무리하고, 지난 드라이버 사고 재발방지도 닫았다</h2>
+<p>며칠째 붙잡고 있던 가격 데이터 보정 작업을 오늘 마무리했습니다. 거래소 확정치가 나중에 들어오면서 생기는 미세한 오차를 뒤늦게 맞춰 넣는 작업인데, 범위를 넓혀 다시 돌리고 나니 운영 중인 종목 전부가 확정치와 일치하게 됐습니다.</p>
+<p>혹시 이 오차가 실제 매매에 영향을 줬는지도 따로 점검했습니다.</p>
+<p>결론은 "영향은 있었지만 감지하기 어려운 수준"이었습니다. 그래서 과거 점수나 성과를 다시 계산하지는 않고 기록만 남기기로 했습니다.</p>
+<p>그리고 며칠 전 자동 업데이트가 그래픽카드 드라이버를 건드려서 야간 작업이 멈출 뻔했던 사고의 재발방지도 오늘 마무리했습니다. 해당 패키지들을 자동 업데이트 대상에서 뺐습니다.</p>
+<h2>그 외</h2>
+<p>TODO 문서 전체를 훑어서, 완료 처리된 줄 안에 묻혀 있던 후속 작업들을 따로 빼냈습니다. 당장 할 일은 아니지만 놓치지 않으려고 목록에 남겨뒀습니다.</p>
+<p>다른 신호 하나는 통계적으로 애매한 결과가 나와서, 일단 현재 상태를 유지하고 한 달쯤 뒤에 한 번 더 확인하기로 했습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 가장 중요했던 건 "실험을 접은 것" 자체가 아니라, 접을지 말지를 사전에 정해둔 규칙대로 판단했다는 점입니다.</p>
+<p>데이터가 애매하게 나오면 사람은 보통 더 지켜보자는 쪽으로 기울기 쉽습니다. 미리 기준을 적어두면 그 유혹을 줄일 수 있습니다.</p>
+<p>데이터 정정과 드라이버 재발방지도 같은 맥락입니다. 문제가 생긴 당시 급하게 메우고 끝내는 게 아니라, 영향 범위를 끝까지 확인하고 재발방지까지 닫는 것까지가 하나의 작업입니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>

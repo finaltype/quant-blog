@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[Oct 21] Rechecking Live Performance — A Cold-Blooded Verdict Against the Index, and a Design That Actually Makes Money&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-21_devlog/index.html">한국어로 보기</a></p>
+<article>
+<h1>&quot;[Oct 21] Rechecking Live Performance — A Cold-Blooded Verdict Against the Index, and a Design That Actually Makes Money&quot;</h1>
+<p class="subtitle">Asked an AI advisor for a hard-nosed verdict on whether live returns are beating the index, then pushed it further for a structure that actually pays off after costs.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Is it actually worse than the index?</h2>
+<p>There are stretches where looking at the live account's cumulative return just feels bad.</p>
+<p>If it's doing worse than simply buying and holding the index, there's no reason to keep pouring resources into this system. So today I asked an AI advisor to give me a verdict with no sugarcoating — spell out whether the right call is to stop, scale down, or keep going, and be explicit about what the evidence can and can't tell us.</p>
+<p>The answer that came back didn't quite match the gut feeling.</p>
+<p>Against the benchmark set in advance, the account wasn't actually behind. But that didn't mean there was any evidence it was picking stocks well, either. Most of the loss traced back to the market being bad overall — the contribution from stock selection itself was close to zero.</p>
+<p>Meanwhile, the costs from turnover were coming out for certain, every single day. So the advisor's conclusion was: no reason to stop right now, but going forward the decision criteria need to pin down evidence of real skill and a hard limit on relative drawdown more explicitly.</p>
+<h2>"Don't give me monitoring rules — give me a structure that actually makes money"</h2>
+<p>The first verdict wasn't enough.</p>
+<p>I asked again — not for rules that just decide when to stop, but for an actual structure that can beat the index after costs. The premise was that with more than three months of track record behind it, the system's strengths and weaknesses should be distinguishable by now.</p>
+<p>What came back this time split the capital into two layers.</p>
+<p>A large share of the capital gets parked in something that simply replicates the index, which structurally removes the risk of underperforming it at all. Only a small remaining slice gets concentrated into the areas where a real signal had actually shown up in past observations.</p>
+<p>And before that small slice gets any bigger, the proposal calls for pre-registering a handful of hypotheses and testing them first. It's a safeguard against fitting the criteria to the results after the fact.</p>
+<p>Neither piece of advice has touched any code yet — both are sitting there waiting on approval.</p>
+<h2>Also today — closed out a small loose end</h2>
+<p>A ticket tracking whether a nightly batch job's data-correction tail stayed within expected bounds got closed today, after three straight days of normal readings.</p>
+<h2>Why this matters</h2>
+<p>The core of today was separating "this feels bad" from "what the evidence actually says."</p>
+<p>Looking at cumulative return alone, it looks rough — but whether that's because the whole market was bad or because the system's choices were bad are two different questions. Mixing them up means fixing the wrong thing.</p>
+<p>The other piece was stepping outside the stop-or-continue binary.</p>
+<p>A structure that caps the downside with index replication and only makes small bets where there's validated signal turned out to be a third option between the two. Though it's still just a proposal — whether it actually pays off depends on approval and testing still to come.</p>
+</article>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>

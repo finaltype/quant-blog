@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&quot;[261019] 증권사 경로 단일화 - 모의 계좌 비교 시스템을 새로 갈아끼웠다&quot; · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-19_devlog/index.html">Read in English</a></p>
+<article>
+<h1>&quot;[261019] 증권사 경로 단일화 - 모의 계좌 비교 시스템을 새로 갈아끼웠다&quot;</h1>
+<p class="subtitle">오래 쓰던 모의 비교 트랙을 접고 새 시뮬레이션 브로커로 하루 만에 갈아탔고, 되돌리기 경로는 남겨뒀습니다.</p><h2>증권사 경로를 하나로 좁혔다</h2>
+<p>그동안 메인 증권사 말고 다른 증권사도 모의·백업 용도로 같이 써왔습니다.</p>
+<p>오늘 그 경로를 메인 증권사 하나로 좁히는 작업을 마무리했습니다. 개인용 알림 기능이나 수동 리밸런싱처럼 더는 쓰지 않는 보조 기능도 함께 걷어냈습니다.</p>
+<p>경로는 좁혔지만 보조 증권사의 연동 코드와 인증키는 지우지 않고 그대로 남겨뒀습니다. 되돌릴 일이 생겼을 때 바로 다시 쓸 수 있는 경로를 남겨두는 쪽을 택했습니다.</p>
+<h2>모의 계좌 비교 시스템을 새 걸로 교체했다</h2>
+<p>오늘 가장 큰 작업은 <a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">모의 계좌로 완전자동매매를 먼저 검증하는 트랙</a>(새 창)에서 쓰던 비교 축을 바꾼 것입니다.</p>
+<p>이제까지는 보조 증권사 계좌로 모의매매를 흉내 내는 방식을 썼는데, 오늘부터 직접 만든 시뮬레이션 브로커 기반 트랙으로 넘어갔습니다.</p>
+<p>설계, 구현, 테스트, 배포까지 하루 안에 끝냈습니다. 과거 데이터를 새 트랙으로 옮기는 초기화 작업도 있었는데, 정확한 금액은 기록만 남기고 실행 자체는 자동화에 맡겼습니다.</p>
+<p>전환 과정에서 실거래용 분봉·호가 수집기도 메인 증권사 경로로 바꿔 새로 설치했습니다. 다만 아직은 그림자 모드로만 돌려서 실제 매매 판단에는 영향을 주지 않습니다.</p>
+<p>이만한 전환을 걸어두고 다음 날 아침까지 사람이 지켜볼 수는 없어서, 핵심 확인 항목(동결 상태·비교 트랙 정상 기동·수집기 동작 여부 등)을 사람 없이 자동으로 점검해 결과를 알림으로 보내는 점검기를 같이 만들어뒀습니다.</p>
+<h2>그 외 — 대규모 코드리뷰와 다음 실험 예약</h2>
+<p>최근 며칠 쌓인 변경사항 전체를 AI에게 통째로 검토시켰습니다.</p>
+<p>심각한 문제는 없었고, 중요도 있는 지적은 대부분 당일 안에 고쳐서 반영했습니다.</p>
+<p>별도로 진행 중이던 서술 방식 실험(모델이 분석 결과를 글로 풀어낼 때 쓰는 표현 단위를 바꿔보는 실험) 하나는 설계와 사전등록을 끝내고, 이번 주말 야간 GPU 여유 시간에 테스트를 돌리도록 예약해뒀습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 핵심은 "경로를 단순화하면서도 되돌릴 구멍은 남겨뒀다"는 점입니다.</p>
+<p>보조 증권사 코드와 키를 지우는 선택지도 있었지만, 메인 경로에 문제가 생겼을 때 바로 돌아갈 곳이 없어지는 위험과 바꿨습니다. 단순화와 복원력 중 하나만 고를 필요는 없었습니다.</p>
+<p>교체 자체보다 중요한 건 "지켜보는 장치"를 같이 만든 것이었습니다.</p>
+<p>큰 전환일수록 다음 날 아침에 사람이 로그를 처음부터 끝까지 읽는 방식에 기대면 놓치는 게 생깁니다. 자동 점검기와 자동 코드리뷰 둘 다, 사람이 밤새 지키지 않아도 다음 날 문제를 먼저 알려주게 만드는 장치라는 점에서 같은 방향이었습니다.</p>
+</article>
+<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+</body>
+</html>
