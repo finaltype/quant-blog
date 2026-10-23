@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Oct 5-11] Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework&quot; · Quant Trading Bot Devlog</title>
+<title>Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework | Quant Bot Devlog</title>
+<meta name="description" content="The execution layer got touched almost daily — output caps, reconciliation guards, partial-fill buys, deposit/withdrawal handling — while the real di…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-11_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-11_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-11_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-11_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework">
+<meta property="og:description" content="The execution layer got touched almost daily — output caps, reconciliation guards, partial-fill buys, deposit/withdrawal handling — while the real di…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-11_weekly/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework", "description": "The execution layer got touched almost daily — output caps, reconciliation guards, partial-fill buys, deposit/withdrawal handling — while the real di…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-11_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-11"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-11_weekly/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-11_weekly/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Oct 5-11] Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework&quot;</h1>
+<h1>Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework</h1>
+<p class="post-date"><time datetime="2026-10-11">2026-10-11</time></p>
 <p class="subtitle">The execution layer got touched almost daily — output caps, reconciliation guards, partial-fill buys, deposit/withdrawal handling — while the real discipline was building a framework that locks in criteria before seeing results, instead of shipping on instinct.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>This week extended the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order-execution and safety layer</a>(new tab) one step almost every day.</p>
 <p>Underneath all of it ran a rule of a different kind: nothing got handled with "it runs, so move on" or "ship it and watch."</p>
@@ -72,6 +86,6 @@
 <p>So the week's rule pointed one direction. A failed criterion gets waved through only after the basis is confirmed, with re-measurement pinned; weakly-grounded ideas get shelved with only their resume conditions kept; and before changing something, build a way to measure it properly first.</p>
 <p>Next week watches whether the new output cap, the new reconciliation guards, partial-fill buys, and deposit/withdrawal handling hold at zero errors across live rounds. The pre-registered A/B experiment, once its remaining items are filled and the design frozen, gets one controlled comparison run and a joint decision to close it out.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

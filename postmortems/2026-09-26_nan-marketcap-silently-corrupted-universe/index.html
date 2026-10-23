@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까 · Quant Trading Bot Devlog</title>
+<title>시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까 | 퀀트봇 개발일지</title>
+<meta name="description" content="정렬 기준값이 통째로 사라지면, 정렬 함수는 조용히 원래 순서를 돌려준다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까">
+<meta property="og:description" content="정렬 기준값이 통째로 사라지면, 정렬 함수는 조용히 원래 순서를 돌려준다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까", "description": "정렬 기준값이 통째로 사라지면, 정렬 함수는 조용히 원래 순서를 돌려준다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-26"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">Read in English</a></p>
 <article>
 <h1>시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까</h1>
+<p class="post-date"><time datetime="2026-09-26">2026-09-26</time></p>
 <p class="subtitle">정렬 기준값이 통째로 사라지면, 정렬 함수는 조용히 원래 순서를 돌려준다</p><p>자동매매 시스템은 매일 아침 국내 두 시장에서 시가총액 상위 종목들을 골라 그날의 매매 후보군(유니버스)으로 삼습니다.</p>
 <p>지난주 어느 날, 이 후보군이 하루 사이에 거의 통째로 바뀌는 일이 있었습니다. 그리고 그 목록에 있어서는 안 될 종목이 하나 섞여 들어가, 실제로 매수까지 실행됐습니다.</p>
 <h2>무슨 일이 있었는지</h2>
@@ -54,6 +68,6 @@
 <p><strong>입력 검증 한 겹만으로는 부족할 때가 있습니다.</strong> 이번엔 입력 검증을 통과한 이후에도 재발했기 때문에, "결과가 갑자기 너무 많이 바뀌었다"는 걸 잡는 이상 탐지 계층을 별도로 뒀습니다. 원인을 특정하기 어려운 오염일수록, 원인이 아니라 증상(과도한 변화량)을 감시하는 장치가 더 안정적으로 작동합니다.</p>
 <p><strong>복구 순서도 검증 대상입니다.</strong> 오염된 상태를 되돌리는 도중에도, 아직 새 로직을 반영하지 않은 다른 프로세스가 낡은 경로로 다시 오염시킬 수 있습니다. 여러 프로세스가 같은 상태를 공유한다면, 복구는 "상태 되돌리기"와 "모든 소비자를 새 코드로 맞추기"를 한 세트로 묶어야 합니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

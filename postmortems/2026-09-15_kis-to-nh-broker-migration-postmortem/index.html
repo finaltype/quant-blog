@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다 · Quant Trading Bot Devlog</title>
+<title>증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다 | 퀀트봇 개발일지</title>
+<meta name="description" content="KIS(한국투자증권)에서 3주 넘게 안 나던 종류의 버그가 NH증권 Open API를 붙이자마자 연달아 터진 이유">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다">
+<meta property="og:description" content="KIS(한국투자증권)에서 3주 넘게 안 나던 종류의 버그가 NH증권 Open API를 붙이자마자 연달아 터진 이유">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다", "description": "KIS(한국투자증권)에서 3주 넘게 안 나던 종류의 버그가 NH증권 Open API를 붙이자마자 연달아 터진 이유", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-15"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">Read in English</a></p>
 <article>
 <h1>증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다</h1>
+<p class="post-date"><time datetime="2026-09-15">2026-09-15</time></p>
 <p class="subtitle">KIS(한국투자증권)에서 3주 넘게 안 나던 종류의 버그가 NH증권 Open API를 붙이자마자 연달아 터진 이유</p><p>주계좌 증권사를 KIS에서 NH로 옮기는 작업을 하고 있습니다. 그런데 신기한 일이 하나 있었습니다. 이전 몇 주 동안 KIS 쪽에서는 거의 안 나던 종류의 사고가, NH를 붙이자마자 거의 매주 하나씩 터졌습니다.</p>
 <p>같은 걸 하는 API인데 왜 한쪽에서만 이런 일이 반복될까요? 이번 글은 그 이유를 정리한 것입니다.</p>
 <h2>왜 증권사를 옮기게 됐나</h2>
@@ -68,6 +82,6 @@
 <p><strong>같은 버그 클래스는 한 곳에서 고쳤다고 끝난 게 아닙니다.</strong> 페이지네이션 문제를 한 API에서 고쳐놓고도, 같은 뒷단을 쓰는 다른 조회 API에서 똑같은 문제가 다시 나왔습니다. 한 군데서 구조적 결함을 발견했으면, "이 패턴을 쓰는 다른 곳이 또 있는가"를 그 자리에서 먼저 확인하는 편이 사고가 나고서야 하나씩 대응하는 것보다 훨씬 쌉니다.</p>
 <p><strong>돈이 걸린 경보는 방치 자체가 비용입니다.</strong> 경보가 뜬 순간의 피해는 대개 작습니다. 그 경보를 며칠 미뤄두는 사이에 오염된 값이 다른 계산에 다시 섞여 들어가면서 피해가 복리로 불어납니다. 경보에 빠르게 반응하는 습관 하나가, 사고 하나를 하루짜리로 끝내느냐 며칠짜리로 키우느냐를 갈랐습니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

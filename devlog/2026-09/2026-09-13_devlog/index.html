@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260913] 킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다&quot; · Quant Trading Bot Devlog</title>
+<title>킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다 | 퀀트봇 개발일지</title>
+<meta name="description" content="어제 급하게 지운 킬스위치 오발 증상, 오늘 사후검토에서 뿌리 원인이 월요일 실거래를 다시 막을 위험으로 남아있는 걸 발견해 수선했습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-13_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-13_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-13_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-13_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다">
+<meta property="og:description" content="어제 급하게 지운 킬스위치 오발 증상, 오늘 사후검토에서 뿌리 원인이 월요일 실거래를 다시 막을 위험으로 남아있는 걸 발견해 수선했습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-13_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다", "description": "어제 급하게 지운 킬스위치 오발 증상, 오늘 사후검토에서 뿌리 원인이 월요일 실거래를 다시 막을 위험으로 남아있는 걸 발견해 수선했습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-13_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-13"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-13_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-13_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260913] 킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다&quot;</h1>
+<h1>킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다</h1>
+<p class="post-date"><time datetime="2026-09-13">2026-09-13</time></p>
 <p class="subtitle">어제 급하게 지운 킬스위치 오발 증상, 오늘 사후검토에서 뿌리 원인이 월요일 실거래를 다시 막을 위험으로 남아있는 걸 발견해 수선했습니다.</p><h2>어제 지운 증상, 뿌리는 남아있었다</h2>
 <p>어제 실계좌 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">킬스위치</a>(새 창)가 오발했던 사고를 급하게 수습했습니다.</p>
 <p>원인이던 계좌 구분값 문제는 그때 바로 고쳤습니다. 그런데 오늘 그 사고 전체를 다시 짚어보는 사후검토를 돌려보니, 증상만 지웠을 뿐 원인 하나가 그대로 남아있었습니다.</p>
@@ -53,6 +67,6 @@
 <p>오늘은 최근에 들여온 여분 그래픽카드를 이용해서, 실제 모델을 올리지 않고도 진짜 운영체제 프로세스 두 개를 프로덕션과 똑같은 이름으로 띄워 충돌 상황을 재현했습니다.</p>
 <p>프로덕션이 실제로 쓰는 정리 로직을 그대로 호출한 결과, 프로덕션 프로세스만 정확히 종료되고 실험 프로세스는 그대로 살아있는 걸 확인했습니다. 이걸로 이 안전장치가 실제 상황에서도 제대로 동작한다는 걸 처음으로 실측 검증했습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

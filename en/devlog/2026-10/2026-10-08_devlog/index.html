@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[261008] Pulling the Deposit/Withdrawal Money-Path Forward and Shipping It Same Day&quot; · Quant Trading Bot Devlog</title>
+<title>Pulling the Deposit/Withdrawal Money-Path Forward and Shipping It Same Day | Quant Bot Devlog</title>
+<meta name="description" content="I&#x27;d parked the deposit/withdrawal bookkeeping (the &quot;money path&quot;) for a weekend window, but at the owner&#x27;s call I pulled it into today — and the criti…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-08_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-08_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-08_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-08_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pulling the Deposit/Withdrawal Money-Path Forward and Shipping It Same Day">
+<meta property="og:description" content="I&#x27;d parked the deposit/withdrawal bookkeeping (the &quot;money path&quot;) for a weekend window, but at the owner&#x27;s call I pulled it into today — and the criti…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-08_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Pulling the Deposit/Withdrawal Money-Path Forward and Shipping It Same Day", "description": "I'd parked the deposit/withdrawal bookkeeping (the \"money path\") for a weekend window, but at the owner's call I pulled it into today — and the criti…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-08_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-08"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-08_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-08_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[261008] Pulling the Deposit/Withdrawal Money-Path Forward and Shipping It Same Day&quot;</h1>
+<h1>Pulling the Deposit/Withdrawal Money-Path Forward and Shipping It Same Day</h1>
+<p class="post-date"><time datetime="2026-10-08">2026-10-08</time></p>
 <p class="subtitle">I&#x27;d parked the deposit/withdrawal bookkeeping (the &quot;money path&quot;) for a weekend window, but at the owner&#x27;s call I pulled it into today — and the critical bug the code review caught lived not in the logic but in a failure-message.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>Pulling the "money path" forward to today</h2>
 <p>The system has a path for handling real cash moving in and out of the account. When a deposit or a withdrawal happens, it has to be booked, and the performance baseline has to be re-anchored.</p>
@@ -58,6 +72,6 @@
 <p>Right after a deploy, I'll watch the records from today's remaining rounds to confirm that errors on the deposit/withdrawal bookkeeping side stay at zero. I plan to keep watching for a few more days.</p>
 <p>The review cleared the critical item, but a few suggestions I haven't adopted yet remain, and I'll work through those one at a time later.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

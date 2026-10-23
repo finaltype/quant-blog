@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Market-Cap Column Came Back All NaN - Why No Error Fired · Quant Trading Bot Devlog</title>
+<title>The Market-Cap Column Came Back All NaN - Why No Error Fired | Quant Bot Devlog</title>
+<meta name="description" content="When a sort key vanishes entirely, a sort function quietly hands back the original order instead">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Market-Cap Column Came Back All NaN - Why No Error Fired">
+<meta property="og:description" content="When a sort key vanishes entirely, a sort function quietly hands back the original order instead">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "The Market-Cap Column Came Back All NaN - Why No Error Fired", "description": "When a sort key vanishes entirely, a sort function quietly hands back the original order instead", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-26"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">한국어로 보기</a></p>
 <article>
 <h1>The Market-Cap Column Came Back All NaN - Why No Error Fired</h1>
+<p class="post-date"><time datetime="2026-09-26">2026-09-26</time></p>
 <p class="subtitle">When a sort key vanishes entirely, a sort function quietly hands back the original order instead</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>Every morning, my automated trading system pulls the largest stocks by market capitalization from two domestic markets and uses that list as the day's trading universe.</p>
 <p>One morning last week, that list changed almost entirely overnight. And one stock that had no business being on it slipped in — and actually got bought.</p>
@@ -55,6 +69,6 @@
 <p><strong>One layer of input validation isn't always enough.</strong> This recurred even after input validation was in place, which is why a separate anomaly layer — watching for "the output changed by way too much" — was added on top. When the cause of a contamination is hard to pin down in advance, monitoring the symptom (an abnormal magnitude of change) tends to be more reliable than trying to enumerate every possible cause.</p>
 <p><strong>Recovery order is itself something to verify.</strong> While rolling back a contaminated state, any other process still running on the old logic can re-contaminate it. If multiple processes share the same state, recovery has to bundle "roll back the state" together with "make sure every consumer of that state is on the new code" — not treat them as separate steps.</p>
 </article>
-<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

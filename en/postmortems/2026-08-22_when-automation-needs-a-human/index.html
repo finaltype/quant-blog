@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>3 Cases Where Fully Automated Trading Still Needed a Human · Quant Trading Bot Devlog</title>
+<title>3 Cases Where Fully Automated Trading Still Needed a Human | Quant Bot Devlog</title>
+<meta name="description" content="Making something run automatically and having it actually get handled to completion turned out to be two different sentences">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_when-automation-needs-a-human/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_when-automation-needs-a-human/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_when-automation-needs-a-human/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_when-automation-needs-a-human/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="3 Cases Where Fully Automated Trading Still Needed a Human">
+<meta property="og:description" content="Making something run automatically and having it actually get handled to completion turned out to be two different sentences">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_when-automation-needs-a-human/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "3 Cases Where Fully Automated Trading Still Needed a Human", "description": "Making something run automatically and having it actually get handled to completion turned out to be two different sentences", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_when-automation-needs-a-human/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../postmortems/2026-08-22_when-automation-needs-a-human/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_when-automation-needs-a-human/">한국어로 보기</a></p>
 <article>
 <h1>3 Cases Where Fully Automated Trading Still Needed a Human</h1>
+<p class="post-date"><time datetime="2026-08-22">2026-08-22</time></p>
 <p class="subtitle">Making something run automatically and having it actually get handled to completion turned out to be two different sentences</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>I designed this system to judge and trade on its own, without needing human approval for each decision. The <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety-guard layer</a>(new tab) was built around that same goal.</p>
 <p>Over the past month, though, there were three separate moments where I had to step in and act directly on the live account. Each one failed for a structurally different reason.</p>
@@ -58,6 +72,6 @@
 <p>When intervention was needed because of some underlying rule — an allocation rule, a time-window design — fixing that root rule instead of patching around it each time matters just as much, so the same intervention doesn't keep recurring.</p>
 <p>The goal of automation isn't removing the human entirely. It's closer to making sure that when a human does have to step in, that intervention is safe and gets recorded.</p>
 </article>
-<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Sep 11] A Do-Not-Rebuy Flag That Force-Sold the Wrong Account&#x27;s Holdings&quot; · Quant Trading Bot Devlog</title>
+<title>A Do-Not-Rebuy Flag That Force-Sold the Wrong Account&#x27;s Holdings | Quant Bot Devlog</title>
+<meta name="description" content="A flag meant to stop one account from rebuying transferred-out stock turned out to be global, and it force-sold the same stock right after another ac…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-11_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-11_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-11_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-11_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A Do-Not-Rebuy Flag That Force-Sold the Wrong Account&#x27;s Holdings">
+<meta property="og:description" content="A flag meant to stop one account from rebuying transferred-out stock turned out to be global, and it force-sold the same stock right after another ac…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-11_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "A Do-Not-Rebuy Flag That Force-Sold the Wrong Account's Holdings", "description": "A flag meant to stop one account from rebuying transferred-out stock turned out to be global, and it force-sold the same stock right after another ac…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-11_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-11"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-11_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-11_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Sep 11] A Do-Not-Rebuy Flag That Force-Sold the Wrong Account&#x27;s Holdings&quot;</h1>
+<h1>A Do-Not-Rebuy Flag That Force-Sold the Wrong Account&#x27;s Holdings</h1>
+<p class="post-date"><time datetime="2026-09-11">2026-09-11</time></p>
 <p class="subtitle">A flag meant to stop one account from rebuying transferred-out stock turned out to be global, and it force-sold the same stock right after another account received it. Also finished building a new automation tool for performance tuning.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>A do-not-rebuy flag hit the wrong account</h2>
 <p>Over the past two days I've been physically transferring stock positions from the old account into the new one.</p>
@@ -51,6 +65,6 @@
 <p>I also split permissions so that the part of the system responsible for touching the GPU is separate from the part responsible for design — structurally preventing the design side from accidentally reaching into the live production service.</p>
 <p>Today was just the build — I haven't run it once yet. The first real run is something I'll walk through myself next time.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

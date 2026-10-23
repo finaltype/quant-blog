@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260908] 증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루&quot; · Quant Trading Bot Devlog</title>
+<title>증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루 | 퀀트봇 개발일지</title>
+<meta name="description" content="증권사 API 로그인이 매번 실패하던 원인을 찾다가, 고치지 않고 배포했으면 열렸을 뻔한 정보유출 구멍까지 함께 막았고, 별도로 종목 유니버스 편입 규칙에 완충을 넣었습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-08_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-08_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-08_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-08_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루">
+<meta property="og:description" content="증권사 API 로그인이 매번 실패하던 원인을 찾다가, 고치지 않고 배포했으면 열렸을 뻔한 정보유출 구멍까지 함께 막았고, 별도로 종목 유니버스 편입 규칙에 완충을 넣었습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-08_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루", "description": "증권사 API 로그인이 매번 실패하던 원인을 찾다가, 고치지 않고 배포했으면 열렸을 뻔한 정보유출 구멍까지 함께 막았고, 별도로 종목 유니버스 편입 규칙에 완충을 넣었습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-08_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-08"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-08_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-08_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260908] 증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루&quot;</h1>
+<h1>증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루</h1>
+<p class="post-date"><time datetime="2026-09-08">2026-09-08</time></p>
 <p class="subtitle">증권사 API 로그인이 매번 실패하던 원인을 찾다가, 고치지 않고 배포했으면 열렸을 뻔한 정보유출 구멍까지 함께 막았고, 별도로 종목 유니버스 편입 규칙에 완충을 넣었습니다</p><h2>증권사 로그인이 매번 실패하던 이유</h2>
 <p>모의투자 계좌 하나에서 증권사 API 로그인이 매 라운드 같은 에러로 실패하고 있었습니다.</p>
 <p>처음에는 설정 파일 하나가 빠진 문제로 보였는데, 직접 확인해보니 실전 계좌 쪽도 똑같이 실패하고 있었습니다. 두 계좌가 같은 증상을 보인다는 건 설정 누락이 아니라 더 근본적인 문제라는 뜻이었습니다.</p>
@@ -47,6 +61,6 @@
 <h2>그 외 - 어제 저녁 장애 후속</h2>
 <p>어제 저녁 그래픽카드 인식 실패로 세 번 연속 실패했던 건은, 원인을 고친 뒤 재시작한 작업이 오늘 새벽 열 시간 넘게 걸리는 전체 종목 분석을 끝까지 정상적으로 완주하는 것으로 확인됐습니다. 재발은 없었습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

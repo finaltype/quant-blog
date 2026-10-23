@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>온도를 처음으로 진짜 바꿔봤더니 - 사전등록 규칙이 &quot;기각&quot;이라 했는데 내가 뒤집은 이유 · Quant Trading Bot Devlog</title>
+<title>온도를 처음으로 진짜 바꿔봤더니 - 사전등록 규칙이 &quot;기각&quot;이라 했는데 내가 뒤집은 이유 | 퀀트봇 개발일지</title>
+<meta name="description" content="몇 주 동안 &quot;논의했다&quot;고 믿었던 샘플링 온도 실험이 사실은 한 번도 실행된 적이 없었습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-21_temperature-ab-rule-override/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-21_temperature-ab-rule-override/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-21_temperature-ab-rule-override/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-21_temperature-ab-rule-override/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="온도를 처음으로 진짜 바꿔봤더니 - 사전등록 규칙이 &quot;기각&quot;이라 했는데 내가 뒤집은 이유">
+<meta property="og:description" content="몇 주 동안 &quot;논의했다&quot;고 믿었던 샘플링 온도 실험이 사실은 한 번도 실행된 적이 없었습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-21_temperature-ab-rule-override/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "온도를 처음으로 진짜 바꿔봤더니 - 사전등록 규칙이 \"기각\"이라 했는데 내가 뒤집은 이유", "description": "몇 주 동안 \"논의했다\"고 믿었던 샘플링 온도 실험이 사실은 한 번도 실행된 적이 없었습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-21_temperature-ab-rule-override/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-21"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-21_temperature-ab-rule-override/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-21_temperature-ab-rule-override/">Read in English</a></p>
 <article>
 <h1>온도를 처음으로 진짜 바꿔봤더니 - 사전등록 규칙이 &quot;기각&quot;이라 했는데 내가 뒤집은 이유</h1>
+<p class="post-date"><time datetime="2026-09-21">2026-09-21</time></p>
 <p class="subtitle">몇 주 동안 &quot;논의했다&quot;고 믿었던 샘플링 온도 실험이 사실은 한 번도 실행된 적이 없었습니다</p><p>프로덕션에서 돌리는 로컬 LLM의 샘플링 온도를 두고 A/B 실험을 했습니다. 결과부터 말하면, 미리 정해둔 판정 규칙은 "지금 세팅을 기각하라"고 나왔는데 저는 그 규칙을 집행하지 않았습니다.</p>
 <p>이 글은 그 판단이 옳았다는 얘기가 아닙니다. 어떤 근거로 규칙을 뒤집었고, 그 사실을 어떻게 기록해뒀는지를 남겨두려는 글입니다.</p>
 <h2>온도를 바꿔본 적이 한 번도 없었다</h2>
@@ -85,6 +99,6 @@
 <p><strong>자문 결과는 내가 준 전제에 따라 달라집니다.</strong> 결론이 바뀌었다면 무엇이 바뀌었는지, 데이터인지 전제인지를 기록해야 나중에 이 결정을 다시 볼 수 있습니다.</p>
 <p>아직 풀리지 않은 것도 남아 있습니다. Hold 쏠림이 실제로 손해인지, 정상 입력에서도 같은 쏠림이 나오는지는 다음 재검토 때 봐야 합니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

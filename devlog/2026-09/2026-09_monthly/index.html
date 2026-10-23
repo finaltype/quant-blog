@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[2609] 공유계좌 실거래 확장과 GPU 이중화, 그 사이 측정 도구 자체의 결함들&quot; · Quant Trading Bot Devlog</title>
+<title>공유계좌 실거래 확장과 GPU 이중화, 그 사이 측정 도구 자체의 결함들 | 퀀트봇 개발일지</title>
+<meta name="description" content="이번 달은 공유계좌로 실거래 범위를 넓히고 두 번째 그래픽카드로 처리 능력을 이중화하는 진전이 있었고, 그 과정에서 벤치마크·리포트·안전장치 같은 측정 도구 자체의 결함을 반복해서 찾아 고쳤습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09_monthly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09_monthly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09_monthly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09_monthly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="공유계좌 실거래 확장과 GPU 이중화, 그 사이 측정 도구 자체의 결함들">
+<meta property="og:description" content="이번 달은 공유계좌로 실거래 범위를 넓히고 두 번째 그래픽카드로 처리 능력을 이중화하는 진전이 있었고, 그 과정에서 벤치마크·리포트·안전장치 같은 측정 도구 자체의 결함을 반복해서 찾아 고쳤습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09_monthly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "공유계좌 실거래 확장과 GPU 이중화, 그 사이 측정 도구 자체의 결함들", "description": "이번 달은 공유계좌로 실거래 범위를 넓히고 두 번째 그래픽카드로 처리 능력을 이중화하는 진전이 있었고, 그 과정에서 벤치마크·리포트·안전장치 같은 측정 도구 자체의 결함을 반복해서 찾아 고쳤습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09_monthly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-01"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09_monthly/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09_monthly/">Read in English</a></p>
 <article>
-<h1>&quot;[2609] 공유계좌 실거래 확장과 GPU 이중화, 그 사이 측정 도구 자체의 결함들&quot;</h1>
+<h1>공유계좌 실거래 확장과 GPU 이중화, 그 사이 측정 도구 자체의 결함들</h1>
+<p class="post-date"><time datetime="2026-09-01">2026-09-01</time></p>
 <p class="subtitle">이번 달은 공유계좌로 실거래 범위를 넓히고 두 번째 그래픽카드로 처리 능력을 이중화하는 진전이 있었고, 그 과정에서 벤치마크·리포트·안전장치 같은 측정 도구 자체의 결함을 반복해서 찾아 고쳤습니다</p><p>9월은 원장 오염 사고로 시작해서 공유계좌 실거래 확장을 거쳐, 측정 도구 자체를 의심하는 흐름으로 이어지다가 GPU 이중화 시도와 그 실패로 마무리됐습니다.</p>
 <h2>원장이 또 오염됐고, 이번엔 증권사 데이터 자체가 원인이었다</h2>
 <p>첫째 주 초입에 모의계좌 검증 트랙의 라운드 하나가 흔적도 없이 통째로 빠지는 사고가 있었습니다.</p>
@@ -64,6 +78,6 @@
 <p>다른 하나는 그 전진을 뒷받침해야 할 측정 도구들 — 벤치마크의 시간 계산, 리포트의 샘플링 설정, 원장 재구성 로직 — 이 스스로도 틀릴 수 있다는 걸 반복해서 확인하고, 그때마다 도구 자체를 고쳐나간 과정이었습니다.</p>
 <p>사전등록한 판정 규칙을 뒤집은 것도, GPU 이중화가 첫 실전에서 무너졌다가 복구된 것도 결국 같은 맥락이었습니다. 시스템이 내놓는 답뿐 아니라, 그 답을 만드는 측정과 판정의 틀 자체를 계속 의심해야 한다는 확인이 이번 달의 결론이었습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

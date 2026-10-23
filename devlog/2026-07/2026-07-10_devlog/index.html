@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[260710] &#x27;조용히&#x27; 잘못되고 있던 것들을 하루에 세 개 잡았다 · Quant Trading Bot Devlog</title>
+<title>&#x27;조용히&#x27; 잘못되고 있던 것들을 하루에 세 개 잡았다 | 퀀트봇 개발일지</title>
+<meta name="description" content="생성이 끝없이 폭주하던 문제부터, 아침에 고친 게 저녁에 조용히 속도를 반토막 낸 것까지">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-10_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-10_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-10_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-10_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="&#x27;조용히&#x27; 잘못되고 있던 것들을 하루에 세 개 잡았다">
+<meta property="og:description" content="생성이 끝없이 폭주하던 문제부터, 아침에 고친 게 저녁에 조용히 속도를 반토막 낸 것까지">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-10_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "'조용히' 잘못되고 있던 것들을 하루에 세 개 잡았다", "description": "생성이 끝없이 폭주하던 문제부터, 아침에 고친 게 저녁에 조용히 속도를 반토막 낸 것까지", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-10_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-07-10"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-10_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-10_devlog/">Read in English</a></p>
 <article>
-<h1>[260710] &#x27;조용히&#x27; 잘못되고 있던 것들을 하루에 세 개 잡았다</h1>
+<h1>&#x27;조용히&#x27; 잘못되고 있던 것들을 하루에 세 개 잡았다</h1>
+<p class="post-date"><time datetime="2026-07-10">2026-07-10</time></p>
 <p class="subtitle">생성이 끝없이 폭주하던 문제부터, 아침에 고친 게 저녁에 조용히 속도를 반토막 낸 것까지</p><p>주말을 끼고 지난 며칠 사이 발견된 것들을 정리하고 마무리한 하루였습니다. 공통점이 하나 있었는데, 셋 다 "겉으로는 티가 안 나게 조용히" 잘못되고 있었다는 겁니다.</p>
 <h2>사고 1: 답변 하나가 끝없이 길어져서 프로덕션이 멈췄다</h2>
 <p>야간 분석 작업 중 하나가 이상하게 정체돼 있는 걸 발견했습니다. 원인을 보니, 로컬 LLM을 돌리는 서버 쪽에 "답변은 최대 이 정도 길이까지만" 하는 상한선이 빠져 있었습니다. 보통은 답변 하나가 짧게 끝나는데, 어쩌다 한 번 모델이 같은 말을 반복하며 멈추지 않고 계속 답변을 만들어내면 수만 토큰, 수십 분까지 폭주할 수 있었던 겁니다. 그동안 감시 체계가 이런 경우를 못 잡고 있었던 게 더 큰 문제였습니다 — 사람이 "왜 이렇게 느리지?" 하고 물어봐야 겨우 알아채는 구조였습니다.</p>
@@ -47,6 +61,6 @@
 <hr />
 <p>셋 다 "지금 당장 문제가 안 보인다"는 게 함정이었습니다. 폭주는 어쩌다 한 번만 터지고, 속도 저하는 시간대에 따라 왔다갔다 하고, 공휴일 문제는 그날이 오기 전엔 티가 안 납니다. 조용히 지나갈 뻔한 걸 하나씩 잡아낸 하루였습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

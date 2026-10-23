@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[260706~260712] 겉보기 지표를 의심하는 데서 시작해, 재현되는 속도로 끝난 한 주 · Quant Trading Bot Devlog</title>
+<title>겉보기 지표를 의심하는 데서 시작해, 재현되는 속도로 끝난 한 주 | 퀀트봇 개발일지</title>
+<meta name="description" content="월요일 &quot;제일 깨끗하다&quot;던 모델이 사실 아무 근거 없이 돌고 있었다는 게 화요일에 드러난 뒤로, &quot;겉보기 지표도 빨라진 속도도 그대로 믿지 말자&quot;가 이번 주를 관통했습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-12_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-12_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-12_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-12_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="겉보기 지표를 의심하는 데서 시작해, 재현되는 속도로 끝난 한 주">
+<meta property="og:description" content="월요일 &quot;제일 깨끗하다&quot;던 모델이 사실 아무 근거 없이 돌고 있었다는 게 화요일에 드러난 뒤로, &quot;겉보기 지표도 빨라진 속도도 그대로 믿지 말자&quot;가 이번 주를 관통했습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-12_weekly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "겉보기 지표를 의심하는 데서 시작해, 재현되는 속도로 끝난 한 주", "description": "월요일 \"제일 깨끗하다\"던 모델이 사실 아무 근거 없이 돌고 있었다는 게 화요일에 드러난 뒤로, \"겉보기 지표도 빨라진 속도도 그대로 믿지 말자\"가 이번 주를 관통했습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-12_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-07-12"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-12_weekly/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-12_weekly/">Read in English</a></p>
 <article>
-<h1>[260706~260712] 겉보기 지표를 의심하는 데서 시작해, 재현되는 속도로 끝난 한 주</h1>
+<h1>겉보기 지표를 의심하는 데서 시작해, 재현되는 속도로 끝난 한 주</h1>
+<p class="post-date"><time datetime="2026-07-12">2026-07-12</time></p>
 <p class="subtitle">월요일 &quot;제일 깨끗하다&quot;던 모델이 사실 아무 근거 없이 돌고 있었다는 게 화요일에 드러난 뒤로, &quot;겉보기 지표도 빨라진 속도도 그대로 믿지 말자&quot;가 이번 주를 관통했습니다</p><p>이번 주는 월요일부터 일요일까지 하나의 질문이 계속 따라다녔습니다 — <strong>"지금 내가 보고 있는 게 진짜인가?"</strong> 겉보기엔 멀쩡한 지표, 그럴듯한 도구의 답, 빨라진 속도가 매일 한 번씩 뒤집혔고, 그 의심이 결국 이번 주의 방향을 정했습니다.</p>
 <h2>전환점: "제일 깨끗한 모델"이 사실은 아무 근거 없이 돌고 있었다</h2>
 <p>주 초에는 최적화하는 기분으로 시작했습니다. 로컬 LLM 후보 몇 개를 같은 조건으로 돌려 비교했고, 실패율·등급 분포 같은 지표가 제일 깨끗한 모델을 골라뒀습니다. 표면 지표만 봐선 안 잡히는 실패(최종 판단 생성 자체가 실패해 기본값으로 떨어지는 것, 낮은 확률로 아예 다른 대상을 분석하는 것)를 이때도 두 개나 걸러냈으니, 나름 꼼꼼히 봤다고 생각했습니다.</p>
@@ -57,6 +71,6 @@
 <h2>맺으며</h2>
 <p>돌아보면 이번 주는 "새로운 걸 많이 만든 주"라기보다 <strong>"이미 있다고 믿었던 걸 하나씩 다시 의심한 주"</strong>에 가깝습니다. 제일 깨끗해 보이던 모델, 그럴듯하던 도구의 답, 어제 좋아졌다던 속도까지 — 파고들 때마다 매번 다른 게 나왔습니다. 덕분에 남은 결론은 단순합니다. 겉보기 지표와 속도를 그대로 믿지 말고, 느려도 재현되는 토대 위에서만 판단하자.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

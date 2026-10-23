@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260823] 주말 A/B 테스트 결과 판정 + 실행 파이프라인 안정성 보강&quot; · Quant Trading Bot Devlog</title>
+<title>주말 A/B 테스트 결과 판정 + 실행 파이프라인 안정성 보강 | 퀀트봇 개발일지</title>
+<meta name="description" content="성과가 더 좋아 보이는 표본에 속지 않게 결과를 정리하고, 실행 계측을 함께 보강했습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-23_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-23_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-23_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-23_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="주말 A/B 테스트 결과 판정 + 실행 파이프라인 안정성 보강">
+<meta property="og:description" content="성과가 더 좋아 보이는 표본에 속지 않게 결과를 정리하고, 실행 계측을 함께 보강했습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-23_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "주말 A/B 테스트 결과 판정 + 실행 파이프라인 안정성 보강", "description": "성과가 더 좋아 보이는 표본에 속지 않게 결과를 정리하고, 실행 계측을 함께 보강했습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-23_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-23"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-23_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-23_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260823] 주말 A/B 테스트 결과 판정 + 실행 파이프라인 안정성 보강&quot;</h1>
+<h1>주말 A/B 테스트 결과 판정 + 실행 파이프라인 안정성 보강</h1>
+<p class="post-date"><time datetime="2026-08-23">2026-08-23</time></p>
 <p class="subtitle">성과가 더 좋아 보이는 표본에 속지 않게 결과를 정리하고, 실행 계측을 함께 보강했습니다</p><h2>주말 A/B 테스트, 두 결과를 어떻게 읽을 것인가</h2>
 <p>주말에 재무 데이터 처리 방식을 바꾼 개입 하나를 A/B로 검증했습니다.</p>
 <p>전체 종목을 대상으로 한 1차 라운드에서는 오류가 뚜렷하게 줄어 채택 기준을 충족했습니다. 이어서 "이 개입이 실제로 작동하는지" 다시 확인하려고 돌린 2차 라운드(과거에 오류가 잦았던 종목만 모은 표본)에서는 개선폭이 더 커 보이는 숫자가 나왔습니다.</p>
@@ -46,6 +60,6 @@
 <hr />
 <p>오늘은 새 기능보다 판정을 신중하게 내리는 일과, 문제가 소리 없이 지나가지 않게 만드는 일에 시간을 더 썼습니다. 둘 다 화려하진 않지만, 나중에 같은 실수를 반복하지 않게 해주는 종류의 작업입니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

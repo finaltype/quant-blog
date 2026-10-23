@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Comparing GPU Performance After a Hardware Swap - Why the Verdict Flipped Twice · Quant Trading Bot Devlog</title>
+<title>Comparing GPU Performance After a Hardware Swap - Why the Verdict Flipped Twice | Quant Bot Devlog</title>
+<meta name="description" content="My first direction call was wrong, and my later purchase call was wrong too, for two completely different reasons — the root cause both times was how…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_hardware-verdict-reversal/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_hardware-verdict-reversal/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Comparing GPU Performance After a Hardware Swap - Why the Verdict Flipped Twice">
+<meta property="og:description" content="My first direction call was wrong, and my later purchase call was wrong too, for two completely different reasons — the root cause both times was how…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_hardware-verdict-reversal/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Comparing GPU Performance After a Hardware Swap - Why the Verdict Flipped Twice", "description": "My first direction call was wrong, and my later purchase call was wrong too, for two completely different reasons — the root cause both times was how…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_hardware-verdict-reversal/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../postmortems/2026-08-22_hardware-verdict-reversal/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_hardware-verdict-reversal/">한국어로 보기</a></p>
 <article>
 <h1>Comparing GPU Performance After a Hardware Swap - Why the Verdict Flipped Twice</h1>
+<p class="post-date"><time datetime="2026-08-22">2026-08-22</time></p>
 <p class="subtitle">My first direction call was wrong, and my later purchase call was wrong too, for two completely different reasons — the root cause both times was how I was reading benchmarks</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>I swapped my GPU for one from a different brand, and had to pick which execution mode to run it in.</p>
 <p>There were two candidate modes, and I judged one clearly better at first. That call turned out to be backwards, and the verdict flipped again after that. Writing this down to work out why it kept happening.</p>
@@ -56,6 +70,6 @@
 <p>Second, whenever I use a conversion formula, I check what assumptions it depends on. One condition changing — in this case, whether a speedup technique is on — was enough to break the formula, and I didn't see that until it already had.</p>
 <p>And now, if a verdict flips more than once in a short window, I treat that as a signal that it needs a third, independent review rather than a fourth pass at the same sources. When catalog comparisons stop converging, a cheap direct measurement gets to the answer faster than reading benchmarks more carefully.</p>
 </article>
-<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

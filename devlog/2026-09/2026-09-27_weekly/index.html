@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260922~260927] 안전장치를 겹겹이 쌓고, 전제를 다시 검증한 한 주&quot; · Quant Trading Bot Devlog</title>
+<title>안전장치를 겹겹이 쌓고, 전제를 다시 검증한 한 주 | 퀀트봇 개발일지</title>
+<meta name="description" content="서버 퇴화 감지부터 GPU 죽은 슬롯 감지까지 안전장치를 여러 겹 쌓았고, 그 사이사이 &quot;고친 게 정말 원했던 걸 이뤘나&quot;를 다시 검증해 틀린 전제를 찾아냈습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-27_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="안전장치를 겹겹이 쌓고, 전제를 다시 검증한 한 주">
+<meta property="og:description" content="서버 퇴화 감지부터 GPU 죽은 슬롯 감지까지 안전장치를 여러 겹 쌓았고, 그 사이사이 &quot;고친 게 정말 원했던 걸 이뤘나&quot;를 다시 검증해 틀린 전제를 찾아냈습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_weekly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "안전장치를 겹겹이 쌓고, 전제를 다시 검증한 한 주", "description": "서버 퇴화 감지부터 GPU 죽은 슬롯 감지까지 안전장치를 여러 겹 쌓았고, 그 사이사이 \"고친 게 정말 원했던 걸 이뤘나\"를 다시 검증해 틀린 전제를 찾아냈습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-27"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-27_weekly/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-27_weekly/">Read in English</a></p>
 <article>
-<h1>&quot;[260922~260927] 안전장치를 겹겹이 쌓고, 전제를 다시 검증한 한 주&quot;</h1>
+<h1>안전장치를 겹겹이 쌓고, 전제를 다시 검증한 한 주</h1>
+<p class="post-date"><time datetime="2026-09-27">2026-09-27</time></p>
 <p class="subtitle">서버 퇴화 감지부터 GPU 죽은 슬롯 감지까지 안전장치를 여러 겹 쌓았고, 그 사이사이 &quot;고친 게 정말 원했던 걸 이뤘나&quot;를 다시 검증해 틀린 전제를 찾아냈습니다.</p><p>이번 주는 두 가지 흐름이 번갈아 나타났습니다.</p>
 <p>하나는 안전장치를 계속 새로 쌓는 흐름이었습니다. 서버 퇴화 감지, GPU 카드별 잠금, 죽은 슬롯 감지기, 테스트 격리까지 여러 층이 이번 주에 새로 생겼습니다.</p>
 <p>다른 하나는 "고쳤다"와 "원했던 걸 이뤘다"가 다르다는 걸 반복해서 확인하는 흐름이었습니다. 코드 수정과 테스트 통과까지 끝내고도, 한 번 더 추적해보니 전제가 틀려 있던 경우가 여러 번 나왔습니다.</p>
@@ -64,6 +78,6 @@
 <p>이번 주를 관통한 건 "그 자리에서 고치기보다 원인과 전제를 다시 확인한다"는 순서였습니다. 야간 실행 시각 조정이 목적을 달성 못 했다는 걸 알아챈 것도, 주문 판별 로직의 전제가 틀렸다는 걸 걷어낸 것도, GPU 병목의 진짜 원인을 슬롯 수가 아니라 가중치 로딩에서 찾아낸 것도 같은 패턴입니다.</p>
 <p>동시에 감지-격리-복구, 카드별 잠금, 죽은 슬롯 감지, 테스트 격리처럼 사람이 매번 지켜보지 않아도 되게 하는 안전장치가 이번 주 곳곳에 새로 생겼습니다. 다음 주엔 뉴스 수집 구조 변경의 실전 배포, 죽은 슬롯 감지기에 재기동 조치 연결, 커널 프로파일링 결과 확인이 이어질 예정입니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

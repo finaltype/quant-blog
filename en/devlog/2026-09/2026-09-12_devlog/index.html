@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Sep 12] A False Kill-Switch Trip From a Missing Account Tag&quot; · Quant Trading Bot Devlog</title>
+<title>A False Kill-Switch Trip From a Missing Account Tag | Quant Bot Devlog</title>
+<meta name="description" content="An information-only simulation tick shared the same kill-switch namespace as the live account, and a fake loss computed from an unrelated account&#x27;s b…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-12_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-12_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-12_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-12_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A False Kill-Switch Trip From a Missing Account Tag">
+<meta property="og:description" content="An information-only simulation tick shared the same kill-switch namespace as the live account, and a fake loss computed from an unrelated account&#x27;s b…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-12_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "A False Kill-Switch Trip From a Missing Account Tag", "description": "An information-only simulation tick shared the same kill-switch namespace as the live account, and a fake loss computed from an unrelated account's b…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-12_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-12"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-12_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-12_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Sep 12] A False Kill-Switch Trip From a Missing Account Tag&quot;</h1>
+<h1>A False Kill-Switch Trip From a Missing Account Tag</h1>
+<p class="post-date"><time datetime="2026-09-12">2026-09-12</time></p>
 <p class="subtitle">An information-only simulation tick shared the same kill-switch namespace as the live account, and a fake loss computed from an unrelated account&#x27;s balance nearly froze Monday&#x27;s live trading.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>An unrelated account's balance tripped the live kill switch</h2>
 <p>This morning, the live account's <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">kill switch</a>(new tab) fired for no real reason.</p>
@@ -49,6 +63,6 @@
 <p>There was no live-trading risk today since markets were closed, but the same failure would likely repeat on the next overnight run, so I did a controlled reboot right away to fix it.</p>
 <p>After the reboot, I confirmed the driver versions matched again and the relevant services came back up cleanly. I also found one minor side feature — a login-time GPU LED shutoff — stuck in a failed state, but it's not urgent, so I left it for later.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

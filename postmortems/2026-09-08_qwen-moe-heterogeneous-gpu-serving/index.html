@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델 · Quant Trading Bot Devlog</title>
+<title>Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델 | 퀀트봇 개발일지</title>
+<meta name="description" content="양자화 버전을 세 번 바꾸고 자문을 열여섯 차례 거친 끝에, 프로덕션에 올린 로컬 모델 교체기">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델">
+<meta property="og:description" content="양자화 버전을 세 번 바꾸고 자문을 열여섯 차례 거친 끝에, 프로덕션에 올린 로컬 모델 교체기">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델", "description": "양자화 버전을 세 번 바꾸고 자문을 열여섯 차례 거친 끝에, 프로덕션에 올린 로컬 모델 교체기", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-08"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">Read in English</a></p>
 <article>
 <h1>Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델</h1>
+<p class="post-date"><time datetime="2026-09-08">2026-09-08</time></p>
 <p class="subtitle">양자화 버전을 세 번 바꾸고 자문을 열여섯 차례 거친 끝에, 프로덕션에 올린 로컬 모델 교체기</p><p>퀀트봇의 AI 추천 파이프라인에는 <a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">리서치 담당 모델</a>(새 창)이 있습니다. 뉴스·공시를 사람처럼 읽고 근거를 세워 리포트를 쓰는 역할입니다.</p>
 <p>이번에 그 자리에 새 오픈소스 모델(Qwen3.8-Flash-Next, 전체 파라미터 약 1,250억 개 중 실제로 켜지는 건 약 60억 개뿐인 MoE 구조, Qwen 차기 세대 프리뷰격 모델)을 후보로 올렸습니다. 이번 글은 평소보다 훨씬 구체적으로 씁니다. 판단 로직이 아니라 순수 인프라(어떤 그래픽카드로 어떻게 돌렸는지, 양자화 버전을 정확히 뭘 골랐는지)라서 굳이 감출 이유가 없다고 판단했고, 마침 로컬 LLM을 직접 돌려보는 분들껜 참고가 될 것 같아 과정을 가감없이 남깁니다.</p>
 <p>글이 좀 깁니다. 먼저 결론만 요약하면, 최종적으로 프로덕션에 채택한 건 <strong>Q3_K_XL 양자화</strong>였고, 오늘 아침(09-08 07:18) 처음으로 100종목을 끊기지 않고 완주한 실제 프로덕션 런의 서버 로그로 환산한 속도는 <strong>프리필 약 610 tok/s, 디코드 약 124 tok/s(4개 슬롯 합산, 슬롯당 약 31 tok/s)</strong>였습니다.</p>
@@ -232,6 +246,6 @@
 <p>전에 <a href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/" target="_blank" rel="noopener noreferrer">그래픽카드를 교체하면서 벤치마크를 잘못 읽어 판정이 두 번 뒤집혔던 일</a>(새 창)을 정리한 적이 있는데, 이번에도 같은 교훈이 반복됐습니다. 카탈로그 숫자나 단발성 벤치마크보다, 실제로 쓸 조건 그대로 재현해서 얻은 실측값이 항상 더 믿을 만했습니다.</p>
 <p>이 글은 두 카드를 하나의 서버에 묶어 큰 모델을 돌린 기록이었습니다. 그 뒤 R9700 한 장으로 35B MoE만 따로 돌리는 백업 경로를 튜닝한 과정(백엔드 비교, 동시 슬롯 4개가 무릎이었다는 것 등)은 <a href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-26_moe35b-r9700-speed-tuning/" target="_blank" rel="noopener noreferrer">별도 글</a>(새 창)에 있습니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

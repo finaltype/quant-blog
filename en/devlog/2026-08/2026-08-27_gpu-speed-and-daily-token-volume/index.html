@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Local LLM Speed by GPU Generation, and Our Production&#x27;s Daily Token Volume · Quant Trading Bot Devlog</title>
+<title>Local LLM Speed by GPU Generation, and Our Production&#x27;s Daily Token Volume | Quant Bot Devlog</title>
+<meta name="description" content="Model names, serving configs, and full prefill/decode measurements included (reorganized as of 2026-09-26)">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Local LLM Speed by GPU Generation, and Our Production&#x27;s Daily Token Volume">
+<meta property="og:description" content="Model names, serving configs, and full prefill/decode measurements included (reorganized as of 2026-09-26)">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Local LLM Speed by GPU Generation, and Our Production's Daily Token Volume", "description": "Model names, serving configs, and full prefill/decode measurements included (reorganized as of 2026-09-26)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-27"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-27_gpu-speed-and-daily-token-volume/">한국어로 보기</a></p>
 <article>
 <h1>Local LLM Speed by GPU Generation, and Our Production&#x27;s Daily Token Volume</h1>
+<p class="post-date"><time datetime="2026-08-27">2026-08-27</time></p>
 <p class="subtitle">Model names, serving configs, and full prefill/decode measurements included (reorganized as of 2026-09-26)</p><p>In <a href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-27_gpu-purchase-rtx5090/" target="_blank" rel="noopener noreferrer">my last post</a>(new tab) I talked about switching to the RTX 5090. This post picks up from there. I'm laying out exactly which model I run and how it's configured, the prefill/decode speeds per card, and how the model-adoption decision played out.</p>
 <p>I first wrote this post on August 27, 2026 and have appended to it twice since. On September 8 I added measurements from the mixed-vendor setup that paired the 5090 with an R9700, and on September 26 I folded in the results of tuning the 27B dense on the 5090 alone and the 35B MoE on the R9700 alone, and rewrote the whole post as one continuous piece. Any sentence without an explicit date is <strong>as of September 26, 2026</strong>.</p>
 <p>Judgments from the first version that later turned out to be wrong are left in place, not deleted. Things like converting bandwidth ratios into speed, or measuring speed by averaging per-call rates. I think where and how I went wrong is a more useful lesson than the numbers themselves.</p>
@@ -346,6 +360,6 @@
 <p>The first production night on the 5090's 27B dense (MTP + 8 slots) is scheduled for September 29. That's when I'll measure the real 100-stock time and see how far it lands from the replay experiment's 2.83 hours.</p>
 <p>Starting September 28, the R9700 backup path will grade the same 100 stocks alongside the main path every night, accumulating forward RankIC for both paths. So far there are zero forward RankIC measurements for any combination, and being fast and being a trustworthy signal are separate questions. Once the verdict is in, I'll write it up as a separate post.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

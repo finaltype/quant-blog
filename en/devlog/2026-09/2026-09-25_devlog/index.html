@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Sep 25] Making News Collection Real-Time and Shipping a Standby-GPU Safeguard&quot; · Quant Trading Bot Devlog</title>
+<title>Making News Collection Real-Time and Shipping a Standby-GPU Safeguard | Quant Bot Devlog</title>
+<meta name="description" content="A structural change to news collection solved what a simple time shift couldn&#x27;t, and a safeguard for running the standby GPU full-time shipped to pro…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-25_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-25_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-25_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-25_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Making News Collection Real-Time and Shipping a Standby-GPU Safeguard">
+<meta property="og:description" content="A structural change to news collection solved what a simple time shift couldn&#x27;t, and a safeguard for running the standby GPU full-time shipped to pro…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-25_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Making News Collection Real-Time and Shipping a Standby-GPU Safeguard", "description": "A structural change to news collection solved what a simple time shift couldn't, and a safeguard for running the standby GPU full-time shipped to pro…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-25_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-25"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-25_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-25_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Sep 25] Making News Collection Real-Time and Shipping a Standby-GPU Safeguard&quot;</h1>
+<h1>Making News Collection Real-Time and Shipping a Standby-GPU Safeguard</h1>
+<p class="post-date"><time datetime="2026-09-25">2026-09-25</time></p>
 <p class="subtitle">A structural change to news collection solved what a simple time shift couldn&#x27;t, and a safeguard for running the standby GPU full-time shipped to production today.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>Solving yesterday's leftover problem</h2>
 <p>Yesterday I shifted the nightly run time to try to get holiday news into the next analysis, but it didn't work — the news-gathering logic had its collection window pinned to the last trading date from the start, so the time shift alone couldn't fix it.</p>
@@ -52,6 +66,6 @@
 <p>Today was about actually finishing the two loose ends from yesterday — the news real-time change and the standby-card safeguard.</p>
 <p>Both are freshly deployed, though, so I'll need to watch them over the next week or two to confirm they hold up in production. The US after-hours signal was another case of validating first and deciding to wait.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

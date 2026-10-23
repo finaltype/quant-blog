@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지 · Quant Trading Bot Devlog</title>
+<title>완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지 | 퀀트봇 개발일지</title>
+<meta name="description" content="자동으로 돌아가게 만든 것과, 자동으로 끝까지 처리되는 것은 다른 문장이었습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_when-automation-needs-a-human/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_when-automation-needs-a-human/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_when-automation-needs-a-human/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_when-automation-needs-a-human/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지">
+<meta property="og:description" content="자동으로 돌아가게 만든 것과, 자동으로 끝까지 처리되는 것은 다른 문장이었습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_when-automation-needs-a-human/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지", "description": "자동으로 돌아가게 만든 것과, 자동으로 끝까지 처리되는 것은 다른 문장이었습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-08-22_when-automation-needs-a-human/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_when-automation-needs-a-human/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_when-automation-needs-a-human/">Read in English</a></p>
 <article>
 <h1>완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지</h1>
+<p class="post-date"><time datetime="2026-08-22">2026-08-22</time></p>
 <p class="subtitle">자동으로 돌아가게 만든 것과, 자동으로 끝까지 처리되는 것은 다른 문장이었습니다</p><p>이 시스템은 사람 승인 없이 스스로 판단하고 매매하는 걸 목표로 설계했습니다. <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실계좌 주문 실행과 안전장치</a>(새 창)도 그 목표에 맞춰 만들었습니다.</p>
 <p>그런데 최근 한 달 사이 실계좌에서 세 번, 사람이 직접 개입해야 하는 상황이 있었습니다. 세 사례 모두 "왜 자동 로직이 이 상황을 못 넘겼는지"의 구조가 서로 달랐습니다.</p>
 <h2>1. 배분 규칙이 특정 주문을 구조적으로 굶겼다</h2>
@@ -57,6 +71,6 @@
 <p>개입이 필요했던 이유(배분 규칙, 시간창 설계 등)는 그때그때 땜질하지 말고 근본 규칙을 고쳐서, 같은 개입이 반복되지 않게 하는 것도 함께 챙길 부분입니다.</p>
 <p>자동화의 목표는 사람을 완전히 빼는 게 아니라, 사람이 개입해야 할 때 그 개입이 안전하고 기록되게 만드는 것에 더 가까운 것 같습니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

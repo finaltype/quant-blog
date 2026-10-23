@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다 · Quant Trading Bot Devlog</title>
+<title>수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다 | 퀀트봇 개발일지</title>
+<meta name="description" content="한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다">
+<meta property="og:description" content="한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다", "description": "한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-17"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">Read in English</a></p>
 <article>
 <h1>수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</h1>
+<p class="post-date"><time datetime="2026-10-17">2026-10-17</time></p>
 <p class="subtitle">한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다</p><p>제 자동매매 시스템은 하루 중 정해진 시각에 자동으로 매매 라운드를 돕니다. 그런데 종종 제가 직접 라운드를 한 번 더 돌려야 하는 상황이 생깁니다.</p>
 <p>안전장치가 발동해서 한동안 매수가 막혀 있다가, 그 장치를 풀고 수동으로 거래를 재개해야 하는 경우가 그렇습니다. 이 안전장치와 수동 개입 절차는 종목을 고르는 판단 로직이 아니라 주문 실행·안전장치 계층에 속합니다. 전체 설계는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실전 계좌 적용편</a>(새 창)에 정리해 뒀습니다.</p>
 <p>코드는 "이번 실행이 예약된 자동 라운드인지, 제가 수동으로 돌린 건지"를 매번 구분해야 합니다. 자동 라운드에만 적용되는 지각 가드가 있기 때문입니다.</p>
@@ -69,6 +83,6 @@
 <p>그리고 그 fail-safe 때문에 막히는 정당한 경우를 위해, 추론을 무시하고 바로 꽂을 수 있는 명시적 탈출구도 같이 만들어야 합니다.</p>
 <p>이 사건 이후로는 "환경변수나 타임스탬프가 매번 새로 세팅되는가"를 가정하는 코드를 새로 짤 때마다, 그 가정을 실제로 한 번은 눈으로 확인하고 넘어가는 습관이 생겼습니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260914~260920] 측정·검증 도구 자체의 결함을 연달아 찾은 한 주&quot; · Quant Trading Bot Devlog</title>
+<title>측정·검증 도구 자체의 결함을 연달아 찾은 한 주 | 퀀트봇 개발일지</title>
+<meta name="description" content="유니버스 오염 사고로 시작해, 랭킹 로직·AI 샘플링 설정·벤치마크 도구까지 검증 자체가 잘못돼 있던 지점을 하나씩 찾아 고쳤습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-20_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-20_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-20_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-20_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="측정·검증 도구 자체의 결함을 연달아 찾은 한 주">
+<meta property="og:description" content="유니버스 오염 사고로 시작해, 랭킹 로직·AI 샘플링 설정·벤치마크 도구까지 검증 자체가 잘못돼 있던 지점을 하나씩 찾아 고쳤습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-20_weekly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "측정·검증 도구 자체의 결함을 연달아 찾은 한 주", "description": "유니버스 오염 사고로 시작해, 랭킹 로직·AI 샘플링 설정·벤치마크 도구까지 검증 자체가 잘못돼 있던 지점을 하나씩 찾아 고쳤습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-20_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-20"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-20_weekly/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-20_weekly/">Read in English</a></p>
 <article>
-<h1>&quot;[260914~260920] 측정·검증 도구 자체의 결함을 연달아 찾은 한 주&quot;</h1>
+<h1>측정·검증 도구 자체의 결함을 연달아 찾은 한 주</h1>
+<p class="post-date"><time datetime="2026-09-20">2026-09-20</time></p>
 <p class="subtitle">유니버스 오염 사고로 시작해, 랭킹 로직·AI 샘플링 설정·벤치마크 도구까지 검증 자체가 잘못돼 있던 지점을 하나씩 찾아 고쳤습니다.</p><p>이번 주는 월요일 데이터 오염 사고로 시작해서, 이후로도 계속 "만든 도구가 실제로 제대로 재고 있는가"를 의심하고 확인하는 흐름으로 이어졌습니다.</p>
 <p>랭킹 로직, AI 모델 설정, 새로 만든 벤치마크 도구까지 차례로 같은 유형의 문제가 드러났습니다. 겉으로는 그럴듯한 숫자가 나오고 있었지만, 근거를 한 겹 더 파보면 검증 자체가 무효였던 경우가 많았습니다.</p>
 <h2>월요일, 유니버스가 통째로 오염됐다</h2>
@@ -61,6 +75,6 @@
 <p>한 주를 돌아보면 새 기능을 추가하기보다는, 이미 돌고 있던 도구들이 실제로 맞게 재고 있는지를 계속 되물은 한 주였습니다. 유니버스 오염, 랭킹 로직, 모델 설정, 벤치마크 회계, 시간제한까지 — 하나를 고치면 그 아래에서 같은 유형의 문제가 또 나왔습니다.</p>
 <p>다행히 매번 "그 숫자가 어디서 나온 거야"라는 질문에서 막힌 지점을 되짚어 찾아냈습니다. 다음 주엔 온도 설정 최종 결정과, 새로 정비된 벤치마크 도구가 실제로 안정적으로 도는지부터 확인하게 될 것 같습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

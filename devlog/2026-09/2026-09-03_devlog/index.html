@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260903] 야간 크래시 하나가 부른 하루 종일의 뒤처리&quot; · Quant Trading Bot Devlog</title>
+<title>야간 크래시 하나가 부른 하루 종일의 뒤처리 | 퀀트봇 개발일지</title>
+<meta name="description" content="어젯밤 배선 실수로 밤새 못 돈 배치를 아침에 발견해 복구하다가, 우회 경로의 허점과 이틀째 재발한 테스트 오염 버그까지 같이 잡았습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-03_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-03_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-03_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-03_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="야간 크래시 하나가 부른 하루 종일의 뒤처리">
+<meta property="og:description" content="어젯밤 배선 실수로 밤새 못 돈 배치를 아침에 발견해 복구하다가, 우회 경로의 허점과 이틀째 재발한 테스트 오염 버그까지 같이 잡았습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-03_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "야간 크래시 하나가 부른 하루 종일의 뒤처리", "description": "어젯밤 배선 실수로 밤새 못 돈 배치를 아침에 발견해 복구하다가, 우회 경로의 허점과 이틀째 재발한 테스트 오염 버그까지 같이 잡았습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-03_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-03"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-03_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-03_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260903] 야간 크래시 하나가 부른 하루 종일의 뒤처리&quot;</h1>
+<h1>야간 크래시 하나가 부른 하루 종일의 뒤처리</h1>
+<p class="post-date"><time datetime="2026-09-03">2026-09-03</time></p>
 <p class="subtitle">어젯밤 배선 실수로 밤새 못 돈 배치를 아침에 발견해 복구하다가, 우회 경로의 허점과 이틀째 재발한 테스트 오염 버그까지 같이 잡았습니다</p><h2>밤새 열 시간 동안 한 번도 못 끝난 배치</h2>
 <p>어제 낮에 장중 관측 파이프라인을 새로 배선하면서, 모델을 고르는 함수 안의 코드 한 줄을 실수로 조건문 안으로 옮겨버렸습니다.</p>
 <p>문제는 그 코드가 매일 밤 정상적으로 도는 프로덕션 배치에서도 똑같이 쓰인다는 점이었습니다. 조건이 안 걸리는 이 경로에서는 변수가 정의조차 안 된 채로 넘어가 버그가 터졌습니다.</p>
@@ -56,6 +70,6 @@
 <p>테스트 코드도 그 함수를 제대로 격리하도록 고쳤습니다. 그리고 이런 사고가 반복되지 않도록, 운영 중 새로 생기는 데이터베이스 파일은 테스트 격리 대상 목록에 곧바로 등록하는 규칙도 다시 한번 챙겼습니다.</p>
 <p>같은 하루에 우연히 전체 테스트를 장중에 돌렸다가 나온 다수의 실패 보고도 살펴봤는데, 이건 진짜 버그가 아니라 장중에 프로덕션이 실제로 쓰고 있는 파일을 테스트가 오탐한 것으로 확인됐습니다. 전체 회귀 테스트는 장이 열려 있는 시간에는 돌리지 않기로 다시 정리했습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

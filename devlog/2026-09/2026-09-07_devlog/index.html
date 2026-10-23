@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260907] VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루&quot; · Quant Trading Bot Devlog</title>
+<title>VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루 | 퀀트봇 개발일지</title>
+<meta name="description" content="낮에 적용한 GPU 메모리 정리 패치가 저녁 프로덕션 3연속 실패로 돌아왔고, 별도로 증권사 API 페이지네이션 버그도 하나 잡았습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-07_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-07_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-07_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-07_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루">
+<meta property="og:description" content="낮에 적용한 GPU 메모리 정리 패치가 저녁 프로덕션 3연속 실패로 돌아왔고, 별도로 증권사 API 페이지네이션 버그도 하나 잡았습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-07_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루", "description": "낮에 적용한 GPU 메모리 정리 패치가 저녁 프로덕션 3연속 실패로 돌아왔고, 별도로 증권사 API 페이지네이션 버그도 하나 잡았습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-07_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-07"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-07_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-07_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260907] VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루&quot;</h1>
+<h1>VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루</h1>
+<p class="post-date"><time datetime="2026-09-07">2026-09-07</time></p>
 <p class="subtitle">낮에 적용한 GPU 메모리 정리 패치가 저녁 프로덕션 3연속 실패로 돌아왔고, 별도로 증권사 API 페이지네이션 버그도 하나 잡았습니다</p><h2>VRAM 정리 패치가 낳은 저녁 장애</h2>
 <p>낮에는 신호모델 하나가 그래픽카드 메모리를 계속 조금씩 붙잡고 있는 문제를 정리했습니다.</p>
 <p>이 모델은 원래도 계산량이 작아 그래픽카드를 꼭 써야 할 이유가 없었는데, 종료 후에도 메모리 일부를 반납하지 않고 남기고 있었습니다. 코드 레벨에서 이 모델을 아예 CPU로만 돌게 고정하고, 그래도 남는 잔여분은 실행 단위 설정에 "이 그래픽카드는 아예 안 보이게" 하는 값을 추가해서 완전히 비웠습니다.</p>
@@ -46,6 +60,6 @@
 <p>들여다보니 이 서버가 실제로는 80초 안팎이면 이미 정상 기동을 마치는데, 기동 확인 코드가 응답 형식을 잘못 가정하고 있어서 매번 정상 응답도 실패로 잘못 읽고 있었습니다. 그 결과 실제로는 멀쩡한 서버를 앞에 두고도 매번 최대 대기시간을 다 채운 뒤에야 넘어가고 있었던 것으로 보입니다.</p>
 <p>확인 방식을 다른 서버들과 같은 기준으로 맞춘 뒤로는 기동 확인이 정상 속도로 통과하는 것을 확인했습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

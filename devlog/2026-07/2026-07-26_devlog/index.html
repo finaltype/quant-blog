@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[260726] 시스템 자산의 백업 체계 구축 · Quant Trading Bot Devlog</title>
+<title>시스템 자산의 백업 체계 구축 | 퀀트봇 개발일지</title>
+<meta name="description" content="시작 이후 쌓아온 데이터가 단일 디스크 위에 있는 치명적 위험을 발견하고, 오프사이트 백업과 버전관계를 완전히 새로 꾸몄습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-26_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-26_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-26_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-26_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="시스템 자산의 백업 체계 구축">
+<meta property="og:description" content="시작 이후 쌓아온 데이터가 단일 디스크 위에 있는 치명적 위험을 발견하고, 오프사이트 백업과 버전관계를 완전히 새로 꾸몄습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-26_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "시스템 자산의 백업 체계 구축", "description": "시작 이후 쌓아온 데이터가 단일 디스크 위에 있는 치명적 위험을 발견하고, 오프사이트 백업과 버전관계를 완전히 새로 꾸몄습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-26_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-07-26"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-26_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-26_devlog/">Read in English</a></p>
 <article>
-<h1>[260726] 시스템 자산의 백업 체계 구축</h1>
+<h1>시스템 자산의 백업 체계 구축</h1>
+<p class="post-date"><time datetime="2026-07-26">2026-07-26</time></p>
 <p class="subtitle">시작 이후 쌓아온 데이터가 단일 디스크 위에 있는 치명적 위험을 발견하고, 오프사이트 백업과 버전관계를 완전히 새로 꾸몄습니다</p><h2>쌓아둔 자산이 백업 없이 잠들었다는 사실</h2>
 <p>오늘은 새 기능 개발이 아닌, <strong>기반 시설 구축</strong>에 모든 에너지를 쏟았습니다. 최근 진행된 시스템 성찰에서 다음과 같은 치명적 문제를 발견했습니다:</p>
 <p>프로젝트 시작 이후 쌓아온 모든 데이터(무사고 원장, 시장 기록, 집행 로그, 분석 아카이브)가 <strong>백업 한 건 없이 버전관리조차 없이 단일 디스크</strong> 위에 있다는 사실이 드러났습니다.</p>
@@ -54,6 +68,6 @@
 <p>하지만 쌓아온 데이터가 백업 없이 매일 밤 잠든다면, 오늘 쓴 모든 분석은 공 위에 성을 쌓는 것과 다를 없습니다.</p>
 <p><strong>기반이 먼저입니다.</strong> 그건 매번 잊었다가 잊지 않게 됩니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

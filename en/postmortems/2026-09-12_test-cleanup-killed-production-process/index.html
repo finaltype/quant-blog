@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>When a Test Cleanup Step Killed a Production Process · Quant Trading Bot Devlog</title>
+<title>When a Test Cleanup Step Killed a Production Process | Quant Bot Devlog</title>
+<meta name="description" content="A pattern-matched kill command that collided with production naming, and an error classifier that only looked at a substring, together produced a com…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-12_test-cleanup-killed-production-process/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-12_test-cleanup-killed-production-process/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-12_test-cleanup-killed-production-process/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-12_test-cleanup-killed-production-process/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="When a Test Cleanup Step Killed a Production Process">
+<meta property="og:description" content="A pattern-matched kill command that collided with production naming, and an error classifier that only looked at a substring, together produced a com…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-12_test-cleanup-killed-production-process/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "When a Test Cleanup Step Killed a Production Process", "description": "A pattern-matched kill command that collided with production naming, and an error classifier that only looked at a substring, together produced a com…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-09-12_test-cleanup-killed-production-process/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-12"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../postmortems/2026-09-12_test-cleanup-killed-production-process/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-09-12_test-cleanup-killed-production-process/">한국어로 보기</a></p>
 <article>
 <h1>When a Test Cleanup Step Killed a Production Process</h1>
+<p class="post-date"><time datetime="2026-09-12">2026-09-12</time></p>
 <p class="subtitle">A pattern-matched kill command that collided with production naming, and an error classifier that only looked at a substring, together produced a completely wrong diagnosis</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>Overnight, an automated processing pipeline skipped 77 out of 100 jobs.</p>
 <p>The logs pointed to an obvious suspect right away. Right around the incident time, there was a burst of noise from calls to an external data vendor.</p>
@@ -55,6 +69,6 @@
 <p><strong>Classifying errors by matching a substring in the message mixes together failures with completely different root causes.</strong> The string "ConnectionError" can't distinguish a connection failure caused by a dead local process from one caused by a genuine network outage. If a retry or fallback strategy is built on top of that shallow classification, two situations that need different responses end up getting the same one. Where possible, classify by something more structural — exception type, or where in the code the failure originated — instead of matching text.</p>
 <p><strong>A plausible-looking log observed at the same time as an incident is not guaranteed to be the actual cause.</strong> Harmless nightly noise happened to overlap with the incident time and steered the initial diagnosis in a completely wrong direction. Before locking in a root cause just because the timing lines up, it helps to ask yourself: would this incident have happened even without that log entry? That question alone catches a lot of these false leads.</p>
 </article>
-<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

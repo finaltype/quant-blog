@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[260727~29] 조용한 크래시, 기록 누락, 27시간 신호 침묵 · Quant Trading Bot Devlog</title>
+<title>조용한 크래시, 기록 누락, 27시간 신호 침묵 | 퀀트봇 개발일지</title>
+<meta name="description" content="사흘 내내 &quot;돈이 잘못 나간&quot; 사고가 아니라 &quot;아무 일도 안 일어난&quot; 사고들을 쫓아다녔습니다 — 월요일 새벽의 조용한 크래시, 독자 제보로 찾은 성과 기록 누락, 그리고 서킷브레이커 상황에서 하루 넘게 이어진 신호 침묵까지">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-29_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-29_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-29_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-29_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="조용한 크래시, 기록 누락, 27시간 신호 침묵">
+<meta property="og:description" content="사흘 내내 &quot;돈이 잘못 나간&quot; 사고가 아니라 &quot;아무 일도 안 일어난&quot; 사고들을 쫓아다녔습니다 — 월요일 새벽의 조용한 크래시, 독자 제보로 찾은 성과 기록 누락, 그리고 서킷브레이커 상황에서 하루 넘게 이어진 신호 침묵까지">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-29_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "조용한 크래시, 기록 누락, 27시간 신호 침묵", "description": "사흘 내내 \"돈이 잘못 나간\" 사고가 아니라 \"아무 일도 안 일어난\" 사고들을 쫓아다녔습니다 — 월요일 새벽의 조용한 크래시, 독자 제보로 찾은 성과 기록 누락, 그리고 서킷브레이커 상황에서 하루 넘게 이어진 신호 침묵까지", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-29_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-07-29"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-29_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-29_devlog/">Read in English</a></p>
 <article>
-<h1>[260727~29] 조용한 크래시, 기록 누락, 27시간 신호 침묵</h1>
+<h1>조용한 크래시, 기록 누락, 27시간 신호 침묵</h1>
+<p class="post-date"><time datetime="2026-07-29">2026-07-29</time></p>
 <p class="subtitle">사흘 내내 &quot;돈이 잘못 나간&quot; 사고가 아니라 &quot;아무 일도 안 일어난&quot; 사고들을 쫓아다녔습니다 — 월요일 새벽의 조용한 크래시, 독자 제보로 찾은 성과 기록 누락, 그리고 서킷브레이커 상황에서 하루 넘게 이어진 신호 침묵까지</p><p>며칠 정신없이 사고 대응만 하다 보니 글 쓸 틈을 못 냈습니다. 27일, 28일, 29일 사흘을 한 번에 정리합니다.</p>
 <p>돌이켜보면 이 사흘은 유독 "조용히 실패하는" 종류의 사고들이 몰렸던 기간이었습니다. 주문이 잘못 나간 게 아니라, 그냥 아무것도 안 일어난 채 멈춰있었던 사고들입니다.</p>
 <h2>월요일 새벽, 알림 없이 멈춘 매매</h2>
@@ -54,6 +68,6 @@
 <hr />
 <p>사흘 내내 새 기능보다는 "실패했을 때 조용히 넘어가지 않게 만드는" 작업에 시간을 더 썼습니다. 화려하진 않지만, 실거래 범위를 넓히기 전에 꼭 필요한 종류의 일이라고 생각합니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

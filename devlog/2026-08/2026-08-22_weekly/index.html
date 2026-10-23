@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[260817~0822] 그래픽카드를 바꾼 뒤, 검증 도구들의 허점을 연달아 잡았다 · Quant Trading Bot Devlog</title>
+<title>그래픽카드를 바꾼 뒤, 검증 도구들의 허점을 연달아 잡았다 | 퀀트봇 개발일지</title>
+<meta name="description" content="하드웨어 교체 판정이 한 주 동안 두 번 뒤집혔고, 자동 검증 도구 두 개가 조용히 오류를 놓치고 있었다는 게 드러났고, 실계좌에서는 사람이 두 번 직접 개입해야 했습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-22_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-22_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-22_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-22_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="그래픽카드를 바꾼 뒤, 검증 도구들의 허점을 연달아 잡았다">
+<meta property="og:description" content="하드웨어 교체 판정이 한 주 동안 두 번 뒤집혔고, 자동 검증 도구 두 개가 조용히 오류를 놓치고 있었다는 게 드러났고, 실계좌에서는 사람이 두 번 직접 개입해야 했습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-22_weekly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "그래픽카드를 바꾼 뒤, 검증 도구들의 허점을 연달아 잡았다", "description": "하드웨어 교체 판정이 한 주 동안 두 번 뒤집혔고, 자동 검증 도구 두 개가 조용히 오류를 놓치고 있었다는 게 드러났고, 실계좌에서는 사람이 두 번 직접 개입해야 했습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-22_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-22_weekly/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-08/2026-08-22_weekly/">Read in English</a></p>
 <article>
-<h1>[260817~0822] 그래픽카드를 바꾼 뒤, 검증 도구들의 허점을 연달아 잡았다</h1>
+<h1>그래픽카드를 바꾼 뒤, 검증 도구들의 허점을 연달아 잡았다</h1>
+<p class="post-date"><time datetime="2026-08-22">2026-08-22</time></p>
 <p class="subtitle">하드웨어 교체 판정이 한 주 동안 두 번 뒤집혔고, 자동 검증 도구 두 개가 조용히 오류를 놓치고 있었다는 게 드러났고, 실계좌에서는 사람이 두 번 직접 개입해야 했습니다</p><p>지난 개발일지 이후로 조금 뜸했는데, 그 사이가 오히려 가장 바빴던 한 주였습니다. 월요일엔 그래픽카드를 통째로 바꿨고, 그 판정이 며칠 사이 두 번 뒤집혔습니다.</p>
 <p>같은 주에 새로 만든 검증 도구 두 개가 그동안 못 보고 지나치던 문제들을 잇달아 드러냈습니다. 그리고 실계좌에서는 사람이 두 번 직접 개입해야 하는 일이 있었습니다.</p>
 <h2>그래픽카드를 바꾸고, 판정이 두 번 뒤집혔다</h2>
@@ -58,6 +72,6 @@
 <p>한 주를 돌아보면 새 기능보다는 "이미 됐다고 믿던 것"들을 다시 확인하고 고친 한 주였습니다. 그래픽카드 판정도, 검증 도구도, 안전장치도 다 한 번씩은 스스로를 배신했습니다.</p>
 <p>다행히 그때그때 발견해서 고쳤고, 실계좌 잔고는 마지막까지 원장과 정확히 맞아떨어졌습니다. 다음 주엔 이번에 새로 설계한 소규모 실험 결과부터 확인하게 될 것 같습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

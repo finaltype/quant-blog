@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI 리포트 수치 검증기 - 자기정합 검사만으론 못 잡는 오류들 · Quant Trading Bot Devlog</title>
+<title>AI 리포트 수치 검증기 - 자기정합 검사만으론 못 잡는 오류들 | 퀀트봇 개발일지</title>
+<meta name="description" content="문서 안에서는 앞뒤가 맞는데 원본 데이터와는 다른 숫자 — 그런 오류를 잡으려고 검증기를 새로 설계했습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_building-a-numeric-verifier/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_building-a-numeric-verifier/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_building-a-numeric-verifier/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_building-a-numeric-verifier/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 리포트 수치 검증기 - 자기정합 검사만으론 못 잡는 오류들">
+<meta property="og:description" content="문서 안에서는 앞뒤가 맞는데 원본 데이터와는 다른 숫자 — 그런 오류를 잡으려고 검증기를 새로 설계했습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_building-a-numeric-verifier/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "AI 리포트 수치 검증기 - 자기정합 검사만으론 못 잡는 오류들", "description": "문서 안에서는 앞뒤가 맞는데 원본 데이터와는 다른 숫자 — 그런 오류를 잡으려고 검증기를 새로 설계했습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-08-22_building-a-numeric-verifier/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_building-a-numeric-verifier/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_building-a-numeric-verifier/">Read in English</a></p>
 <article>
 <h1>AI 리포트 수치 검증기 - 자기정합 검사만으론 못 잡는 오류들</h1>
+<p class="post-date"><time datetime="2026-08-22">2026-08-22</time></p>
 <p class="subtitle">문서 안에서는 앞뒤가 맞는데 원본 데이터와는 다른 숫자 — 그런 오류를 잡으려고 검증기를 새로 설계했습니다</p><p>자동매매 시스템은 매일 종목마다 AI가 작성한 리포트를 만들어냅니다. 사람이 그걸 하나하나 다 읽고 숫자를 확인할 수는 없습니다.</p>
 <p>리포트 안에는 가격, 재무 수치 같은 구체적인 숫자가 많이 들어갑니다. 그 숫자가 틀리면 판단 근거 자체가 틀린 셈이라, 오래전부터 검사 로직을 붙여두긴 했습니다.</p>
 <p>그런데 이번에 그 검사 로직을 다시 들여다볼 일이 생겼습니다. "검사하고 있다"는 게 정말 "확인해야 할 걸 확인하고 있다"는 뜻인지 스스로 의심이 들어서였습니다.</p>
@@ -68,6 +82,6 @@
 <p><strong>참값이 일부만 있을 때는 대리 지표를 쓰되, 그게 하한이라는 걸 명시해야 한다.</strong> 대리 지표가 실제 규모를 과소평가할 수 있다는 걸 알고 있어야, 그 숫자를 안심의 근거로 잘못 쓰지 않습니다.</p>
 <p>검증기 하나를 새로 붙일 때마다, "이 검증기가 지금 뭘 못 보고 있을까"를 다음 점검 목록에 올려두려고 합니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

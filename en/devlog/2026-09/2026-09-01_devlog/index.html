@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Sep 1] Four Stages of Refactoring, a Follow-Up Review, and Automated Restarts&quot; · Quant Trading Bot Devlog</title>
+<title>Four Stages of Refactoring, a Follow-Up Review, and Automated Restarts | Quant Bot Devlog</title>
+<meta name="description" content="I asked an AI to review the whole project&#x27;s structure, and once the fixes were in, I asked it to check its own work">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-01_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-01_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-01_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-01_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Four Stages of Refactoring, a Follow-Up Review, and Automated Restarts">
+<meta property="og:description" content="I asked an AI to review the whole project&#x27;s structure, and once the fixes were in, I asked it to check its own work">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-01_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Four Stages of Refactoring, a Follow-Up Review, and Automated Restarts", "description": "I asked an AI to review the whole project's structure, and once the fixes were in, I asked it to check its own work", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-01_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-01"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-01_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-01_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Sep 1] Four Stages of Refactoring, a Follow-Up Review, and Automated Restarts&quot;</h1>
+<h1>Four Stages of Refactoring, a Follow-Up Review, and Automated Restarts</h1>
+<p class="post-date"><time datetime="2026-09-01">2026-09-01</time></p>
 <p class="subtitle">I asked an AI to review the whole project&#x27;s structure, and once the fixes were in, I asked it to check its own work</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>I asked an AI to review the whole project's structure</h2>
 <p>The project has grown enough over the past few days that I felt it needed a fresh, top-to-bottom structural review.</p>
@@ -58,6 +72,6 @@
 <p>One guard compares the fill price against a live quote at the moment it's recorded to the ledger and rejects it if it looks abnormally scaled down. The other automatically escalates the alert level if a reconciliation block stays unresolved across multiple trading days.</p>
 <p>That closes out all four recurrence-prevention measures.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

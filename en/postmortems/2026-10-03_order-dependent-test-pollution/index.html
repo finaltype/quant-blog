@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>An Order-Dependent Test Failure - Traced to a Monkeypatch Nobody Restored · Quant Trading Bot Devlog</title>
+<title>An Order-Dependent Test Failure - Traced to a Monkeypatch Nobody Restored | Quant Bot Devlog</title>
+<meta name="description" content="A test passed in isolation and only failed inside the full suite. The culprit was a monkeypatch in another file">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-10-03_order-dependent-test-pollution/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-03_order-dependent-test-pollution/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-10-03_order-dependent-test-pollution/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-03_order-dependent-test-pollution/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="An Order-Dependent Test Failure - Traced to a Monkeypatch Nobody Restored">
+<meta property="og:description" content="A test passed in isolation and only failed inside the full suite. The culprit was a monkeypatch in another file">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-10-03_order-dependent-test-pollution/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "An Order-Dependent Test Failure - Traced to a Monkeypatch Nobody Restored", "description": "A test passed in isolation and only failed inside the full suite. The culprit was a monkeypatch in another file", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-10-03_order-dependent-test-pollution/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-03"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../postmortems/2026-10-03_order-dependent-test-pollution/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-10-03_order-dependent-test-pollution/">한국어로 보기</a></p>
 <article>
 <h1>An Order-Dependent Test Failure - Traced to a Monkeypatch Nobody Restored</h1>
+<p class="post-date"><time datetime="2026-10-03">2026-10-03</time></p>
 <p class="subtitle">A test passed in isolation and only failed inside the full suite. The culprit was a monkeypatch in another file</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>One particular test kept failing whenever I ran the full regression suite. Run that same test alone, and it always passed.</p>
 <p>It reproduced a second time in the same week. That ruled out coincidence — something was systematically wrong.</p>
@@ -55,6 +69,6 @@
 <p><strong>Reproducing the real execution order beat a wide bisect.</strong> I first tried bisecting across a shortlist of "files likely to touch global state," 166 combinations deep, and got nowhere. What actually worked was running the full regression in the order it actually runs. A guessed-at subset of candidates was less reliable than reproducing the exact sequence where the failure actually occurs.</p>
 <p>More detail on this fund-allocation safety-gate layer is in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">the live-account deployment writeup</a>(new tab).</p>
 </article>
-<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

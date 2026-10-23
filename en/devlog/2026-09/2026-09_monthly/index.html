@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Sep 2026] Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying&quot; · Quant Trading Bot Devlog</title>
+<title>Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying | Quant Bot Devlog</title>
+<meta name="description" content="This month&#x27;s progress was expanding live trading to a shared account and doubling up on GPU capacity, while I kept finding defects in the measurement…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09_monthly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09_monthly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09_monthly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09_monthly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying">
+<meta property="og:description" content="This month&#x27;s progress was expanding live trading to a shared account and doubling up on GPU capacity, while I kept finding defects in the measurement…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09_monthly/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying", "description": "This month's progress was expanding live trading to a shared account and doubling up on GPU capacity, while I kept finding defects in the measurement…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09_monthly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-01"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09_monthly/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09_monthly/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Sep 2026] Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying&quot;</h1>
+<h1>Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying</h1>
+<p class="post-date"><time datetime="2026-09-01">2026-09-01</time></p>
 <p class="subtitle">This month&#x27;s progress was expanding live trading to a shared account and doubling up on GPU capacity, while I kept finding defects in the measurement tools themselves — benchmarks, reports, safety devices</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>September started with a ledger corruption incident, moved through expanding live trading to a shared account, turned into a run of doubting the measurement tools themselves, and closed with an attempt at GPU redundancy that failed before it recovered.</p>
 <h2>The ledger got corrupted again — this time the broker's own data was the cause</h2>
@@ -65,6 +79,6 @@
 <p>The other was discovering, again and again, that the measurement tools meant to support that progress — a benchmark's time accounting, a report's sampling settings, the ledger-reconstruction logic — could be wrong themselves, and fixing each one as it turned up.</p>
 <p>Overriding a pre-registered rule and watching GPU redundancy collapse on its first run before recovering both came from the same place. This month's conclusion wasn't just about the system's answers, but about continuing to question the measurement and judgment frameworks that produce them.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

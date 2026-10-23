@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Aug 31] A Missed Process Restart and a Paper-Account Ledger Corruption, on the Same Day&quot; · Quant Trading Bot Devlog</title>
+<title>A Missed Process Restart and a Paper-Account Ledger Corruption, on the Same Day | Quant Bot Devlog</title>
+<meta name="description" content="A ranking process that silently sat idle for days, and a brokerage API field that quietly shrank order prices by a factor of 1000">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-31_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-31_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-31_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-31_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A Missed Process Restart and a Paper-Account Ledger Corruption, on the Same Day">
+<meta property="og:description" content="A ranking process that silently sat idle for days, and a brokerage API field that quietly shrank order prices by a factor of 1000">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-31_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "A Missed Process Restart and a Paper-Account Ledger Corruption, on the Same Day", "description": "A ranking process that silently sat idle for days, and a brokerage API field that quietly shrank order prices by a factor of 1000", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-31_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-31"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-31_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-31_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Aug 31] A Missed Process Restart and a Paper-Account Ledger Corruption, on the Same Day&quot;</h1>
+<h1>A Missed Process Restart and a Paper-Account Ledger Corruption, on the Same Day</h1>
+<p class="post-date"><time datetime="2026-08-31">2026-08-31</time></p>
 <p class="subtitle">A ranking process that silently sat idle for days, and a brokerage API field that quietly shrank order prices by a factor of 1000</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>A missed restart quietly broke ranking updates for days</h2>
 <p>While reviewing whether to keep running a different model combination in production, I went through the actual live state of things instead of trusting assumptions.</p>
@@ -57,6 +71,6 @@
 <p>Each cause had been quietly building for days, invisible until something else I was checking — or a monitor firing by chance — surfaced it.</p>
 <p>Both fires got put out, but the longer-term prevention work is only half done as the day wraps up.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

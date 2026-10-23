@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>그래픽카드 교체 성능 비교 - 판정이 두 번 뒤집힌 이유 · Quant Trading Bot Devlog</title>
+<title>그래픽카드 교체 성능 비교 - 판정이 두 번 뒤집힌 이유 | 퀀트봇 개발일지</title>
+<meta name="description" content="처음 방향 판정도, 나중 추가구매 판정도 서로 다른 이유로 틀렸습니다 — 벤치마크를 읽는 방식 자체가 문제였습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_hardware-verdict-reversal/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="그래픽카드 교체 성능 비교 - 판정이 두 번 뒤집힌 이유">
+<meta property="og:description" content="처음 방향 판정도, 나중 추가구매 판정도 서로 다른 이유로 틀렸습니다 — 벤치마크를 읽는 방식 자체가 문제였습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "그래픽카드 교체 성능 비교 - 판정이 두 번 뒤집힌 이유", "description": "처음 방향 판정도, 나중 추가구매 판정도 서로 다른 이유로 틀렸습니다 — 벤치마크를 읽는 방식 자체가 문제였습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-08-22_hardware-verdict-reversal/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_hardware-verdict-reversal/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_hardware-verdict-reversal/">Read in English</a></p>
 <article>
 <h1>그래픽카드 교체 성능 비교 - 판정이 두 번 뒤집힌 이유</h1>
+<p class="post-date"><time datetime="2026-08-22">2026-08-22</time></p>
 <p class="subtitle">처음 방향 판정도, 나중 추가구매 판정도 서로 다른 이유로 틀렸습니다 — 벤치마크를 읽는 방식 자체가 문제였습니다</p><p>그래픽카드를 다른 브랜드 제품으로 교체하면서, 새 카드에 맞는 실행 방식을 골라야 했습니다.</p>
 <p>후보가 두 갈래였는데, 처음엔 그중 하나가 확실히 낫다고 판단했습니다. 그런데 이 판단이 방향 자체가 반대였다는 게 곧 드러났고, 그 뒤로도 판정이 한 번 더 뒤집혔습니다. 정리하면서 왜 이런 일이 반복됐는지 짚어봤습니다.</p>
 <h2>첫 판정 — 방향이 반대였다</h2>
@@ -55,6 +69,6 @@
 <p>비교 공식이나 환산식을 쓸 때는, 그 공식이 성립하는 전제 조건이 무엇인지 먼저 확인합니다. 조건이 하나라도 바뀌면(이번엔 속도 향상 기법 사용 여부) 공식 자체가 깨질 수 있다는 걸 이번에 배웠습니다.</p>
 <p>그리고 판정이 짧은 시간에 두 번 이상 뒤집힌다면, 그건 세 번째 검토가 필요하다는 신호로 받아들이기로 했습니다. 카탈로그 비교로 답이 안 나올 때는, 계속 더 정교하게 비교하기보다 저비용으로 직접 재보는 쪽이 더 빨리 답에 닿았습니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

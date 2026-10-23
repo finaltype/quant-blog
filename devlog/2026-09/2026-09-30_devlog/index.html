@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260930] 모의계좌 장부대조 잔차 원인 규명과 방치된 경보 정리&quot; · Quant Trading Bot Devlog</title>
+<title>모의계좌 장부대조 잔차 원인 규명과 방치된 경보 정리 | 퀀트봇 개발일지</title>
+<meta name="description" content="9일 전 전혀 다른 종목 체결이 엉뚱한 매도에 잘못 붙었던 사고를 찾아냈고, 한 달 넘게 매일 울리던 미사용 경보 항목도 함께 정리했습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-30_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-30_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-30_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-30_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="모의계좌 장부대조 잔차 원인 규명과 방치된 경보 정리">
+<meta property="og:description" content="9일 전 전혀 다른 종목 체결이 엉뚱한 매도에 잘못 붙었던 사고를 찾아냈고, 한 달 넘게 매일 울리던 미사용 경보 항목도 함께 정리했습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-30_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "모의계좌 장부대조 잔차 원인 규명과 방치된 경보 정리", "description": "9일 전 전혀 다른 종목 체결이 엉뚱한 매도에 잘못 붙었던 사고를 찾아냈고, 한 달 넘게 매일 울리던 미사용 경보 항목도 함께 정리했습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-30_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-30"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-30_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-30_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260930] 모의계좌 장부대조 잔차 원인 규명과 방치된 경보 정리&quot;</h1>
+<h1>모의계좌 장부대조 잔차 원인 규명과 방치된 경보 정리</h1>
+<p class="post-date"><time datetime="2026-09-30">2026-09-30</time></p>
 <p class="subtitle">9일 전 전혀 다른 종목 체결이 엉뚱한 매도에 잘못 붙었던 사고를 찾아냈고, 한 달 넘게 매일 울리던 미사용 경보 항목도 함께 정리했습니다.</p><h2>원장과 브로커가 계속 어긋나 있었다</h2>
 <p><a href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">모의계좌</a>(새 창) 하나에서 내부 원장과 실제 브로커 잔액을 맞추는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">장부대조</a>(새 창) 결과가 계속 어긋나 있었습니다.</p>
 <p>며칠 전까지는 "일시적인 오탐이고 저절로 풀렸다"고 판단하고 넘어갔던 항목입니다.</p>
@@ -54,6 +68,6 @@
 <p>원장 정정 자체는 오너 승인을 기다리는 중입니다.</p>
 <p>승인이 나면 잘못 붙은 체결을 걷어내고, 위에서 짚은 종목·방향 대조 가드부터 우선 붙일 계획입니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

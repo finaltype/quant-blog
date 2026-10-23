@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[260709] 몇 주째 미스터리였던 새벽 크래시의 진짜 범인을 찾았다 · Quant Trading Bot Devlog</title>
+<title>몇 주째 미스터리였던 새벽 크래시의 진짜 범인을 찾았다 | 퀀트봇 개발일지</title>
+<meta name="description" content="메모리 문제의 진짜 원인을 찾아 고치는 김에, 프로덕션을 실수로 죽여버리기도 한 하루">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-09_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-09_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-09_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-09_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="몇 주째 미스터리였던 새벽 크래시의 진짜 범인을 찾았다">
+<meta property="og:description" content="메모리 문제의 진짜 원인을 찾아 고치는 김에, 프로덕션을 실수로 죽여버리기도 한 하루">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-09_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "몇 주째 미스터리였던 새벽 크래시의 진짜 범인을 찾았다", "description": "메모리 문제의 진짜 원인을 찾아 고치는 김에, 프로덕션을 실수로 죽여버리기도 한 하루", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-09_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-07-09"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-09_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-09_devlog/">Read in English</a></p>
 <article>
-<h1>[260709] 몇 주째 미스터리였던 새벽 크래시의 진짜 범인을 찾았다</h1>
+<h1>몇 주째 미스터리였던 새벽 크래시의 진짜 범인을 찾았다</h1>
+<p class="post-date"><time datetime="2026-07-09">2026-07-09</time></p>
 <p class="subtitle">메모리 문제의 진짜 원인을 찾아 고치는 김에, 프로덕션을 실수로 죽여버리기도 한 하루</p><p>오늘은 몇 주간 미궁이었던 문제 하나를 드디어 근본 원인까지 찾아 고쳤습니다. 다만 그 과정에서 실수도 두 건 겪었습니다.</p>
 <h2>몇 주째 미스터리였던 새벽 크래시, 진짜 범인을 찾았다</h2>
 <p>얼마 전부터 매일 새벽 특정 시각마다 개발 환경이 죽는 문제가 있었습니다(그래서 핵심 프로세스들을 개발 환경과 분리된 별도 서비스로 옮겨두기도 했었는데, 이건 증상 완화였지 원인 해결은 아니었습니다). 오늘 다른 AI와 함께 로그를 더 깊이 파본 끝에 드디어 진짜 원인을 찾았습니다.</p>
@@ -46,6 +60,6 @@
 <hr />
 <p>오늘 두 실수 다 심각한 피해로 이어지진 않았지만, 몇 주짜리 미스터리를 잡은 날 바로 새 실수 두 개를 만든 게 좀 아이러니했습니다. 배포/자동화를 다룰 땐 "지금 뭐가 돌고 있는지"를 항상 먼저 확인해야 한다는 교훈을 이렇게 두 번이나 다시 배웠습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

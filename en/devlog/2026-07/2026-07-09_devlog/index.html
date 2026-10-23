@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[Jul 9] Finally Found the Real Culprit Behind Weeks of Overnight Crashes · Quant Trading Bot Devlog</title>
+<title>Finally Found the Real Culprit Behind Weeks of Overnight Crashes | Quant Bot Devlog</title>
+<meta name="description" content="Tracked down and fixed the real cause of a memory problem, and accidentally killed production while doing it">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-09_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-09_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-09_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-09_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Finally Found the Real Culprit Behind Weeks of Overnight Crashes">
+<meta property="og:description" content="Tracked down and fixed the real cause of a memory problem, and accidentally killed production while doing it">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-09_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Finally Found the Real Culprit Behind Weeks of Overnight Crashes", "description": "Tracked down and fixed the real cause of a memory problem, and accidentally killed production while doing it", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-09_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-07-09"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-09_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-07/2026-07-09_devlog/">한국어로 보기</a></p>
 <article>
-<h1>[Jul 9] Finally Found the Real Culprit Behind Weeks of Overnight Crashes</h1>
+<h1>Finally Found the Real Culprit Behind Weeks of Overnight Crashes</h1>
+<p class="post-date"><time datetime="2026-07-09">2026-07-09</time></p>
 <p class="subtitle">Tracked down and fixed the real cause of a memory problem, and accidentally killed production while doing it</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>Today I finally traced a problem that had been a mystery for weeks all the way down to its root cause and fixed it. Along the way I also made two mistakes.</p>
 <h2>Weeks of mysterious overnight crashes — found the real culprit</h2>
@@ -47,6 +61,6 @@
 <hr />
 <p>Neither mistake today led to serious damage, but it felt ironic to fix a weeks-long mystery and immediately make two new mistakes the same day. The lesson to always check "what's currently running" before touching deploys or automation got relearned twice over today.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

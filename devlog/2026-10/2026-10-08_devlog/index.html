@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[261008] 계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다&quot; · Quant Trading Bot Devlog</title>
+<title>계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다 | 퀀트봇 개발일지</title>
+<meta name="description" content="원래 주말로 미뤄뒀던 입출금 장부 처리(머니패스)를 오너 지시로 오늘 당겨 구현했는데, 코드 리뷰가 잡은 치명적 버그가 로직이 아니라 &quot;실패 안내 문구&quot;에 있었습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-08_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-08_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-08_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-08_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다">
+<meta property="og:description" content="원래 주말로 미뤄뒀던 입출금 장부 처리(머니패스)를 오너 지시로 오늘 당겨 구현했는데, 코드 리뷰가 잡은 치명적 버그가 로직이 아니라 &quot;실패 안내 문구&quot;에 있었습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-08_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다", "description": "원래 주말로 미뤄뒀던 입출금 장부 처리(머니패스)를 오너 지시로 오늘 당겨 구현했는데, 코드 리뷰가 잡은 치명적 버그가 로직이 아니라 \"실패 안내 문구\"에 있었습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-08_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-08"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-08_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-08_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[261008] 계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다&quot;</h1>
+<h1>계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다</h1>
+<p class="post-date"><time datetime="2026-10-08">2026-10-08</time></p>
 <p class="subtitle">원래 주말로 미뤄뒀던 입출금 장부 처리(머니패스)를 오너 지시로 오늘 당겨 구현했는데, 코드 리뷰가 잡은 치명적 버그가 로직이 아니라 &quot;실패 안내 문구&quot;에 있었습니다.</p><h2>미뤄뒀던 "머니패스"를 오늘로 당겼다</h2>
 <p>이 시스템에는 실제 현금이 계좌에 들어오고 나가는 경우를 다루는 경로가 있습니다. 입금이나 출금이 생기면 그걸 장부에 반영하고, 성과 측정의 기준선을 다시 맞춰야 합니다.</p>
 <p>왜 기준선을 다시 맞춰야 하냐면, 외부에서 들어온 현금을 트레이딩으로 번 돈으로 착각하면 안 되기 때문입니다. 반대로 빠져나간 돈을 손실로 잡아도 안 됩니다.</p>
@@ -57,6 +71,6 @@
 <p>배포 직후라, 오늘 남은 라운드들의 기록에서 입출금 장부 처리 쪽 오류가 0건으로 유지되는지 지켜봅니다. 며칠간 더 관찰할 계획입니다.</p>
 <p>리뷰에서 치명은 사라졌지만 아직 반영하지 않은 제안 몇 개가 남아 있어서, 그건 이후에 하나씩 볼 예정입니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

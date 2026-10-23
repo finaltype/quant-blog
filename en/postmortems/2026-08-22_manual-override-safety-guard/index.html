@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>A Trading Safety Guard Misfired - The Time Scale of the Threshold Was Wrong · Quant Trading Bot Devlog</title>
+<title>A Trading Safety Guard Misfired - The Time Scale of the Threshold Was Wrong | Quant Bot Devlog</title>
+<meta name="description" content="A guard meant to catch cumulative losses reacted to a brief intraday dip instead — the fix came down to whether two numbers were measured on the same…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_manual-override-safety-guard/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_manual-override-safety-guard/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_manual-override-safety-guard/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_manual-override-safety-guard/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A Trading Safety Guard Misfired - The Time Scale of the Threshold Was Wrong">
+<meta property="og:description" content="A guard meant to catch cumulative losses reacted to a brief intraday dip instead — the fix came down to whether two numbers were measured on the same…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_manual-override-safety-guard/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "A Trading Safety Guard Misfired - The Time Scale of the Threshold Was Wrong", "description": "A guard meant to catch cumulative losses reacted to a brief intraday dip instead — the fix came down to whether two numbers were measured on the same…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_manual-override-safety-guard/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../postmortems/2026-08-22_manual-override-safety-guard/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-22_manual-override-safety-guard/">한국어로 보기</a></p>
 <article>
 <h1>A Trading Safety Guard Misfired - The Time Scale of the Threshold Was Wrong</h1>
+<p class="post-date"><time datetime="2026-08-22">2026-08-22</time></p>
 <p class="subtitle">A guard meant to catch cumulative losses reacted to a brief intraday dip instead — the fix came down to whether two numbers were measured on the same time scale</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>My automated trading system has a safety guard that blocks new buys once losses accumulate past a certain point. Recently, that guard wrongly blocked two perfectly normal buy orders.</p>
 <p>Tracing it back, the problem wasn't a bug in the usual sense. Two numbers feeding into the same judgment were measured on different time scales. Here's how it played out.</p>
@@ -57,6 +71,6 @@
 <p>The real answer was to let the judgment window differ by the character of the risk. Give a loosely-timed window to the kind of threshold that fires often but is cheap to miss, and a tightly-timed window to the kind that fires rarely but is expensive to miss. Don't collapse two different risks into one guard measured on one time scale — that's the most general lesson this incident left behind.</p>
 <p>Every time I touch one safety guard now, I try to also write down where its boundary with the neighboring guard sits, and which direction responsibility shifts to when I narrow this one's scope. If coverage isn't disappearing but just moving somewhere else, and I don't write that down, the next person reads it as a bug.</p>
 </article>
-<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

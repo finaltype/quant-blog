@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>자동매매 검증 도구가 오류를 놓치는 이유 3가지 · Quant Trading Bot Devlog</title>
+<title>자동매매 검증 도구가 오류를 놓치는 이유 3가지 | 퀀트봇 개발일지</title>
+<meta name="description" content="검증 도구를 새로 붙일 때마다 걸리는 방식이 매번 달랐습니다 — 도구 자신의 버그, 아예 없던 관측, 판독 시점의 착시">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_verification-tool-blind-spots/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_verification-tool-blind-spots/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-22_verification-tool-blind-spots/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_verification-tool-blind-spots/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="자동매매 검증 도구가 오류를 놓치는 이유 3가지">
+<meta property="og:description" content="검증 도구를 새로 붙일 때마다 걸리는 방식이 매번 달랐습니다 — 도구 자신의 버그, 아예 없던 관측, 판독 시점의 착시">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-08-22_verification-tool-blind-spots/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "자동매매 검증 도구가 오류를 놓치는 이유 3가지", "description": "검증 도구를 새로 붙일 때마다 걸리는 방식이 매번 달랐습니다 — 도구 자신의 버그, 아예 없던 관측, 판독 시점의 착시", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-08-22_verification-tool-blind-spots/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_verification-tool-blind-spots/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-08-22_verification-tool-blind-spots/">Read in English</a></p>
 <article>
 <h1>자동매매 검증 도구가 오류를 놓치는 이유 3가지</h1>
+<p class="post-date"><time datetime="2026-08-22">2026-08-22</time></p>
 <p class="subtitle">검증 도구를 새로 붙일 때마다 걸리는 방식이 매번 달랐습니다 — 도구 자신의 버그, 아예 없던 관측, 판독 시점의 착시</p><p>최근 자동매매 시스템에 검증 도구를 여러 개 새로 붙였습니다. 그런데 붙일 때마다 걸리는 방식이 매번 달랐습니다.</p>
 <p>한 번은 검증 도구 자신이 틀렸고, 한 번은 도구가 없어서 몰랐고, 한 번은 도구는 있는데 판독 방식이 틀렸습니다. 세 사례를 정리해봤습니다.</p>
 <h2>1. 검증 도구 자신도 버그를 가진다</h2>
@@ -51,6 +65,6 @@
 <p>도구를 만든 것 자체가 끝이 아니었습니다. 그 도구가 스스로 틀릴 수 있는지, 어떤 오류는 처음부터 못 보는지, 판독 방식이 측정 대상과 충돌하지는 않는지를 계속 물어야 했습니다.</p>
 <p>검증 도구를 하나 새로 붙일 때마다, "이게 지금 뭘 놓치고 있을까"를 다음 점검 항목으로 남겨두려고 합니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

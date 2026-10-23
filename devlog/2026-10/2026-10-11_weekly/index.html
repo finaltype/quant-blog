@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[261005~261011] 주문 실행·안전장치 계층 확장과 사전등록 A/B 실험 틀 구축&quot; · Quant Trading Bot Devlog</title>
+<title>주문 실행·안전장치 계층 확장과 사전등록 A/B 실험 틀 구축 | 퀀트봇 개발일지</title>
+<meta name="description" content="출력 상한·장부대조 가드·부분충전 매수·입출금 반영까지 실행 계층을 연일 손봤고, 성급히 반영하는 대신 결과를 보기 전에 기준을 못박는 실험 틀을 먼저 세운 한 주였습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-11_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-11_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-11_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-11_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="주문 실행·안전장치 계층 확장과 사전등록 A/B 실험 틀 구축">
+<meta property="og:description" content="출력 상한·장부대조 가드·부분충전 매수·입출금 반영까지 실행 계층을 연일 손봤고, 성급히 반영하는 대신 결과를 보기 전에 기준을 못박는 실험 틀을 먼저 세운 한 주였습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-11_weekly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "주문 실행·안전장치 계층 확장과 사전등록 A/B 실험 틀 구축", "description": "출력 상한·장부대조 가드·부분충전 매수·입출금 반영까지 실행 계층을 연일 손봤고, 성급히 반영하는 대신 결과를 보기 전에 기준을 못박는 실험 틀을 먼저 세운 한 주였습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-11_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-11"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-11_weekly/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-11_weekly/">Read in English</a></p>
 <article>
-<h1>&quot;[261005~261011] 주문 실행·안전장치 계층 확장과 사전등록 A/B 실험 틀 구축&quot;</h1>
+<h1>주문 실행·안전장치 계층 확장과 사전등록 A/B 실험 틀 구축</h1>
+<p class="post-date"><time datetime="2026-10-11">2026-10-11</time></p>
 <p class="subtitle">출력 상한·장부대조 가드·부분충전 매수·입출금 반영까지 실행 계층을 연일 손봤고, 성급히 반영하는 대신 결과를 보기 전에 기준을 못박는 실험 틀을 먼저 세운 한 주였습니다.</p><p>이번 주는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행·안전장치 계층</a>(새 창)을 거의 매일 한 단계씩 넓힌 한 주였습니다.</p>
 <p>그런데 그 밑으로는 다른 결의 규칙 하나가 계속 흘렀습니다. "일단 돌아가니 넘어가자", "일단 반영하고 눈으로 보자"로 처리하지 않는다는 것이었습니다.</p>
 <p>통과 못 한 기준을 결과 보고 그 자리에서 낮추지 않고, 근거가 약한 아이디어는 참고 접고, 숫자가 안 맞으면 손대기 전에 원인부터 끝까지 따라갔습니다.</p>
@@ -71,6 +85,6 @@
 <p>그래서 이번 주 규칙은 한 방향이었습니다. 통과 못 한 기준은 근거를 확인한 뒤에만 넘기고 재측정을 못박는다, 근거 약한 아이디어는 재개 조건만 남기고 접는다, 바꾸기 전에 제대로 잴 틀부터 세운다.</p>
 <p>다음 주는 새로 건 출력 상한과 신규 장부대조 가드, 부분충전 매수, 입출금 장부 처리가 실전 라운드에서 오류 0건을 유지하는지 지켜보는 구간입니다. 사전등록 A/B 실험도 남은 항목을 채워 설계를 동결한 뒤, 한 번의 통제된 비교로 돌려 공동 판정으로 마무리할 계획입니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

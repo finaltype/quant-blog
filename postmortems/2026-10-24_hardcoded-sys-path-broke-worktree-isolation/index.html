@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제 · Quant Trading Bot Devlog</title>
+<title>병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제 | 퀀트봇 개발일지</title>
+<meta name="description" content="워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제">
+<meta property="og:description" content="워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제", "description": "워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-24"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">Read in English</a></p>
 <article>
 <h1>병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</h1>
+<p class="post-date"><time datetime="2026-10-24">2026-10-24</time></p>
 <p class="subtitle">워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다</p><p>새 기능 묶음을 네 개의 git worktree에 나눠 병렬로 개발하고 있었습니다.</p>
 <p>워크트리마다 독립된 브랜치에서 서로 다른 부분을 맡았습니다. 각자 안에서 테스트를 돌려 통과를 확인한 뒤, 순서를 정해 메인 브랜치에 차례로 병합하는 계획이었습니다.</p>
 <h2>증상</h2>
@@ -56,6 +70,6 @@
 <p><strong>넓은 테스트 디스커버리는 부작용까지 함께 수집합니다.</strong> <code>pytest</code> 전체나 <code>-k</code> 패턴으로 돌리면, 의도치 않게 수집된 모듈의 최상단 코드도 같이 실행됩니다. 검증하려는 파일을 명시적으로 지정하는 실행은 이런 부작용의 노출면을 줄여줍니다. 완전한 해법은 아니지만, 근본 수정 전까지 버틸 수 있는 선입니다.</p>
 <p><strong>병렬 에이전트·병렬 브랜치로 일할 때는 "각 작업공간이 독립적으로 보인다"는 착시가 더 위험합니다.</strong> 디스크상 디렉터리가 나뉘어 있다는 사실이, 그 안의 코드가 실제로 격리돼 있다는 증거는 아닙니다. 절대경로 한 줄이면 그 격리를 넘어갈 수 있습니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

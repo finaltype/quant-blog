@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI 추천 파이프라인 - 세 모델이 합의로 판단하는 방법 · Quant Trading Bot Devlog</title>
+<title>AI 추천 파이프라인 - 세 모델이 합의로 판단하는 방법 | 퀀트봇 개발일지</title>
+<meta name="description" content="종목을 추천하는 AI 파이프라인의 핵심은 개별 모델의 성능이 아니라, 서로 다른 시각을 가진 세 모델이 합의를 만드는 방식에 있습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 추천 파이프라인 - 세 모델이 합의로 판단하는 방법">
+<meta property="og:description" content="종목을 추천하는 AI 파이프라인의 핵심은 개별 모델의 성능이 아니라, 서로 다른 시각을 가진 세 모델이 합의를 만드는 방식에 있습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "AI 추천 파이프라인 - 세 모델이 합의로 판단하는 방법", "description": "종목을 추천하는 AI 파이프라인의 핵심은 개별 모델의 성능이 아니라, 서로 다른 시각을 가진 세 모델이 합의를 만드는 방식에 있습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,8 +37,8 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/architecture/08_ai_ensemble/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/architecture/08_ai_ensemble/">Read in English</a></p>
 <article>
 <h1>AI 추천 파이프라인 - 세 모델이 합의로 판단하는 방법</h1>
 <p class="subtitle">종목을 추천하는 AI 파이프라인의 핵심은 개별 모델의 성능이 아니라, 서로 다른 시각을 가진 세 모델이 합의를 만드는 방식에 있습니다</p><p>퀀트봇에는 실계좌에 연결된 트레이딩봇과 별개로, 여러 AI 모델로 종목을 분석해서 참고용 리포트를 보내는 파이프라인이 있습니다. 아직 실제 자금으로 자동매매를 시키지는 않고, 추천이 맞았는지 계속 기록만 하고 있습니다.</p>
@@ -63,6 +76,6 @@
 <hr />
 <p>돌이켜보면 이 파이프라인에서 가장 공들인 건 어느 모델을 쓸지가 아니라, 서로 다른 의견을 어떻게 존중하며 묶을지였습니다. 전체 프로젝트 구조가 궁금하시면 <a href="https://finaltype.github.io/quant-blog/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">프로젝트 구조 글</a>(새 창)도 함께 봐주세요.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

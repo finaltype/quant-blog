@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[261012~261018] 실험 버그, GPU 사고, 실계좌 매수 차단 — 사람 개입을 감시 대상으로 만든 한 주&quot; · Quant Trading Bot Devlog</title>
+<title>실험 버그, GPU 사고, 실계좌 매수 차단 — 사람 개입을 감시 대상으로 만든 한 주 | 퀀트봇 개발일지</title>
+<meta name="description" content="이번 주 터진 사고 세 건 모두 직접 손을 대서 넘겼는데, 그 뒤로 &quot;같은 개입이 다시 생기면 자동으로 기록·경보되게&quot; 만드는 작업이 매번 따라붙었습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-18_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-18_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-18_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-18_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="실험 버그, GPU 사고, 실계좌 매수 차단 — 사람 개입을 감시 대상으로 만든 한 주">
+<meta property="og:description" content="이번 주 터진 사고 세 건 모두 직접 손을 대서 넘겼는데, 그 뒤로 &quot;같은 개입이 다시 생기면 자동으로 기록·경보되게&quot; 만드는 작업이 매번 따라붙었습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-18_weekly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "실험 버그, GPU 사고, 실계좌 매수 차단 — 사람 개입을 감시 대상으로 만든 한 주", "description": "이번 주 터진 사고 세 건 모두 직접 손을 대서 넘겼는데, 그 뒤로 \"같은 개입이 다시 생기면 자동으로 기록·경보되게\" 만드는 작업이 매번 따라붙었습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-18_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-18"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-18_weekly/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-18_weekly/">Read in English</a></p>
 <article>
-<h1>&quot;[261012~261018] 실험 버그, GPU 사고, 실계좌 매수 차단 — 사람 개입을 감시 대상으로 만든 한 주&quot;</h1>
+<h1>실험 버그, GPU 사고, 실계좌 매수 차단 — 사람 개입을 감시 대상으로 만든 한 주</h1>
+<p class="post-date"><time datetime="2026-10-18">2026-10-18</time></p>
 <p class="subtitle">이번 주 터진 사고 세 건 모두 직접 손을 대서 넘겼는데, 그 뒤로 &quot;같은 개입이 다시 생기면 자동으로 기록·경보되게&quot; 만드는 작업이 매번 따라붙었습니다.</p><p>이번 주는 사람이 직접 손을 대야 했던 상황이 세 번 있었습니다.</p>
 <p>실험 인프라 버그, GPU 드라이버 꼬임, 실계좌 매수 차단. 성격은 다 다르지만 처리 방식은 똑같았습니다.</p>
 <p>급한 불을 끄는 것과, 같은 상황이 다시 와도 사람 없이 혹은 최소한 기록이 남도록 장치를 추가하는 것을 분리해서 둘 다 했습니다.</p>
@@ -58,6 +72,6 @@
 <p>토요일의 사전등록 판단도 같은 결이었습니다. 데이터가 애매하면 더 지켜보고 싶어지는 게 사람 마음인데, 미리 적어둔 기준이 그 유혹을 대신 막아줬습니다.</p>
 <p>세 사고가 보여준 공통점은, 방어가 로직 한복판이 아니라 가장자리 — 사전 점검이 못 잡는 실행 환경, 사람이 끼어드는 순간, 판단이 애매해지는 경계 — 에서 뚫린다는 것이었습니다. 다음 주는 이번 주 새로 건 장치들(수동 개입 감시 8건, GPU 재부팅 자동화, 섀도 실험 종료)이 실제로 조용히 작동하는지 지켜보는 구간입니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검 · Quant Trading Bot Devlog</title>
+<title>에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검 | 퀀트봇 개발일지</title>
+<meta name="description" content="해피 패스는 수백 개 테스트를 통과했는데, 진짜 치명 결함은 &quot;실패했을 때 뭘 하라&quot;는 안내 문구 안에 있었다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-10_recovery-guidance-double-execution/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-10_recovery-guidance-double-execution/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-10-10_recovery-guidance-double-execution/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-10-10_recovery-guidance-double-execution/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검">
+<meta property="og:description" content="해피 패스는 수백 개 테스트를 통과했는데, 진짜 치명 결함은 &quot;실패했을 때 뭘 하라&quot;는 안내 문구 안에 있었다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-10-10_recovery-guidance-double-execution/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검", "description": "해피 패스는 수백 개 테스트를 통과했는데, 진짜 치명 결함은 \"실패했을 때 뭘 하라\"는 안내 문구 안에 있었다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-10-10_recovery-guidance-double-execution/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-10"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-10-10_recovery-guidance-double-execution/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-10-10_recovery-guidance-double-execution/">Read in English</a></p>
 <article>
 <h1>에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</h1>
+<p class="post-date"><time datetime="2026-10-10">2026-10-10</time></p>
 <p class="subtitle">해피 패스는 수백 개 테스트를 통과했는데, 진짜 치명 결함은 &quot;실패했을 때 뭘 하라&quot;는 안내 문구 안에 있었다</p><p>돈이 실제로 움직이는 경로를 사가(saga) 패턴으로 다시 짰습니다. 입출금 같은 자본 이벤트가 계좌 장부에 반영되는 과정을 여러 단계로 쪼개고, 중간에 실패하면 보상(compensation)으로 되돌리는 구조입니다.</p>
 <p>구현을 끝내고 코드리뷰를 돌렸습니다. 그런데 가장 치명적인 결함은 제가 가장 공들여 짠 실행 로직이 아니라, 전혀 다른 곳에 있었습니다.</p>
 <p>이 글은 그 "다른 곳"에 관한 이야기입니다. 이 경로는 종목을 고르는 판단 로직이 아니라 주문 실행·안전장치 계층에 속하는데, 그 전체 설계는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실전 계좌 적용편</a>(새 창)에 따로 정리해 뒀습니다.</p>
@@ -66,6 +80,6 @@
 <p><strong>비슷해 보이지만 정반대 대응이 필요한 실패를 구분해라.</strong> 둘 다 들어맞는 하나의 범용 메시지는, 사실 둘 중 한쪽에겐 버그입니다.</p>
 <p>제가 가장 공들인 건 실행 로직이었는데, 정작 시스템을 지켜준 건 "실패했을 때 뭘 하라"를 다시 설계한 쪽이었습니다. 다음부터는 기능을 다 짠 뒤에 복구 안내를 "그 기능의 일부"로 같이 리뷰하려고 합니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

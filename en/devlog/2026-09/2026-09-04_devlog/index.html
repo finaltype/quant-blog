@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Sep 4] Closing Out Yesterday&#x27;s Workaround and Two Misfiring Bugs&quot; · Quant Trading Bot Devlog</title>
+<title>Closing Out Yesterday&#x27;s Workaround and Two Misfiring Bugs | Quant Bot Devlog</title>
+<meta name="description" content="Fixed the hardcoding that blocked manual trading rounds at the root, and tracked down why a ledger-contamination bug recurred and why an overnight re…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-04_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-04_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-04_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-04_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Closing Out Yesterday&#x27;s Workaround and Two Misfiring Bugs">
+<meta property="og:description" content="Fixed the hardcoding that blocked manual trading rounds at the root, and tracked down why a ledger-contamination bug recurred and why an overnight re…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-04_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Closing Out Yesterday's Workaround and Two Misfiring Bugs", "description": "Fixed the hardcoding that blocked manual trading rounds at the root, and tracked down why a ledger-contamination bug recurred and why an overnight re…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-04_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-04"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-04_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-04_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Sep 4] Closing Out Yesterday&#x27;s Workaround and Two Misfiring Bugs&quot;</h1>
+<h1>Closing Out Yesterday&#x27;s Workaround and Two Misfiring Bugs</h1>
+<p class="post-date"><time datetime="2026-09-04">2026-09-04</time></p>
 <p class="subtitle">Fixed the hardcoding that blocked manual trading rounds at the root, and tracked down why a ledger-contamination bug recurred and why an overnight recovery guard kept misfiring</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>Going back to fix yesterday's workaround properly</h2>
 <p>While recovering from yesterday's overnight batch failure, I found that manually triggering a trading round always failed with zero orders placed.</p>
@@ -53,6 +67,6 @@
 <p>Deployment avoided a restart during market hours — it's scheduled to restart quietly once, in a fixed off-hours window. Whether it actually stops misfiring only gets confirmed by tonight's run.</p>
 <p>All three things that landed on the same day followed a similar shape: one problem patched around yesterday, one recurrence of the same bug family in a different function, and one safety mechanism that had been misjudging a normal situation as an incident. In each case, I didn't just stop the symptom — I traced it back to the actual root cause before calling it closed.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

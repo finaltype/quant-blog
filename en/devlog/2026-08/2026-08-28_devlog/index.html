@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Aug 28] GPU Job Time-Window Collisions - Turning Repeated Failures Into Infrastructure&quot; · Quant Trading Bot Devlog</title>
+<title>GPU Job Time-Window Collisions - Turning Repeated Failures Into Infrastructure | Quant Bot Devlog</title>
+<meta name="description" content="I moved the safety-window math I&#x27;d been doing by hand into code, and also fixed a live-account trade that got reversed right after it went through">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-28_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-28_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-28_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-28_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GPU Job Time-Window Collisions - Turning Repeated Failures Into Infrastructure">
+<meta property="og:description" content="I moved the safety-window math I&#x27;d been doing by hand into code, and also fixed a live-account trade that got reversed right after it went through">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-28_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "GPU Job Time-Window Collisions - Turning Repeated Failures Into Infrastructure", "description": "I moved the safety-window math I'd been doing by hand into code, and also fixed a live-account trade that got reversed right after it went through", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-28_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-28"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-28_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-28_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Aug 28] GPU Job Time-Window Collisions - Turning Repeated Failures Into Infrastructure&quot;</h1>
+<h1>GPU Job Time-Window Collisions - Turning Repeated Failures Into Infrastructure</h1>
+<p class="post-date"><time datetime="2026-08-28">2026-08-28</time></p>
 <p class="subtitle">I moved the safety-window math I&#x27;d been doing by hand into code, and also fixed a live-account trade that got reversed right after it went through</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>Today I kept getting stuck trying to run a GPU experiment to evaluate a new local model candidate.</p>
 <p>The first attempt died immediately because the runtime environment was missing a required program path. The second attempt died too, running under the wrong Python environment that didn't have a needed library.</p>
@@ -49,6 +63,6 @@
 <p>The two problems today look unrelated, but they taught the same lesson. Whether it's a time window or a price band, logic that sits right up against a boundary breaks easily from the smallest error or fluctuation.</p>
 <p>Since the boundaries themselves can't go away, today's fix for both was simply to give them more margin.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

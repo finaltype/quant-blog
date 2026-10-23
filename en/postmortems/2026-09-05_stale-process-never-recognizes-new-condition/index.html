@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Why a Resident Process Could Never Recognize a Newly Registered Condition · Quant Trading Bot Devlog</title>
+<title>Why a Resident Process Could Never Recognize a Newly Registered Condition | Quant Bot Devlog</title>
+<meta name="description" content="The code was deployed, but the process meant to run it had already been running since before that">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Why a Resident Process Could Never Recognize a Newly Registered Condition">
+<meta property="og:description" content="The code was deployed, but the process meant to run it had already been running since before that">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Why a Resident Process Could Never Recognize a Newly Registered Condition", "description": "The code was deployed, but the process meant to run it had already been running since before that", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-05"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../postmortems/2026-09-05_stale-process-never-recognizes-new-condition/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">한국어로 보기</a></p>
 <article>
 <h1>Why a Resident Process Could Never Recognize a Newly Registered Condition</h1>
+<p class="post-date"><time datetime="2026-09-05">2026-09-05</time></p>
 <p class="subtitle">The code was deployed, but the process meant to run it had already been running since before that</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>The trading system has a scheduling queue for tasks meant to run "not now, but once a specific condition becomes true later." I recently added a new condition to that queue, and the task I registered sat silently for over an hour without firing.</p>
 <h2>What happened</h2>
@@ -52,6 +66,6 @@
 <p><strong>In systems where deployment and process lifecycle are decoupled, it's safer to make "does the process running this also need a restart" an explicit checklist item for every deployment that touches dispatch logic.</strong> Rather than relying on someone remembering every time, it would be even better to have the deploy script look at the list of changed files and automatically report back which resident processes import them.</p>
 <p><strong>Directly watching a newly registered condition actually fire once, as scheduled, is cheap insurance.</strong> In this case, checking whether it fired right after registration would have narrowed down the cause immediately instead of waiting an hour. "It's registered" and "it actually works" are different questions.</p>
 </article>
-<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

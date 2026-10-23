@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260922] 서버가 조용히 망가지는 문제 - 감지·격리·복구 안전장치를 만든 하루&quot; · Quant Trading Bot Devlog</title>
+<title>서버가 조용히 망가지는 문제 - 감지·격리·복구 안전장치를 만든 하루 | 퀀트봇 개발일지</title>
+<meta name="description" content="어제 발견한 뉴스 입력 사고를 마무리하자마자 새로운 결함이 나타났고, 재발 방지 장치를 하루 만에 만들었습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-22_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-22_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-22_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-22_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="서버가 조용히 망가지는 문제 - 감지·격리·복구 안전장치를 만든 하루">
+<meta property="og:description" content="어제 발견한 뉴스 입력 사고를 마무리하자마자 새로운 결함이 나타났고, 재발 방지 장치를 하루 만에 만들었습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-22_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "서버가 조용히 망가지는 문제 - 감지·격리·복구 안전장치를 만든 하루", "description": "어제 발견한 뉴스 입력 사고를 마무리하자마자 새로운 결함이 나타났고, 재발 방지 장치를 하루 만에 만들었습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-22_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-22"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-22_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-22_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260922] 서버가 조용히 망가지는 문제 - 감지·격리·복구 안전장치를 만든 하루&quot;</h1>
+<h1>서버가 조용히 망가지는 문제 - 감지·격리·복구 안전장치를 만든 하루</h1>
+<p class="post-date"><time datetime="2026-09-22">2026-09-22</time></p>
 <p class="subtitle">어제 발견한 뉴스 입력 사고를 마무리하자마자 새로운 결함이 나타났고, 재발 방지 장치를 하루 만에 만들었습니다.</p><h2>어제 사고의 마무리</h2>
 <p>어제 밤 확인된 문제는 뉴스 기반 종목 스코어링의 입력 자체가 무너져 있었다는 것이었습니다.</p>
 <p>네이버가 종목 페이지를 리다이렉트하고 뉴스 목록을 가져오던 경로가 아예 사라지면서, 봇이 종목 이름조차 못 알아보고 뉴스 없이 점수를 매기는 상태가 일주일 넘게 이어지고 있었습니다.</p>
@@ -51,6 +65,6 @@
 <p>오늘 있었던 일들을 돌아보면 공통된 패턴이 하나 있습니다. 문제를 발견하면 바로 고치기보다, 원인 분석과 대안을 먼저 검토받고 그 위에서 최종 판단을 내리는 순서를 그대로 지켰다는 점입니다.</p>
 <p>뉴스 입력 결손이 이동평균에서 완전히 빠지는 시점과, 섀도 전략의 60일 관측이 끝나는 시점 모두 앞으로 며칠 안에 자동으로 판정되도록 걸어뒀습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

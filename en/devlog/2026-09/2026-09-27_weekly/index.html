@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Sep 22-27] Stacking Safety Nets While Re-Checking Whether Fixes Actually Worked&quot; · Quant Trading Bot Devlog</title>
+<title>Stacking Safety Nets While Re-Checking Whether Fixes Actually Worked | Quant Bot Devlog</title>
+<meta name="description" content="From a server degeneration guard to a dead-slot detector on GPU, several safety layers went up this week — and repeatedly, re-checking whether a fix…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-27_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-27_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-27_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Stacking Safety Nets While Re-Checking Whether Fixes Actually Worked">
+<meta property="og:description" content="From a server degeneration guard to a dead-slot detector on GPU, several safety layers went up this week — and repeatedly, re-checking whether a fix…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-27_weekly/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Stacking Safety Nets While Re-Checking Whether Fixes Actually Worked", "description": "From a server degeneration guard to a dead-slot detector on GPU, several safety layers went up this week — and repeatedly, re-checking whether a fix…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-27_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-27"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-27_weekly/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-09/2026-09-27_weekly/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Sep 22-27] Stacking Safety Nets While Re-Checking Whether Fixes Actually Worked&quot;</h1>
+<h1>Stacking Safety Nets While Re-Checking Whether Fixes Actually Worked</h1>
+<p class="post-date"><time datetime="2026-09-27">2026-09-27</time></p>
 <p class="subtitle">From a server degeneration guard to a dead-slot detector on GPU, several safety layers went up this week — and repeatedly, re-checking whether a fix actually achieved its goal turned up a wrong premise underneath.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>Two threads alternated through this week.</p>
 <p>One was stacking new safety nets: a server degeneration guard, per-card GPU locking, a dead-slot detector, and test isolation all landed this week.</p>
@@ -65,6 +79,6 @@
 <p>The thread running through this week was re-checking cause and premise instead of patching on the spot. Realizing the overnight-timing fix hadn't achieved its goal, clearing the wrong premise behind order matching, and tracing the GPU bottleneck to weight loading instead of slot count were all the same pattern.</p>
 <p>At the same time, several unattended-safety layers went up this week — detect-isolate-recover, per-card locking, dead-slot detection, test isolation. Next week continues with the live rollout of the news-collection window change, wiring a restart action into the dead-slot detector, and reviewing kernel-profiling results.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

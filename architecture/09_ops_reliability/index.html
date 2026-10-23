@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>퀀트봇 운영 구조 - 프로세스 분리, 리포트, 성과 추적 · Quant Trading Bot Devlog</title>
+<title>퀀트봇 운영 구조 - 프로세스 분리, 리포트, 성과 추적 | 퀀트봇 개발일지</title>
+<meta name="description" content="하나의 스크립트가 다 하던 구조를 여러 프로세스로 나누고, 리포트와 성과 추적 방식도 함께 다듬어온 이야기입니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="퀀트봇 운영 구조 - 프로세스 분리, 리포트, 성과 추적">
+<meta property="og:description" content="하나의 스크립트가 다 하던 구조를 여러 프로세스로 나누고, 리포트와 성과 추적 방식도 함께 다듬어온 이야기입니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "퀀트봇 운영 구조 - 프로세스 분리, 리포트, 성과 추적", "description": "하나의 스크립트가 다 하던 구조를 여러 프로세스로 나누고, 리포트와 성과 추적 방식도 함께 다듬어온 이야기입니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,8 +37,8 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/architecture/09_ops_reliability/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/architecture/09_ops_reliability/">Read in English</a></p>
 <article>
 <h1>퀀트봇 운영 구조 - 프로세스 분리, 리포트, 성과 추적</h1>
 <p class="subtitle">하나의 스크립트가 다 하던 구조를 여러 프로세스로 나누고, 리포트와 성과 추적 방식도 함께 다듬어온 이야기입니다</p><p>퀀트봇의 겉으로 보이는 기능(매매 제안, 추천 리포트) 못지않게 신경 쓰는 부분이 있습니다. 이 시스템이 사람이 안 보고 있어도 계속 안정적으로 돌아가는지, 그리고 잘 돌아가고 있다는 걸 어떻게 확인하는지입니다. 오늘은 그 얘기를 정리해봤습니다.</p>
@@ -46,6 +59,6 @@
 <hr />
 <p>화려한 기능은 아니지만, 결국 이런 부분들이 쌓여야 "혼자 돌아가는" 시스템을 믿고 맡길 수 있게 되는 것 같습니다. 전체 프로젝트 구조가 궁금하시면 <a href="https://finaltype.github.io/quant-blog/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">프로젝트 구조 글</a>(새 창)도 함께 봐주세요.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260918] 성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다&quot; · Quant Trading Bot Devlog</title>
+<title>성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다 | 퀀트봇 개발일지</title>
+<meta name="description" content="GPU 사용량을 실제보다 3배 넘게 잘못 계산하고 있었고, 측정 시간제한이 너무 짧아 후보 순위까지 거꾸로 나오고 있었습니다. 두 건 다 오늘 안에 찾아 고쳤습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-18_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-18_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-18_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-18_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다">
+<meta property="og:description" content="GPU 사용량을 실제보다 3배 넘게 잘못 계산하고 있었고, 측정 시간제한이 너무 짧아 후보 순위까지 거꾸로 나오고 있었습니다. 두 건 다 오늘 안에 찾아 고쳤습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-18_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다", "description": "GPU 사용량을 실제보다 3배 넘게 잘못 계산하고 있었고, 측정 시간제한이 너무 짧아 후보 순위까지 거꾸로 나오고 있었습니다. 두 건 다 오늘 안에 찾아 고쳤습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-18_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-18"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-18_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-18_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260918] 성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다&quot;</h1>
+<h1>성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다</h1>
+<p class="post-date"><time datetime="2026-09-18">2026-09-18</time></p>
 <p class="subtitle">GPU 사용량을 실제보다 3배 넘게 잘못 계산하고 있었고, 측정 시간제한이 너무 짧아 후보 순위까지 거꾸로 나오고 있었습니다. 두 건 다 오늘 안에 찾아 고쳤습니다.</p><h2>GPU 사용량이 3배 넘게 부풀려져 있었다</h2>
 <p>어제 마지막으로 걸어둔 벤치마크가 밤사이 자동으로 돌았습니다.</p>
 <p>결과를 확인하니 이상한 숫자가 나왔습니다. 트라이얼 하나가 하루 GPU 사용 한도의 80% 넘게를 혼자 다 써버린 걸로 기록돼 있었습니다.</p>
@@ -51,6 +65,6 @@
 <p>정정된 회계·시간제한 기준으로 벤치마크를 계속 이어가는 중입니다.</p>
 <p>다음 확인 지점은 오늘 밤 자동으로 재개되는 라운드에서 이번에 고친 값들이 실제로 정상 찍히는지, 그리고 지난 데이터와 직접 비교하지 않고 이번 라운드 자체 기준으로만 판정되는지입니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

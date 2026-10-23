@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[261004] 동시성 올리기 스모크와 출력 토큰 상한 부재 발견&quot; · Quant Trading Bot Devlog</title>
+<title>동시성 올리기 스모크와 출력 토큰 상한 부재 발견 | 퀀트봇 개발일지</title>
+<meta name="description" content="모델 서빙 처리량을 올리려 동시요청수를 단계적으로 올려봤는데 스모크 테스트에서 걸렸고, 그 와중에 출력 쪽에 애초에 토큰 상한이 없었다는 걸 알게 됐습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-04_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-04_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-04_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-04_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="동시성 올리기 스모크와 출력 토큰 상한 부재 발견">
+<meta property="og:description" content="모델 서빙 처리량을 올리려 동시요청수를 단계적으로 올려봤는데 스모크 테스트에서 걸렸고, 그 와중에 출력 쪽에 애초에 토큰 상한이 없었다는 걸 알게 됐습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-04_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "동시성 올리기 스모크와 출력 토큰 상한 부재 발견", "description": "모델 서빙 처리량을 올리려 동시요청수를 단계적으로 올려봤는데 스모크 테스트에서 걸렸고, 그 와중에 출력 쪽에 애초에 토큰 상한이 없었다는 걸 알게 됐습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-04_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-04"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-04_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-04_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[261004] 동시성 올리기 스모크와 출력 토큰 상한 부재 발견&quot;</h1>
+<h1>동시성 올리기 스모크와 출력 토큰 상한 부재 발견</h1>
+<p class="post-date"><time datetime="2026-10-04">2026-10-04</time></p>
 <p class="subtitle">모델 서빙 처리량을 올리려 동시요청수를 단계적으로 올려봤는데 스모크 테스트에서 걸렸고, 그 와중에 출력 쪽에 애초에 토큰 상한이 없었다는 걸 알게 됐습니다.</p><h2>처리량을 더 올려보기로 했다</h2>
 <p>지금 쓰는 35B 모델의 동시요청수(흔히 np라고 부르는 값)를 더 올려서 처리량을 높여보기로 했습니다.</p>
 <p>기존 값에서 한 단계, 두 단계 더 올린 설정 두 가지를 같이 스모크 테스트에 넣었습니다.</p>
@@ -53,6 +67,6 @@
 <p>동시성은 지금 통과한 설정으로 당분간 유지하고, 더 올리는 건 나중에 다시 시도합니다.</p>
 <p>출력 상한을 낮게 거는 수선과 도구 호출 결함 수선은 내일 휴장일 낮에 다시 스모크를 돌려 통과하면 같은 재시작에 같이 반영하고, 못 넘기면 다음으로 미루기로 했습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

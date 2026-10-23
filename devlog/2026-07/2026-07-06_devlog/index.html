@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[260706] 로컬 LLM 3종 비교에서 찾아낸 숨은 실패 패턴들 · Quant Trading Bot Devlog</title>
+<title>로컬 LLM 3종 비교에서 찾아낸 숨은 실패 패턴들 | 퀀트봇 개발일지</title>
+<meta name="description" content="등급 분포만 봐서는 안 보였던 두 가지 실패 유형, 그리고 프레임워크 마이그레이션으로 잡은 구조화 출력 문제">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-06_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-06_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-06_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-06_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="로컬 LLM 3종 비교에서 찾아낸 숨은 실패 패턴들">
+<meta property="og:description" content="등급 분포만 봐서는 안 보였던 두 가지 실패 유형, 그리고 프레임워크 마이그레이션으로 잡은 구조화 출력 문제">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-06_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "로컬 LLM 3종 비교에서 찾아낸 숨은 실패 패턴들", "description": "등급 분포만 봐서는 안 보였던 두 가지 실패 유형, 그리고 프레임워크 마이그레이션으로 잡은 구조화 출력 문제", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-06_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-07-06"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-06_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-06_devlog/">Read in English</a></p>
 <article>
-<h1>[260706] 로컬 LLM 3종 비교에서 찾아낸 숨은 실패 패턴들</h1>
+<h1>로컬 LLM 3종 비교에서 찾아낸 숨은 실패 패턴들</h1>
+<p class="post-date"><time datetime="2026-07-06">2026-07-06</time></p>
 <p class="subtitle">등급 분포만 봐서는 안 보였던 두 가지 실패 유형, 그리고 프레임워크 마이그레이션으로 잡은 구조화 출력 문제</p><p>프로젝트 초반이라 하루 단위로 바뀌는 게 많습니다. 매일 올리진 못하겠지만, 굵직한 변화가 있었던 날은 이렇게 짧게 남겨보려고 합니다. 오늘은 세 가지 축으로 작업했습니다.</p>
 <h2>1. 로컬 LLM 3종 정식 비교</h2>
 <p>멀티에이전트 LLM 리서치 파이프라인에 쓸 로컬 모델을 하나 골라야 해서, 후보 3개를 같은 조건(같은 종목 목록, 같은 날짜)으로 순차 실행해서 비교했습니다.</p>
@@ -59,6 +73,6 @@
 <hr />
 <p>오늘은 이 정도로 정리합니다. 앞으로도 눈에 띄는 변화가 있으면 이런 형태로 가볍게 남겨볼 예정입니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Oct 19] Consolidating Broker Paths — Swapping Out the Paper-Trading Comparison Track&quot; · Quant Trading Bot Devlog</title>
+<title>Consolidating Broker Paths — Swapping Out the Paper-Trading Comparison Track | Quant Bot Devlog</title>
+<meta name="description" content="Retired an old paper-trading comparison track for a new simulated-broker one in a single day, while deliberately leaving a way back.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-19_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-19_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-19_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-19_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Consolidating Broker Paths — Swapping Out the Paper-Trading Comparison Track">
+<meta property="og:description" content="Retired an old paper-trading comparison track for a new simulated-broker one in a single day, while deliberately leaving a way back.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-19_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Consolidating Broker Paths — Swapping Out the Paper-Trading Comparison Track", "description": "Retired an old paper-trading comparison track for a new simulated-broker one in a single day, while deliberately leaving a way back.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-19_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-19"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-19_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-19_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Oct 19] Consolidating Broker Paths — Swapping Out the Paper-Trading Comparison Track&quot;</h1>
+<h1>Consolidating Broker Paths — Swapping Out the Paper-Trading Comparison Track</h1>
+<p class="post-date"><time datetime="2026-10-19">2026-10-19</time></p>
 <p class="subtitle">Retired an old paper-trading comparison track for a new simulated-broker one in a single day, while deliberately leaving a way back.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>Narrowing down to one broker path</h2>
 <p>For a while I'd been running a secondary broker alongside the main one, for paper trading and as a backup.</p>
@@ -48,6 +62,6 @@
 <p>I could have deleted the secondary broker's code and keys outright, but that would trade away a fast recovery path if the main one ever breaks. Simplifying and staying resilient didn't have to be an either/or choice.</p>
 <p>What mattered more than the swap itself was building something to watch it. A big transition is easy to half-miss if the only plan is reading logs top-to-bottom the next morning. Both the automated checker and the automated code review point the same direction: let the system flag problems by morning instead of relying on someone staying up all night.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

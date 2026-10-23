@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260826] A Sequential-Execution Bug from Moving Production Earlier, and Verifying a New Broker Connection&quot; · Quant Trading Bot Devlog</title>
+<title>A Sequential-Execution Bug from Moving Production Earlier, and Verifying a New Broker Connection | Quant Bot Devlog</title>
+<meta name="description" content="I fixed a sequential-execution bug uncovered by pulling production earlier, with a batching switch, and verified a new broker&#x27;s API against a real ac…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-26_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-26_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-26_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08-26_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A Sequential-Execution Bug from Moving Production Earlier, and Verifying a New Broker Connection">
+<meta property="og:description" content="I fixed a sequential-execution bug uncovered by pulling production earlier, with a batching switch, and verified a new broker&#x27;s API against a real ac…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-26_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "A Sequential-Execution Bug from Moving Production Earlier, and Verifying a New Broker Connection", "description": "I fixed a sequential-execution bug uncovered by pulling production earlier, with a batching switch, and verified a new broker's API against a real ac…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08-26_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-26"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-26_devlog/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08-26_devlog/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[260826] A Sequential-Execution Bug from Moving Production Earlier, and Verifying a New Broker Connection&quot;</h1>
+<h1>A Sequential-Execution Bug from Moving Production Earlier, and Verifying a New Broker Connection</h1>
+<p class="post-date"><time datetime="2026-08-26">2026-08-26</time></p>
 <p class="subtitle">I fixed a sequential-execution bug uncovered by pulling production earlier, with a batching switch, and verified a new broker&#x27;s API against a real account</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>A sequential-execution bug uncovered by moving the start time earlier</h2>
 <p>Earlier today, I pulled the production pipeline's start time much earlier than before.</p>
@@ -58,6 +72,6 @@
 <hr />
 <p>Today I ran into the same kind of mistake twice: carrying over a number or behavior validated in an experimental setup without checking whether production's actual conditions differed. Whether processing ran sequentially or concurrently, and whether a cancellation showed up as a new event — both only became clear once I checked directly instead of assuming.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

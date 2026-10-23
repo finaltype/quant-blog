@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Aug 2026] Going Live and Onboarding a Second Broker, With Quiet Bugs Along the Way&quot; · Quant Trading Bot Devlog</title>
+<title>Going Live and Onboarding a Second Broker, With Quiet Bugs Along the Way | Quant Bot Devlog</title>
+<meta name="description" content="This month&#x27;s biggest progress was starting live trading and running a second broker in parallel, while I kept turning up bugs that had been failing q…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08_monthly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08_monthly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08_monthly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-08/2026-08_monthly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Going Live and Onboarding a Second Broker, With Quiet Bugs Along the Way">
+<meta property="og:description" content="This month&#x27;s biggest progress was starting live trading and running a second broker in parallel, while I kept turning up bugs that had been failing q…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08_monthly/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Going Live and Onboarding a Second Broker, With Quiet Bugs Along the Way", "description": "This month's biggest progress was starting live trading and running a second broker in parallel, while I kept turning up bugs that had been failing q…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-08/2026-08_monthly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-01"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08_monthly/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-08/2026-08_monthly/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Aug 2026] Going Live and Onboarding a Second Broker, With Quiet Bugs Along the Way&quot;</h1>
+<h1>Going Live and Onboarding a Second Broker, With Quiet Bugs Along the Way</h1>
+<p class="post-date"><time datetime="2026-08-01">2026-08-01</time></p>
 <p class="subtitle">This month&#x27;s biggest progress was starting live trading and running a second broker in parallel, while I kept turning up bugs that had been failing quietly for days</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <h2>A quiet regression, then a full audit right before going live</h2>
 <p>August started with wrapping up the alert system work carried over from the previous month.</p>
@@ -90,6 +104,6 @@
 <p>The other was a repeated pattern of finding things that had been quietly failing for days — sometimes weeks — scattered throughout that progress: a process that never restarted, an API field silently scaled down, a monitoring window that missed the second half of every night.</p>
 <p>Running into that same "it runs, but nothing is actually being checked" failure mode all month long was a steady reminder that this system still isn't at a point where it can be fully trusted on its own.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

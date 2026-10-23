@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다 · Quant Trading Bot Devlog</title>
+<title>테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다 | 퀀트봇 개발일지</title>
+<meta name="description" content="이틀 연속 재발하고서야 잡은 근본원인 - 로컬 임포트와 파이썬 기본인자 바인딩">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다">
+<meta property="og:description" content="이틀 연속 재발하고서야 잡은 근본원인 - 로컬 임포트와 파이썬 기본인자 바인딩">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다", "description": "이틀 연속 재발하고서야 잡은 근본원인 - 로컬 임포트와 파이썬 기본인자 바인딩", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-03"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">Read in English</a></p>
 <article>
 <h1>테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다</h1>
+<p class="post-date"><time datetime="2026-09-03">2026-09-03</time></p>
 <p class="subtitle">이틀 연속 재발하고서야 잡은 근본원인 - 로컬 임포트와 파이썬 기본인자 바인딩</p><p>며칠 전, 모의투자 계좌 하나가 이틀 연속 같은 이유로 거래를 멈췄습니다.</p>
 <p>원인을 찾다가 처음엔 "테스트 스크립트가 실수로 실 DB에 뭔가 썼나 보다"로 결론 내고 넘어갔습니다. 다음날 똑같은 일이 또 일어나고 나서야 진짜 원인을 잡았습니다.</p>
 <h2>무슨 일이 있었는지</h2>
@@ -61,6 +75,6 @@
 <p><strong>첫 발생에서 원인을 특정하지 못했다면, 그 사실 자체를 다음 발생과 이어붙일 장치를 남겨둬야 합니다.</strong> 처음엔 "일회성 사고"로 정리하고 넘어갔는데, 재발하고 나서야 두 사고가 같은 원인이라는 게 드러났습니다. 이례적인 데이터 흔적(호출 패턴, 타임스탬프 간격, 값의 배율 오차 등)은 삭제하기 전에 기록해두면, 다음 재발 때 훨씬 빨리 연결할 수 있습니다.</p>
 <p><strong>성공 경로도 실패 경로만큼 철저히 격리해야 합니다.</strong> 테스트를 짤 때 "이 함수가 실패하면 어떻게 되나"는 신경 쓰기 쉬운데, "이 함수가 성공하면 무엇을 건드리나"는 상대적으로 덜 의심하게 됩니다. 이번 사고의 진원지도 정확히 그 성공 경로였습니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days · Quant Trading Bot Devlog</title>
+<title>The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days | Quant Bot Devlog</title>
+<meta name="description" content="A single except line meant to quietly skip cache corruption also swallowed the case where the dependency library wasn&#x27;t even installed">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-29_swallowed-exception-silent-failure/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-29_swallowed-exception-silent-failure/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-29_swallowed-exception-silent-failure/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-08-29_swallowed-exception-silent-failure/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days">
+<meta property="og:description" content="A single except line meant to quietly skip cache corruption also swallowed the case where the dependency library wasn&#x27;t even installed">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-08-29_swallowed-exception-silent-failure/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days", "description": "A single except line meant to quietly skip cache corruption also swallowed the case where the dependency library wasn't even installed", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-08-29_swallowed-exception-silent-failure/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-08-29"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../postmortems/2026-08-29_swallowed-exception-silent-failure/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-08-29_swallowed-exception-silent-failure/">한국어로 보기</a></p>
 <article>
 <h1>The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days</h1>
+<p class="post-date"><time datetime="2026-08-29">2026-08-29</time></p>
 <p class="subtitle">A single except line meant to quietly skip cache corruption also swallowed the case where the dependency library wasn&#x27;t even installed</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>A few days ago I found out that a module I'd added eight days earlier had never worked correctly since it was created.</p>
 <p>There were no error logs. No crashes. It was just quietly returning empty values the whole time.</p>
@@ -57,6 +71,6 @@
 <p><strong>"It runs without errors" is not evidence that "it works."</strong> This is especially true when there's a safety fallback that quietly reverts to the old logic on failure — that fallback can trigger every single time and still look completely fine from the outside. After wiring in a new module, it's worth directly confirming, at least once, that the new path is actually the one being taken.</p>
 <p><strong>If you wrote new code to fix a bug, whether that code is actually running is a precondition for saying the bug is fixed.</strong> Shipping it is not evidence by itself.</p>
 </article>
-<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

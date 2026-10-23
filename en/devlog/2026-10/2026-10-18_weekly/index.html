@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[Oct 12-18] Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored&quot; · Quant Trading Bot Devlog</title>
+<title>Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored | Quant Bot Devlog</title>
+<meta name="description" content="Three incidents this week each got handled by hand — then followed by work to make sure the same intervention would next time be logged and alerted o…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-18_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-18_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-18_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-18_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored">
+<meta property="og:description" content="Three incidents this week each got handled by hand — then followed by work to make sure the same intervention would next time be logged and alerted o…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-18_weekly/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored", "description": "Three incidents this week each got handled by hand — then followed by work to make sure the same intervention would next time be logged and alerted o…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-18_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-18"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-18_weekly/index.html">한국어로 보기</a></p>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-18_weekly/">한국어로 보기</a></p>
 <article>
-<h1>&quot;[Oct 12-18] Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored&quot;</h1>
+<h1>Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored</h1>
+<p class="post-date"><time datetime="2026-10-18">2026-10-18</time></p>
 <p class="subtitle">Three incidents this week each got handled by hand — then followed by work to make sure the same intervention would next time be logged and alerted on automatically, or not need a human at all.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
 <p>Three situations this week needed a hand directly on the keyboard: an experiment infrastructure bug, a GPU driver mismatch, and a live-account buy block.</p>
 <p>Different in nature, but handled the same way each time.</p>
@@ -59,6 +73,6 @@
 <p>Saturday's pre-registered judgment call ran on the same logic. Ambiguous data tempts a person to keep watching a little longer — a criterion written down in advance is what overrides that temptation.</p>
 <p>What the three incidents had in common is that the defenses break at the edges, not down the middle of the logic — in the execution environment a pre-check can't reach, in the moment a human steps in, at the boundary where a judgment turns ambiguous. Next week is for watching whether the devices added this week — the eight manual-intervention guards, the GPU reboot automation, the closed shadow experiment — actually hold quietly in practice.</p>
 </article>
-<footer class="site"><a href="../../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>

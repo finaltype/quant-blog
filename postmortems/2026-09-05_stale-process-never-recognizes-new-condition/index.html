@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유 · Quant Trading Bot Devlog</title>
+<title>새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유 | 퀀트봇 개발일지</title>
+<meta name="description" content="코드는 배포됐는데 그 코드를 실행할 프로세스가 그 전부터 떠 있었던 경우">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유">
+<meta property="og:description" content="코드는 배포됐는데 그 코드를 실행할 프로세스가 그 전부터 떠 있었던 경우">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유", "description": "코드는 배포됐는데 그 코드를 실행할 프로세스가 그 전부터 떠 있었던 경우", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-05"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">Read in English</a></p>
 <article>
 <h1>새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유</h1>
+<p class="post-date"><time datetime="2026-09-05">2026-09-05</time></p>
 <p class="subtitle">코드는 배포됐는데 그 코드를 실행할 프로세스가 그 전부터 떠 있었던 경우</p><p>자동매매 시스템에는 "지금은 아니지만 나중 특정 조건이 되면 실행"할 작업을 등록해두는 예약 큐가 있습니다. 최근 이 큐에 새 조건 하나를 추가했는데, 등록한 작업이 한 시간 넘게 아무 반응 없이 조용히 멈춰 있었습니다.</p>
 <h2>무슨 일이 있었는지</h2>
 <p>새 조건은 "지금 상주 프로세스를 재시작해도 안전한가"를 판정하는 용도였습니다. 다른 야간 작업과 겹치면 안 되는 재시작이라, 이 조건이 참이 될 때까지 기다렸다가 재시작을 트리거하도록 설계했습니다.</p>
@@ -51,6 +65,6 @@
 <p><strong>배포와 프로세스 생명주기가 분리된 시스템에서는, 디스패치 로직을 건드리는 배포마다 "이걸 실행하는 프로세스도 재시작이 필요한가"를 체크리스트 항목으로 명시하는 게 안전합니다.</strong> 사람이 매번 기억하기보다, 배포 스크립트가 변경된 파일 목록을 보고 그 파일을 임포트하는 상주 프로세스 목록을 역으로 알려주는 자동화가 있다면 더 좋습니다.</p>
 <p><strong>새로 등록한 것이 예정대로 한 번은 실제로 발화하는지 직접 눈으로 확인하는 습관이 저렴한 보험입니다.</strong> 이번 경우 등록 직후 발화 여부를 확인했다면 한 시간을 기다리지 않고 바로 원인을 좁힐 수 있었을 겁니다. "등록됐다"는 확인과 "실제로 작동한다"는 확인은 다른 질문입니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

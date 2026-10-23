@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260901] 구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화&quot; · Quant Trading Bot Devlog</title>
+<title>구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화 | 퀀트봇 개발일지</title>
+<meta name="description" content="AI에게 프로젝트 구조를 통째로 봐달라고 했고, 고친 뒤엔 다시 검증까지 맡겼다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-01_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-01_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-01_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-01_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화">
+<meta property="og:description" content="AI에게 프로젝트 구조를 통째로 봐달라고 했고, 고친 뒤엔 다시 검증까지 맡겼다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-01_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화", "description": "AI에게 프로젝트 구조를 통째로 봐달라고 했고, 고친 뒤엔 다시 검증까지 맡겼다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-01_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-01"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-01_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-01_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260901] 구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화&quot;</h1>
+<h1>구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화</h1>
+<p class="post-date"><time datetime="2026-09-01">2026-09-01</time></p>
 <p class="subtitle">AI에게 프로젝트 구조를 통째로 봐달라고 했고, 고친 뒤엔 다시 검증까지 맡겼다</p><h2>프로젝트 구조를 AI에게 통째로 봐달라고 했다</h2>
 <p>며칠 전부터 이 프로젝트가 꽤 커져서, 코드 구조 전체를 다시 한번 점검받아야겠다고 생각했습니다.</p>
 <p>그래서 AI에게 프로젝트 전체 구조를 훑어보고 개선할 부분을 짚어달라고 요청했습니다.</p>
@@ -57,6 +71,6 @@
 <p>체결가를 원장에 기록하는 시점에 조회한 값이 비정상적으로 축소돼 있지 않은지 미리 비교해서 걸러내는 가드 하나, 그리고 원장 정합성 차단이 여러 거래일 연속으로 풀리지 않으면 자동으로 경보 수위를 올리는 규율 하나였습니다.</p>
 <p>이걸로 재발방지책 4건이 전부 끝났습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

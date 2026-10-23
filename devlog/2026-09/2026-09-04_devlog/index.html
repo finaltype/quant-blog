@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260904] 어제 남긴 우회 경로 허점과 오탐 버그 두 건을 마저 수선하다&quot; · Quant Trading Bot Devlog</title>
+<title>어제 남긴 우회 경로 허점과 오탐 버그 두 건을 마저 수선하다 | 퀀트봇 개발일지</title>
+<meta name="description" content="수동 라운드를 막던 하드코딩 문제를 근본적으로 고치고, 이틀째 재발한 테스트 오염과 야간 복구 로직의 오탐 원인도 함께 잡았습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-04_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-04_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-04_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-04_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="어제 남긴 우회 경로 허점과 오탐 버그 두 건을 마저 수선하다">
+<meta property="og:description" content="수동 라운드를 막던 하드코딩 문제를 근본적으로 고치고, 이틀째 재발한 테스트 오염과 야간 복구 로직의 오탐 원인도 함께 잡았습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-04_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "어제 남긴 우회 경로 허점과 오탐 버그 두 건을 마저 수선하다", "description": "수동 라운드를 막던 하드코딩 문제를 근본적으로 고치고, 이틀째 재발한 테스트 오염과 야간 복구 로직의 오탐 원인도 함께 잡았습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-04_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-04"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-04_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-04_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260904] 어제 남긴 우회 경로 허점과 오탐 버그 두 건을 마저 수선하다&quot;</h1>
+<h1>어제 남긴 우회 경로 허점과 오탐 버그 두 건을 마저 수선하다</h1>
+<p class="post-date"><time datetime="2026-09-04">2026-09-04</time></p>
 <p class="subtitle">수동 라운드를 막던 하드코딩 문제를 근본적으로 고치고, 이틀째 재발한 테스트 오염과 야간 복구 로직의 오탐 원인도 함께 잡았습니다</p><h2>어제 남겨둔 우회 경로, 근본 원인부터 다시 봤다</h2>
 <p>어제 밤새 못 돈 배치를 복구하던 중, 수동으로 거래 라운드를 트리거하면 전부 무발주로 실패하는 문제가 있었습니다.</p>
 <p>당시엔 더 낮은 단계에서 직접 실행하는 우회 경로로 급한 불을 끄고, 정식 수선은 나중으로 미뤄뒀습니다.</p>
@@ -52,6 +66,6 @@
 <p>배포는 장중 재시작을 피해서, 정해진 시간대에 한 번만 조용히 재시작되도록 예약해뒀습니다. 실제로 오탐 없이 넘어가는지는 오늘 밤 결과를 봐야 확정됩니다.</p>
 <p>하루 안에 겹친 세 가지 일 모두 패턴이 비슷했습니다. 어제는 급한 대로 우회했던 문제, 같은 계열이지만 다른 함수에서 재발한 문제, 그리고 원래 안전장치인데 정상 상황을 사고로 오판하던 문제. 셋 다 증상만 막지 않고 근본 원인까지 추적한 뒤에야 마무리했습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

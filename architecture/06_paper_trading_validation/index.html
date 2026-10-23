@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>5억짜리 가짜 계좌로, 완전자동매매를 먼저 돌려보기로 했다 · Quant Trading Bot Devlog</title>
+<title>5억짜리 가짜 계좌로, 완전자동매매를 먼저 돌려보기로 했다 | 퀀트봇 개발일지</title>
+<meta name="description" content="실주문 한 번 테스트한 것과는 다른 얘기입니다. 사람 승인 없이 스스로 판단하고 주문까지 내는 자동매매가, 진짜 돈을 만나기 전에 가짜 돈으로 얼마나 버티는지 보는 중입니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="5억짜리 가짜 계좌로, 완전자동매매를 먼저 돌려보기로 했다">
+<meta property="og:description" content="실주문 한 번 테스트한 것과는 다른 얘기입니다. 사람 승인 없이 스스로 판단하고 주문까지 내는 자동매매가, 진짜 돈을 만나기 전에 가짜 돈으로 얼마나 버티는지 보는 중입니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "5억짜리 가짜 계좌로, 완전자동매매를 먼저 돌려보기로 했다", "description": "실주문 한 번 테스트한 것과는 다른 얘기입니다. 사람 승인 없이 스스로 판단하고 주문까지 내는 자동매매가, 진짜 돈을 만나기 전에 가짜 돈으로 얼마나 버티는지 보는 중입니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/architecture/06_paper_trading_validation/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,8 +37,8 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/architecture/06_paper_trading_validation/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/architecture/06_paper_trading_validation/">Read in English</a></p>
 <article>
 <h1>5억짜리 가짜 계좌로, 완전자동매매를 먼저 돌려보기로 했다</h1>
 <p class="subtitle">실주문 한 번 테스트한 것과는 다른 얘기입니다. 사람 승인 없이 스스로 판단하고 주문까지 내는 자동매매가, 진짜 돈을 만나기 전에 가짜 돈으로 얼마나 버티는지 보는 중입니다</p><p>지난 글(<a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실전 계좌 적용편</a>(새 창))에서 실주문을 한 번 내봤다는 얘기를 했습니다. 그런데 그건 사실 "배관이 뚫리는지" 확인한 것에 가깝습니다. 딱 한 번, 사람이 지켜보는 채로 사고팔아본 것뿐이니까요.</p>
@@ -52,6 +65,6 @@
 <hr />
 <p>실주문 한 번을 내본 것과, 이렇게 계속 스스로 판단하게 놔두는 것은 완전히 다른 차원의 이야기입니다. 지금은 그 차이를 가짜 돈으로 먼저 겪어보는 중입니다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

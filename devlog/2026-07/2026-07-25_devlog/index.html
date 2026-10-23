@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[260723~25] 현금 배치 버그, 위험종목 안전망, 시계 오차 사고 · Quant Trading Bot Devlog</title>
+<title>현금 배치 버그, 위험종목 안전망, 시계 오차 사고 | 퀀트봇 개발일지</title>
+<meta name="description" content="사흘 동안 새 기능보다는 이미 있던 것들을 촘촘하게 다듬었습니다 — 모의계좌 현금 배치 버그를 잡고, 지인이 알려준 종목 하나가 계기가 된 위험종목 안전망을 만들고, 재부팅 후 생긴 시계 오차 사고를 수습했습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-25_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-25_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-07/2026-07-25_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-25_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="현금 배치 버그, 위험종목 안전망, 시계 오차 사고">
+<meta property="og:description" content="사흘 동안 새 기능보다는 이미 있던 것들을 촘촘하게 다듬었습니다 — 모의계좌 현금 배치 버그를 잡고, 지인이 알려준 종목 하나가 계기가 된 위험종목 안전망을 만들고, 재부팅 후 생긴 시계 오차 사고를 수습했습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-25_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "현금 배치 버그, 위험종목 안전망, 시계 오차 사고", "description": "사흘 동안 새 기능보다는 이미 있던 것들을 촘촘하게 다듬었습니다 — 모의계좌 현금 배치 버그를 잡고, 지인이 알려준 종목 하나가 계기가 된 위험종목 안전망을 만들고, 재부팅 후 생긴 시계 오차 사고를 수습했습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-07/2026-07-25_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-07-25"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-25_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-07/2026-07-25_devlog/">Read in English</a></p>
 <article>
-<h1>[260723~25] 현금 배치 버그, 위험종목 안전망, 시계 오차 사고</h1>
+<h1>현금 배치 버그, 위험종목 안전망, 시계 오차 사고</h1>
+<p class="post-date"><time datetime="2026-07-25">2026-07-25</time></p>
 <p class="subtitle">사흘 동안 새 기능보다는 이미 있던 것들을 촘촘하게 다듬었습니다 — 모의계좌 현금 배치 버그를 잡고, 지인이 알려준 종목 하나가 계기가 된 위험종목 안전망을 만들고, 재부팅 후 생긴 시계 오차 사고를 수습했습니다</p><p>7월 23일 작업일지를 깜빡하고 못 올렸습니다. 그 사이 24일, 25일까지 밀렸는데, 25일은 거의 손을 안 댄 날이라 사흘을 한 번에 정리합니다.</p>
 <h2>모의계좌에 현금이 계속 쌓이던 이유</h2>
 <p>모의계좌에서 현금의 상당 부분이 계속 안 쓰이고 남아있는 문제가 있었습니다. 원인을 파보니, 사려는 수량이 딱 맞아떨어지지 않으면 주문을 아예 통째로 거부해버리는 로직 때문이었습니다.</p>
@@ -49,6 +63,6 @@
 <hr />
 <p>사흘 다 화려한 신기능은 없었지만, 돌이켜보면 전부 "이미 있는 걸 더 안전하게 만드는" 쪽의 작업이었습니다. 이런 날들이 쌓여야 실거래 범위를 넓힐 명분이 생기는 것 같습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

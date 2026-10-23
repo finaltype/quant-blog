@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유 · Quant Trading Bot Devlog</title>
+<title>LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유 | 퀀트봇 개발일지</title>
+<meta name="description" content="상위 함수에 값을 넘겼다는 것과, 그 값이 실제로 서버에 도착했다는 것은 다른 문장이었습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유">
+<meta property="og:description" content="상위 함수에 값을 넘겼다는 것과, 그 값이 실제로 서버에 도착했다는 것은 다른 문장이었습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유", "description": "상위 함수에 값을 넘겼다는 것과, 그 값이 실제로 서버에 도착했다는 것은 다른 문장이었습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-19"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../en/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/index.html">Read in English</a></p>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">Read in English</a></p>
 <article>
 <h1>LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유</h1>
+<p class="post-date"><time datetime="2026-09-19">2026-09-19</time></p>
 <p class="subtitle">상위 함수에 값을 넘겼다는 것과, 그 값이 실제로 서버에 도착했다는 것은 다른 문장이었습니다</p><p>몇 주 전, 대뜸 "우리 temperature 얘기 논의한 적 없지 않나?"라는 질문을 받았습니다.</p>
 <p><a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">AI 추천 파이프라인</a>(새 창)에서 쓰는 로컬 LLM의 디코딩 온도(temperature) — 같은 입력에도 매번 답이 얼마나 흔들리는지를 좌우하는 값 — 값을 정말 의도적으로 정했는지 되짚어보라는 질문이었습니다. 다시 뒤져보니, 절반은 맞고 절반은 틀린 상황이었습니다.</p>
 <h2>이미 끝난 줄 알았던 실험</h2>
@@ -57,6 +71,6 @@
 <p><strong>설정 버그를 고쳤다고 그 설정을 쓰는 모든 경로가 같이 고쳐지는 건 아니다.</strong> 같은 종류의 요청을 만드는 코드 경로가 여러 개면, 하나를 고친 뒤에는 "이 값을 쓰는 다른 진입점이 또 있는가"를 반드시 물어야 한다. 이번처럼 검증용 하네스가 프로덕션과 다른 경로로 같은 서버를 띄우는 구조라면 특히 그렇다.</p>
 <p><strong>우연히 발견된 사고는 재발 방지 장치로 이어져야 한다.</strong> 이번 건 전부 오너의 우연한 질문 하나에서 시작됐다. 같은 종류의 어긋남을 다음엔 질문이 아니라 감시축이 먼저 잡아내도록, 발견 직후에 일반화된 체크를 하나 심어두는 게 낫다.</p>
 </article>
-<footer class="site"><a href="../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>

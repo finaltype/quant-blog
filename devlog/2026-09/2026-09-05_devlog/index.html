@@ -3,9 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>&quot;[260905] 로컬 대형모델 100종목/10시간 목표 - 서버 튜닝과 원인 진단으로 보낸 하루&quot; · Quant Trading Bot Devlog</title>
+<title>로컬 대형모델 100종목/10시간 목표 - 서버 튜닝과 원인 진단으로 보낸 하루 | 퀀트봇 개발일지</title>
+<meta name="description" content="벤치마크에서 이긴 설정이 실전에서는 오히려 손해였던 이유를 추적했고, 별도로 진행 중이던 통계 경보 하나도 최종 종결했습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-05_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-05_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-09/2026-09-05_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-05_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="로컬 대형모델 100종목/10시간 목표 - 서버 튜닝과 원인 진단으로 보낸 하루">
+<meta property="og:description" content="벤치마크에서 이긴 설정이 실전에서는 오히려 손해였던 이유를 추적했고, 별도로 진행 중이던 통계 경보 하나도 최종 종결했습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-05_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "로컬 대형모델 100종목/10시간 목표 - 서버 튜닝과 원인 진단으로 보낸 하루", "description": "벤치마크에서 이긴 설정이 실전에서는 오히려 손해였던 이유를 추적했고, 별도로 진행 중이던 통계 경보 하나도 최종 종결했습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-09/2026-09-05_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-09-05"}</script>
 <style>
   :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
   body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
   a { color: #3366cc; }
   header.site { margin-bottom: 2rem; font-size: .95rem; }
@@ -24,10 +37,11 @@
 </style>
 </head>
 <body>
-<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
-<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-05_devlog/index.html">Read in English</a></p>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-09/2026-09-05_devlog/">Read in English</a></p>
 <article>
-<h1>&quot;[260905] 로컬 대형모델 100종목/10시간 목표 - 서버 튜닝과 원인 진단으로 보낸 하루&quot;</h1>
+<h1>로컬 대형모델 100종목/10시간 목표 - 서버 튜닝과 원인 진단으로 보낸 하루</h1>
+<p class="post-date"><time datetime="2026-09-05">2026-09-05</time></p>
 <p class="subtitle">벤치마크에서 이긴 설정이 실전에서는 오히려 손해였던 이유를 추적했고, 별도로 진행 중이던 통계 경보 하나도 최종 종결했습니다</p><h2>로컬 대형모델로 100종목을 10시간 안에 처리하기</h2>
 <p>최근 들인 여분 그래픽카드와 기존 메인 카드를 같이 써서, 오픈소스 대형 언어모델 하나를 로컬에서 종목분석 파이프라인에 얹어보는 실험을 오늘 하루 종일 진행했습니다.</p>
 <p>이 모델은 전체 파라미터는 크지만 실제 추론에 쓰이는 활성 파라미터는 훨씬 작은 구조(MoE)입니다. 목표는 "100개 종목을 10시간 안에 처리"였습니다.</p>
@@ -55,6 +69,6 @@
 <p>여분 그래픽카드의 전력 제한값도 팬 소음 문제로 낮춰 재조정했고, 이 카드에서 두 가지 구동 방식을 최종 대조한 결과 기존 방식이 더 빨라 그대로 채택을 확정했습니다.</p>
 <p>최근 하드웨어를 통째로 교체한 사실이 문서에 반영되면서, 예전 하드웨어에 대해 내려뒀던 판정 몇 건은 전제 자체가 사라져 무효 처리됐습니다.</p>
 </article>
-<footer class="site"><a href="../../../legal/privacy-policy/index.html">개인정보처리방침</a></footer>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
 </body>
 </html>
