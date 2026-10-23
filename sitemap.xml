@@ -251,4 +251,6 @@
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-10-10_recovery-guidance-double-execution/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/</loc></url>
   <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/</loc></url>
+  <url><loc>https://finaltype.github.io/quant-blog/en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/</loc></url>
 </urlset>

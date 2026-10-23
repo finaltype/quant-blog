@@ -120,6 +120,7 @@
 </ul>
 <h2>Postmortems</h2>
 <ul>
+<li><a href="postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/index.html">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a> · <a href="en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/index.html">EN</a><div class="sub">워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다</div></li>
 <li><a href="postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/index.html">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a> · <a href="en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/index.html">EN</a><div class="sub">한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다</div></li>
 <li><a href="postmortems/2026-10-10_recovery-guidance-double-execution/index.html">에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</a> · <a href="en/postmortems/2026-10-10_recovery-guidance-double-execution/index.html">EN</a><div class="sub">해피 패스는 수백 개 테스트를 통과했는데, 진짜 치명 결함은 &quot;실패했을 때 뭘 하라&quot;는 안내 문구 안에 있었다</div></li>
 <li><a href="postmortems/2026-10-03_order-dependent-test-pollution/index.html">순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염</a> · <a href="en/postmortems/2026-10-03_order-dependent-test-pollution/index.html">EN</a><div class="sub">단독으로 돌리면 통과하고 전체 스위트에서만 실패하던 테스트, 범인은 다른 파일의 몽키패치였습니다</div></li>

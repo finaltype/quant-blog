@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How a Hardcoded sys.path Silently Broke Git Worktree Isolation · Quant Trading Bot Devlog</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../index.html">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/index.html">한국어로 보기</a></p>
+<article>
+<h1>How a Hardcoded sys.path Silently Broke Git Worktree Isolation</h1>
+<p class="subtitle">Every worktree&#x27;s test suite passed — but that didn&#x27;t mean it had actually tested that worktree&#x27;s code</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I was developing a batch of new features across four git worktrees in parallel.</p>
+<p>Each worktree was an independent branch owning a different slice of the work. The plan was to run tests inside each one, confirm they passed, and then merge them into main in order.</p>
+<h2>Symptom</h2>
+<p>While sorting out the merge order, I went back and looked at one of the helper scripts — a runner used to build reports.</p>
+<p>Near the top of the file there was a line like this: an absolute path stored as a constant, then inserted at the front of <code>sys.path</code> with <code>sys.path.insert(0, that_path)</code>.</p>
+<p>That path pointed at the main checkout. Not the worktree. A fixed string that always pointed to the same single place, no matter where the script ran.</p>
+<h2>What I thought at first</h2>
+<p>At first it didn't register as a problem.</p>
+<p>It looked like a familiar line — the kind people add to make the project root importable. Each worktree is its own directory at the git level, so I assumed that wherever the script ran, it would import its own local copy of the code inside that directory.</p>
+<p>That assumption was wrong.</p>
+<h2>The actual cause</h2>
+<p>A git worktree only separates working directories from each other. To Python's import system, it's just another path on disk.</p>
+<p>No matter which worktree you run this script from, the absolute path baked into the code always points at the main checkout. Same value, regardless of where you execute it.</p>
+<p>Run <code>pytest</code> broadly — without naming specific files, across a whole directory or with a <code>-k</code> pattern — and this script gets swept into collection and imported too. The moment that happens, the top-level code in the module runs, including that <code>sys.path.insert(0, ...)</code> line.</p>
+<p>From that point on, every <code>import</code> in the same process looks at whatever got pushed to the front of <code>sys.path</code> first — the main checkout's path, not the worktree's own modified code. Whatever's still sitting in main, old and unmodified.</p>
+<p>So a worktree reporting "all tests passed" was no guarantee that the pass had actually exercised that worktree's changes. With bad luck, it could have passed against main's old code instead.</p>
+<h2>Why nobody caught it</h2>
+<p>sys.path pollution doesn't throw an error. The import just "succeeds." There's no visible signal at all.</p>
+<p>Each of the four worktrees reported green, and nobody went back to double-check what code that green result had actually run against. Once the test runner lit up green, that was treated as the end of the story.</p>
+<h2>How it was addressed</h2>
+<p>The real fix is removing the hardcoded absolute path from the script, but the merge schedule was tight, so the immediate response was a workaround.</p>
+<p>Instead of running tests via broad discovery, test invocations were switched to explicitly naming the files under test, so the problematic script never got swept into collection. The failure pattern itself was logged separately as a recognized class of incident, with the actual hardcoding left as a follow-up fix.</p>
+<h2>Generalizing</h2>
+<p><strong>An import hook with a hardcoded absolute path silently defeats worktree or monorepo isolation.</strong> Even when directories are physically separated, one line of code can cut straight through that separation and always point to the same place.</p>
+<p><strong>"The tests passed" does not guarantee "the copy of code I wanted got executed."</strong> This is especially true in any setup running multiple checkouts of the same codebase at once — before trusting a green result, check which copy is actually being imported right now.</p>
+<p><strong>Broad test discovery sweeps up side effects along with the tests you meant to run.</strong> Running <code>pytest</code> across a whole directory or with a <code>-k</code> pattern also executes the top-level code of any module that happens to get collected along the way. Explicitly naming the files under test shrinks that exposure surface — not a complete fix, but enough to hold the line until the root cause gets removed.</p>
+<p><strong>When working across parallel agents or parallel branches, the illusion that "each workspace looks independent" is especially dangerous.</strong> Separate directories on disk aren't proof that the code inside them is actually isolated. A single hardcoded absolute path can cross that boundary without anyone noticing.</p>
+</article>
+<footer class="site"><a href="../../../en/legal/privacy-policy/index.html">Privacy Policy</a></footer>
+</body>
+</html>
