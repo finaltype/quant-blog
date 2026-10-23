@@ -24,7 +24,11 @@
 </head>
 <body>
 <h1>Quant Trading Bot Devlog</h1>
-<h2>개발일지</h2>
+<h2>처음 오셨다면</h2>
+<ul>
+<li><a href="architecture/01_project_architecture/">혼자 만드는 한국 주식 퀀트봇 - 프로젝트 구조 (업데이트)</a></li><li><a href="architecture/05_execution_architecture/">퀀트 투자 자동매매 시스템 - 실전 계좌 적용편</a></li><li><a href="architecture/08_ai_ensemble/">AI 추천 파이프라인 - 세 모델이 합의로 판단하는 방법</a></li><li><a href="topics/local-llm-serving/">로컬 LLM 서빙·GPU 속도 실측 모음</a> — GPU·tokens/s 실측 글 모음</li>
+</ul>
+<h2><a href="devlog/">개발일지</a></h2>
 <ul>
 <li><a href="devlog/2026-10/2026-10-22_devlog/">조기 진입 실거래 첫날, 핵-액티브 구조는 재원 문제로 보류</a> · <a href="en/devlog/2026-10/2026-10-22_devlog/">EN</a><div class="sub">랭킹을 미리 얼려 첫 라운드를 당기는 조기 진입이 실거래에 들어갔고, 어제 제안받은 두 층 구조는 투입 재원이 없어 보류됐습니다.</div></li>
 <li><a href="devlog/2026-10/2026-10-21_devlog/">자동매매 성과 재점검 - 지수 대비 냉정한 판정과 돈 버는 구조 설계</a> · <a href="en/devlog/2026-10/2026-10-21_devlog/">EN</a><div class="sub">지수보다 못하면 그만둘 이유가 있다는 질문을 AI 자문에게 던져 판정을 받고, 이어서 실제로 비용을 넘어서는 구조 설계안까지 받았습니다.</div></li>
@@ -119,13 +123,13 @@
 <li><a href="devlog/2026-07/2026-07-07_devlog/">앙상블의 한 축이 6개월 넘게 완전히 비어있었다</a> · <a href="en/devlog/2026-07/2026-07-07_devlog/">EN</a><div class="sub">리서치 파이프라인 한 축이 사실상 무근거로 동작하던 이중 사고를 잡아내고, 그 김에 야간 프로덕션을 통째로 다시 짠 하루</div></li>
 <li><a href="devlog/2026-07/2026-07-06_devlog/">로컬 LLM 3종 비교에서 찾아낸 숨은 실패 패턴들</a> · <a href="en/devlog/2026-07/2026-07-06_devlog/">EN</a><div class="sub">등급 분포만 봐서는 안 보였던 두 가지 실패 유형, 그리고 프레임워크 마이그레이션으로 잡은 구조화 출력 문제</div></li>
 </ul>
-<h2>실계좌 주간 현황</h2>
+<h2><a href="e1_weekly/">실계좌 주간 현황</a></h2>
 <ul>
 <li><a href="e1_weekly/2026/2026-09-09_weekly/">실계좌 자동매매 주간 현황</a> · <a href="en/e1_weekly/2026/2026-09-09_weekly/">EN</a><div class="sub">이번 주 보유 비중과 NAV 지수 흐름으로 보는 실계좌 상태</div></li>
 <li><a href="e1_weekly/2026/2026-09-04_weekly/">실계좌 자동매매 주간 현황</a> · <a href="en/e1_weekly/2026/2026-09-04_weekly/">EN</a><div class="sub">이번 주 보유 비중과 NAV 지수 흐름으로 보는 실계좌 상태</div></li>
 <li><a href="e1_weekly/2026/2026-08-28_weekly/">실계좌 자동매매 주간 현황</a> · <a href="en/e1_weekly/2026/2026-08-28_weekly/">EN</a><div class="sub">이번 주 보유 비중과 NAV 지수 흐름으로 보는 실계좌 상태</div></li>
 </ul>
-<h2>Postmortems</h2>
+<h2><a href="postmortems/">Postmortems</a></h2>
 <ul>
 <li><a href="postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a> · <a href="en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">EN</a><div class="sub">워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다</div></li>
 <li><a href="postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a> · <a href="en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">EN</a><div class="sub">한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다</div></li>
@@ -146,7 +150,7 @@
 <li><a href="postmortems/2026-08-22_hardware-verdict-reversal/">그래픽카드 교체 성능 비교 - 판정이 두 번 뒤집힌 이유</a> · <a href="en/postmortems/2026-08-22_hardware-verdict-reversal/">EN</a><div class="sub">처음 방향 판정도, 나중 추가구매 판정도 서로 다른 이유로 틀렸습니다 — 벤치마크를 읽는 방식 자체가 문제였습니다</div></li>
 <li><a href="postmortems/2026-08-22_building-a-numeric-verifier/">AI 리포트 수치 검증기 - 자기정합 검사만으론 못 잡는 오류들</a> · <a href="en/postmortems/2026-08-22_building-a-numeric-verifier/">EN</a><div class="sub">문서 안에서는 앞뒤가 맞는데 원본 데이터와는 다른 숫자 — 그런 오류를 잡으려고 검증기를 새로 설계했습니다</div></li>
 </ul>
-<h2>아키텍처</h2>
+<h2><a href="architecture/">아키텍처</a></h2>
 <ul>
 <li><a href="architecture/10_real_money_launch/">퀀트봇 실거래 시작 - 소액으로 넘은 첫 관문, 그리고 첫 주의 사고들</a> · <a href="en/architecture/10_real_money_launch/">EN</a><div class="sub">몇 달간 모의계좌로만 검증하던 시스템이 드디어 실제 돈이 오가는 계좌를 열었습니다. 소액으로 조심스럽게 시작했는데, 첫 주부터 예상 못 한 일들이 있었습니다</div></li>
 <li><a href="architecture/09_ops_reliability/">퀀트봇 운영 구조 - 프로세스 분리, 리포트, 성과 추적</a> · <a href="en/architecture/09_ops_reliability/">EN</a><div class="sub">하나의 스크립트가 다 하던 구조를 여러 프로세스로 나누고, 리포트와 성과 추적 방식도 함께 다듬어온 이야기입니다</div></li>
@@ -159,7 +163,7 @@
 <li><a href="architecture/02_data_archive/">소멸하는 데이터들 — 사이드 프로젝트가 하나에서 셋으로 늘었다</a> · <a href="en/architecture/02_data_archive/">EN</a><div class="sub">뉴스 하나 모아두려고 만든 프로젝트가, 같은 원칙으로 게시판 심리·분 단위 가격까지 모으는 우산 프로젝트가 됐습니다</div></li>
 <li><a href="architecture/01_project_architecture/">혼자 만드는 한국 주식 퀀트봇 - 프로젝트 구조 (업데이트)</a> · <a href="en/architecture/01_project_architecture/">EN</a></li>
 </ul>
-<h2>테마 분석</h2>
+<h2><a href="themes/">테마 분석</a></h2>
 <ul>
 <li><a href="themes/2026-07-31_secondary-battery-outlook/">2차전지 섹터 점검 - ESS 숏티지·실적 반등과 주가의 괴리</a> · <a href="en/themes/2026-07-31_secondary-battery-outlook/">EN</a><div class="sub">셀 3사가 사상 처음 동반 흑자전환에 성공하고 ESS 공급부족 서사까지 힘을 받았는데, 정작 주가는 왜 아직 눌려 있는가</div></li>
 <li><a href="themes/2026-07-10_power-equipment-divergence/">오느</a> · <a href="en/themes/2026-07-10_power-equipment-divergence/">EN</a><div class="sub">같은 AI 전력 슈퍼사이클인데 한·미 전력기기주가 왜 이렇게 벌어졌나, 그리고 투자자가 확인해야 할 것</div></li>

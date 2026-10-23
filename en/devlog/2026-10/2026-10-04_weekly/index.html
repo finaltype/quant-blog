@@ -33,6 +33,8 @@
   table { border-collapse: collapse; }
   td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
   img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
   footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
 </style>
 </head>
@@ -65,6 +67,10 @@
 <p>The thread running through this week was telling apart "gone quiet" from "actually resolved." Self-healing passing reproduction tests and then collapsing live, a ledger residual going unflagged without being fixed, and both first instincts about concurrency and token caps pointing the wrong direction are all the same pattern.</p>
 <p>Next week watches whether the five fixes on the backup GPU path actually hold up before revisiting hardware priority, alongside the paper-trading ledger correction, the ticker/direction guard, and landing the output-token cap.</p>
 </article>
+<aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-10/2026-10-04_devlog/">A Concurrency-Scaling Smoke Test, and Discovering There Was No Output Token Cap</a></li><li>Next: <a href="../../../../en/devlog/2026-10/2026-10-05_devlog/">Shipping the Output Token Cap and Expanding Order-Ledger Reconciliation Guards</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/postmortems/2026-08-22_manual-override-safety-guard/">A Trading Safety Guard Misfired - The Time Scale of the Threshold Was Wrong</a></li><li><a href="../../../../en/devlog/2026-10/2026-10-06_devlog/">Fixing a Stock Classifier Misclassification and Correcting a Paper-Account Reconciliation Gap</a></li><li><a href="../../../../en/devlog/2026-09/2026-09_monthly/">Expanding Live Trading to a Shared Account, Doubling Up on GPUs, and the Measurement Tools That Kept Lying</a></li></ul>
+</aside>
 <footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
 </body>
 </html>
