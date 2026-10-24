@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Blog Report Skipped for Five Weeks Straight - A Dead Account Reference Was the Cause | Quant Bot Devlog</title>
+<meta name="description" content="Tracing why the weekly performance report kept silently skipping turned up a reconciliation check still reading state from an account the system had…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-24_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-24_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-24_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-24_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Weekly Blog Report Skipped for Five Weeks Straight - A Dead Account Reference Was the Cause">
+<meta property="og:description" content="Tracing why the weekly performance report kept silently skipping turned up a reconciliation check still reading state from an account the system had…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-24_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Weekly Blog Report Skipped for Five Weeks Straight - A Dead Account Reference Was the Cause", "description": "Tracing why the weekly performance report kept silently skipping turned up a reconciliation check still reading state from an account the system had…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-24_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-24"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-24_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Weekly Blog Report Skipped for Five Weeks Straight - A Dead Account Reference Was the Cause</h1>
+<p class="post-date"><time datetime="2026-10-24">2026-10-24</time></p>
+<p class="subtitle">Tracing why the weekly performance report kept silently skipping turned up a reconciliation check still reading state from an account the system had already migrated away from.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A report that kept quietly skipping for five weeks</h2>
+<p>The weekly performance report that goes up on this blog had been silently skipping every Saturday since mid-September, each time logging "no recent snapshot."</p>
+<p>There's no alert wired up for this, so it went unnoticed for a while. I finally sat down and dug into it today.</p>
+<p>Two separate causes turned out to be stacked on top of each other. The simple one: the timer that builds the daily snapshot had been switched off for a few days, and restarting it was quick.</p>
+<p>The trickier one was a safety check built into the snapshot job — it verifies that the ledger and the real account balance line up closely enough before it lets a snapshot through. That check had been failing for weeks straight.</p>
+<h2>The account had moved, but the report hadn't caught up</h2>
+<p>Digging further, I found that the account-state file this check was reading from had stopped being updated over a month earlier. The actual trading had already moved to a different account, but the report was still staring at the old one.</p>
+<p>Since that file was frozen, it obviously stopped matching the live balance, and the safety check kept flagging a mismatch and blocking the report. When the account migration happened, the trading logic itself was fully switched over to the new account — but this one reference in the reporting path got missed, and it took weeks to surface.</p>
+<p>Once I pointed the reference at the new account, the safety check passed cleanly. Snapshots should start accumulating again from the next weekday, with the weekly report back on schedule by the following Saturday.</p>
+<h2>Also caught a definition bug in the data collector</h2>
+<p>Separately, I found and fixed a definition bug in the <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">data archive</a>(new tab) project's intraday-bar comparison work.</p>
+<p>The market code field used to classify a brokerage's intraday bars had been set to a consolidated-aggregate definition instead of the actual exchange definition. The two look similar by name but refer to different things, which was causing the comparison check against other data sources to keep failing.</p>
+<p>I switched the definition to the correct one and confirmed the checker passed afterward.</p>
+<h2>Also: an advisory round on trading strategy questions</h2>
+<p>Beyond the bug fixes, today also involved several rounds of back-and-forth with an AI advisor over whether to shorten the current holding-period rule.</p>
+<p>The advisor's first answer had grouped some data incorrectly, so I had it re-verify, and the final conclusion settled on "not enough grounds to change the current approach." No changes were made to the live account's settings.</p>
+<p>In the same thread, I also asked whether it was worth re-running a simulation on past data right away instead of waiting, and the answer came back "no reason to wait" — that'll carry into the next round of work.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/trading-bot/">#trading bot</a> <a href="../../../../en/tags/devlog/">#devlog</a> <a href="../../../../en/tags/operations/">#operations</a> <a href="../../../../en/tags/debugging/">#debugging</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-10/2026-10-22_devlog/">First Live Day of Early Entry, and a Two-Tier Structure Stalled on Funding</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions</a></li><li><a href="../../../../en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">How a Hardcoded sys.path Silently Broke Git Worktree Isolation</a></li><li><a href="../../../../en/postmortems/2026-10-10_recovery-guidance-double-execution/">How Error-Recovery Guidance Caused a Double-Execution Bug</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

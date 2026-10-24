@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>블로그 주간 리포트 5주째 스킵 - 죽은 계좌 참조가 원인 | 퀀트봇 개발일지</title>
+<meta name="description" content="E1 주간 리포트가 5주 연속 스킵된 원인을 추적했더니, 계좌 이전 후에도 리포트가 예전 계좌 상태만 보고 있었습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-24_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-24_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-24_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-24_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="블로그 주간 리포트 5주째 스킵 - 죽은 계좌 참조가 원인">
+<meta property="og:description" content="E1 주간 리포트가 5주 연속 스킵된 원인을 추적했더니, 계좌 이전 후에도 리포트가 예전 계좌 상태만 보고 있었습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-24_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "블로그 주간 리포트 5주째 스킵 - 죽은 계좌 참조가 원인", "description": "E1 주간 리포트가 5주 연속 스킵된 원인을 추적했더니, 계좌 이전 후에도 리포트가 예전 계좌 상태만 보고 있었습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-24_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-24"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-24_devlog/">Read in English</a></p>
+<article>
+<h1>블로그 주간 리포트 5주째 스킵 - 죽은 계좌 참조가 원인</h1>
+<p class="post-date"><time datetime="2026-10-24">2026-10-24</time></p>
+<p class="subtitle">E1 주간 리포트가 5주 연속 스킵된 원인을 추적했더니, 계좌 이전 후에도 리포트가 예전 계좌 상태만 보고 있었습니다.</p><h2>5주째 조용히 스킵되던 리포트</h2>
+<p>블로그에 올라가는 주간 운용 리포트가 9월 중순부터 토요일마다 "최근 스냅샷 없음"으로 조용히 스킵되고 있었습니다.</p>
+<p>알림이 따로 뜨는 구조가 아니라서 꽤 오래 모르고 지나갔습니다. 오늘 직접 들여다봤습니다.</p>
+<p>원인은 두 가지가 겹쳐 있었습니다. 하나는 스냅샷을 만드는 타이머 자체가 며칠 전부터 꺼져 있던 단순한 문제였고, 금방 다시 켰습니다.</p>
+<p>더 까다로운 쪽은 따로 있었습니다. 스냅샷 작업에는 "원장과 실제 계좌 잔고가 충분히 맞아떨어지는지" 확인하는 안전장치가 있는데, 이 확인이 몇 주 동안 계속 실패하고 있었습니다.</p>
+<h2>계좌를 옮겼는데 리포트는 못 들었다</h2>
+<p>추적해보니 이 확인 로직이 참조하던 계좌 상태 파일이, 알고 보니 한 달도 더 전에 갱신이 끊긴 파일이었습니다. 실제 운용은 이미 다른 계좌로 넘어가 있었는데, 리포트만 옛 계좌를 계속 쳐다보고 있었던 셈입니다.</p>
+<p>갱신이 끊긴 파일이니 당연히 최신 잔고와 안 맞고, 안전장치는 계속 "불일치"로 판정해 리포트를 막아왔던 겁니다. 계좌 이전 작업을 할 때 운용 로직은 전부 새 계좌 기준으로 옮겼는데, 리포트 쪽 참조 하나를 놓친 게 몇 주 뒤에야 드러난 셈입니다.</p>
+<p>참조를 새 계좌 쪽으로 돌리고 나니 안전장치가 정상적으로 통과했습니다. 다음 평일부터 스냅샷이 다시 쌓이고, 다음 토요일에는 주간 리포트가 다시 발행될 예정입니다.</p>
+<h2>데이터 수집기 쪽 정의 오류도 하나 잡았다</h2>
+<p>별도로 <a href="https://finaltype.github.io/quant-blog/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">데이터 아카이브</a>(새 창) 쪽 분봉 비교 작업에서도 수집기 정의 오류를 하나 발견해 고쳤습니다.</p>
+<p>증권사별로 분봉 데이터를 구분하는 시장 코드 값이, 실제로 거래소가 쓰는 정의가 아니라 통합 집계 기준 정의로 잘못 들어가 있었습니다. 둘이 이름은 비슷해도 가리키는 대상이 달라서, 다른 데이터와 비교하는 검증기가 계속 실패로 떨어지고 있었습니다.</p>
+<p>정의를 맞는 쪽으로 바꾸고 검증기를 다시 돌려 통과를 확인했습니다.</p>
+<h2>그 외: 매매 전략 쪽 질문에 대한 자문 라운드</h2>
+<p>오늘은 이것 말고도 보유 기간을 지금보다 짧게 끊는 게 나을지에 대한 질문을 놓고 AI 자문에게 여러 차례 되물었습니다.</p>
+<p>처음 받은 답변에 집단을 잘못 묶은 부분이 있어 다시 검증을 맡겼고, 최종적으로는 "지금 방식을 바꿀 근거가 충분하지 않다"는 결론으로 정리됐습니다. 실제 계좌 설정은 바꾸지 않았습니다.</p>
+<p>같은 맥락에서 과거 데이터로 지금 바로 다시 시뮬레이션해볼지 말지도 자문에게 물었는데, "기다릴 이유가 없다"는 답이 나와서 다음 작업으로 이어질 예정입니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/ai%EA%B0%9C%EB%B0%9C%EC%9D%BC%EC%A7%80/">#AI개발일지</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%9A%B4%EC%98%81/">#운영</a> <a href="../../../tags/%EB%94%94%EB%B2%84%EA%B9%85/">#디버깅</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-10/2026-10-22_devlog/">조기 진입 실거래 첫날, 핵-액티브 구조는 재원 문제로 보류</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a></li><li><a href="../../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li><li><a href="../../../postmortems/2026-10-10_recovery-guidance-double-execution/">에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
