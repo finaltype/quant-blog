@@ -34,6 +34,8 @@
   td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
   img { max-width: 100%; height: auto; border-radius: 6px; }
   aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
   aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
   footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
 </style>
@@ -70,7 +72,7 @@
 <p><strong>입력 검증 한 겹만으로는 부족할 때가 있습니다.</strong> 이번엔 입력 검증을 통과한 이후에도 재발했기 때문에, "결과가 갑자기 너무 많이 바뀌었다"는 걸 잡는 이상 탐지 계층을 별도로 뒀습니다. 원인을 특정하기 어려운 오염일수록, 원인이 아니라 증상(과도한 변화량)을 감시하는 장치가 더 안정적으로 작동합니다.</p>
 <p><strong>복구 순서도 검증 대상입니다.</strong> 오염된 상태를 되돌리는 도중에도, 아직 새 로직을 반영하지 않은 다른 프로세스가 낡은 경로로 다시 오염시킬 수 있습니다. 여러 프로세스가 같은 상태를 공유한다면, 복구는 "상태 되돌리기"와 "모든 소비자를 새 코드로 맞추기"를 한 세트로 묶어야 합니다.</p>
 </article>
-<aside class="related">
+<p class="tags"><a href="../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../tags/%ED%8A%B8%EB%A0%88%EC%9D%B4%EB%94%A9%EB%B4%87/">#트레이딩봇</a> <a href="../../tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%ED%92%88%EC%A7%88/">#데이터품질</a> <a href="../../tags/%EC%86%8C%ED%94%84%ED%8A%B8%EC%9B%A8%EC%96%B4%ED%92%88%EC%A7%88/">#소프트웨어품질</a> <a href="../../tags/postmortem/">#postmortem</a></p><aside class="related">
 <ul><li>이전 글: <a href="../../postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유</a></li><li>다음 글: <a href="../../postmortems/2026-10-03_order-dependent-test-pollution/">순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염</a></li></ul>
 <h2>관련 글</h2><ul><li><a href="../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li><li><a href="../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a></li><li><a href="../../postmortems/2026-10-10_recovery-guidance-double-execution/">에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</a></li></ul>
 </aside>

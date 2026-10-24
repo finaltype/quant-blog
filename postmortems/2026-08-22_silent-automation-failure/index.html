@@ -34,6 +34,8 @@
   td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
   img { max-width: 100%; height: auto; border-radius: 6px; }
   aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
   aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
   footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
 </style>
@@ -71,7 +73,7 @@
 <p>만약 스킵 로그라는 장치가 없었다면, "초안이 계속 없는 조용한 한 달이었나 보다"로 착각하고 넘어갔을 수도 있습니다. CI/CD 파이프라인이든 cron 잡이든 백그라운드로 도는 배치 작업이든, 결과가 안 나온다고 바로 알림이 울리는 구조가 아니라면 이런 공백은 똑같이 생길 수 있습니다.</p>
 <p>무인으로 도는 무언가를 설계할 때는, "잘 돌고 있어서 조용한 것"과 "안 돌고 있어서 조용한 것"을 사람이 구분할 수 있는 장치를 반드시 하나는 심어둬야 한다는 걸 다시 배웠습니다. 하트비트든 스킵 로그든, 뭐든 상관없습니다. 아무 신호도 없는 상태를 정상으로 오인하지만 않으면 됩니다.</p>
 </article>
-<aside class="related">
+<p class="tags"><a href="../../tags/%EC%9E%90%EB%8F%99%ED%99%94/">#자동화</a> <a href="../../tags/postmortem/">#postmortem</a> <a href="../../tags/%EC%9A%B4%EC%98%81/">#운영</a></p><aside class="related">
 <ul><li>이전 글: <a href="../../postmortems/2026-08-22_manual-override-safety-guard/">자동매매 안전장치 오작동 - 판정 기준의 시간 단위가 잘못됐다</a></li><li>다음 글: <a href="../../postmortems/2026-08-22_verification-tool-blind-spots/">자동매매 검증 도구가 오류를 놓치는 이유 3가지</a></li></ul>
 <h2>관련 글</h2><ul><li><a href="../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a></li><li><a href="../../postmortems/2026-08-22_when-automation-needs-a-human/">완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지</a></li><li><a href="../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li></ul>
 </aside>
