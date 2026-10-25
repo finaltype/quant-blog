@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계좌 간 자금 이동 기능 - 코드리뷰가 두 번 잡아낸 자금 불일치 위험 | 퀀트봇 개발일지</title>
+<meta name="description" content="12월 중순으로 예정된 계좌 구조 변경에 대비해 자금 이동 기능을 만들었는데, 독립 리뷰에서 돈이 조용히 사라지거나 반대로 생겨날 수 있는 결함을 두 차례 찾아 고쳤습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-25_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-25_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-25_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-25_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="계좌 간 자금 이동 기능 - 코드리뷰가 두 번 잡아낸 자금 불일치 위험">
+<meta property="og:description" content="12월 중순으로 예정된 계좌 구조 변경에 대비해 자금 이동 기능을 만들었는데, 독립 리뷰에서 돈이 조용히 사라지거나 반대로 생겨날 수 있는 결함을 두 차례 찾아 고쳤습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-25_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "계좌 간 자금 이동 기능 - 코드리뷰가 두 번 잡아낸 자금 불일치 위험", "description": "12월 중순으로 예정된 계좌 구조 변경에 대비해 자금 이동 기능을 만들었는데, 독립 리뷰에서 돈이 조용히 사라지거나 반대로 생겨날 수 있는 결함을 두 차례 찾아 고쳤습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-25_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-25"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-25_devlog/">Read in English</a></p>
+<article>
+<h1>계좌 간 자금 이동 기능 - 코드리뷰가 두 번 잡아낸 자금 불일치 위험</h1>
+<p class="post-date"><time datetime="2026-10-25">2026-10-25</time></p>
+<p class="subtitle">12월 중순으로 예정된 계좌 구조 변경에 대비해 자금 이동 기능을 만들었는데, 독립 리뷰에서 돈이 조용히 사라지거나 반대로 생겨날 수 있는 결함을 두 차례 찾아 고쳤습니다.</p><h2>계좌 구조가 바뀔 날을 미리 준비했다</h2>
+<p>12월 중순에 계좌 구조가 한 번 바뀔 일이 예정돼 있습니다.</p>
+<p>그때를 대비해, 한 계좌의 자금 일부를 다른 계좌로 옮기는 기능을 새로 만들었습니다. 평소에는 쓰지 않고 꺼둔 채로, 그날이 와서 실제로 필요할 때만 켜는 용도입니다.</p>
+<p>자금 이동은 출금과 입금, 두 동작으로 나뉩니다. 각 동작은 멱등하게(같은 요청을 중복으로 보내도 한 번만 처리되게) 설계했고, 끝난 뒤에는 전체 자금 합계가 변하지 않았는지 검증하는 절차도 넣었습니다.</p>
+<h2>한쪽 다리만 실패하면 무슨 일이 생기나</h2>
+<p>코드를 다 쓰고 나서 독립적인 AI 리뷰를 맡겼습니다.</p>
+<p>리뷰에서 가장 심각하다고 지적한 문제는 이것이었습니다. 출금-입금 두 동작 중 뒤쪽(입금)이 실패하면, 이미 처리된 출금만 원장에 남습니다.</p>
+<p>그런데 이 경우 경보도 안 뜨고 기록도 안 남아서, 아무도 모르는 채로 한쪽 계좌 자금이 조용히 줄어든 상태가 되는 구조였습니다. 반복되면 실제 보유 현금과 장부상 기준선이 영구적으로 틀어질 수 있는 결함입니다.</p>
+<p>고치는 방법은, 입금이 실패하면 그 이동 건 전체를 즉시 차단 상태로 걸어 경보를 띄우고, 같은 건으로 다시 시도하지 않는 한 그 계좌의 다른 거래도 막아버리는 쪽으로 바꿨습니다. 조용히 넘어가는 대신 눈에 보이게 멈추는 설계입니다.</p>
+<h2>재시도할 때 금액이 달라지면</h2>
+<p>수선한 코드를 다시 리뷰에 올렸더니, 또 하나를 찾아냈습니다.</p>
+<p>중단된 이동 건을 나중에 이어받아 처리할 때, 처음과 다른 금액을 입력해도 그대로 통과되는 구조였습니다. 완화해둔 안전장치와 사후 검증 로직이 전부 "입력한 금액"을 기준으로 돌아가고 있었기 때문입니다.</p>
+<p>이 틈을 쓰면 근거 없이 자금이 더 생겨나는 결과가 나올 수 있었습니다. 실제로 리뷰어가 금액을 바꿔 넣는 시험을 돌려 재현까지 확인했습니다.</p>
+<p>수선은 간단했습니다. 이어받기 시점에 저장된 원래 요청 금액과 새로 입력한 금액을 대조해서, 아주 작은 오차 이상 다르거나 원래 기록을 읽을 수 없으면 그대로 거부하도록 했습니다.</p>
+<p>두 번째 수선까지 마치고서야 병합 승인이 났습니다. 기능은 아직 꺼둔 상태고, 실제로 켜는 건 12월 계좌 변경 시점에 가서입니다.</p>
+<h2>그 외: 보고서 단위 표기 실험은 한 번 더 설계를 바꿨다</h2>
+<p>별개로, 보고서에 쓰는 어떤 단위 표기 방식을 바꿔보는 실험을 진행 중이었습니다.</p>
+<p>사전에 정해둔 기준으로 비교해본 결과, 이번 방식은 효과는 뚜렷했지만 통과 기준에는 못 미쳐 그대로 채택하지 않기로 했습니다. 대신 표기 위치를 바꾸는 다른 방식으로 다시 설계해, 월말에 한 번 더 시험해볼 예정입니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%BD%94%EB%93%9C%EB%A6%AC%EB%B7%B0/">#코드리뷰</a> <a href="../../../tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/">#안전장치</a> <a href="../../../tags/%EA%B0%9C%EB%B0%9C%EC%9D%BC%EC%A7%80/">#개발일지</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-10/2026-10-24_devlog/">블로그 주간 리포트 5주째 스킵 - 죽은 계좌 참조가 원인</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-10/2026-10-08_devlog/">계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다</a></li><li><a href="../../../postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다</a></li><li><a href="../../../e1_weekly/2026/2026-09-09_weekly/">실계좌 자동매매 주간 현황</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
