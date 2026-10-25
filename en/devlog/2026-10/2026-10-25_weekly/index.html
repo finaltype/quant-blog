@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Re-judging Performance, Going Live on Early Entry, Two Rounds of Review on a Fund-Transfer Feature — a Week of Double-Checking Numbers | Quant Bot Devlog</title>
+<meta name="description" content="I had a strict AI-led re-judgment of performance against the benchmark, pushed an early-entry structure live, and only caught a silent reporting bug…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-25_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-25_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-25_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-25_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Re-judging Performance, Going Live on Early Entry, Two Rounds of Review on a Fund-Transfer Feature — a Week of Double-Checking Numbers">
+<meta property="og:description" content="I had a strict AI-led re-judgment of performance against the benchmark, pushed an early-entry structure live, and only caught a silent reporting bug…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-25_weekly/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Re-judging Performance, Going Live on Early Entry, Two Rounds of Review on a Fund-Transfer Feature — a Week of Double-Checking Numbers", "description": "I had a strict AI-led re-judgment of performance against the benchmark, pushed an early-entry structure live, and only caught a silent reporting bug…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-25_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-25"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-25_weekly/">한국어로 보기</a></p>
+<article>
+<h1>Re-judging Performance, Going Live on Early Entry, Two Rounds of Review on a Fund-Transfer Feature — a Week of Double-Checking Numbers</h1>
+<p class="post-date"><time datetime="2026-10-25">2026-10-25</time></p>
+<p class="subtitle">I had a strict AI-led re-judgment of performance against the benchmark, pushed an early-entry structure live, and only caught a silent reporting bug and hidden money-safety flaws by checking things myself a second time.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>First, the infrastructure got cleaned up</h2>
+<p>Early in the week, I finished narrowing the broker path down to one primary broker.</p>
+<p>I kept the secondary broker's integration code and credentials around instead of deleting them. But I switched the comparison track used in <a href="https://finaltype.github.io/quant-blog/en/architecture/06_paper_trading_validation/" target="_blank" rel="noopener noreferrer">the fully-automated paper-trading validation effort</a>(new tab) — from faking it through a secondary broker's paper account to a self-built simulation broker, all in one day.</p>
+<p>Alongside the switch, I built an unattended health checker that watches the key states and alerts automatically. The bigger the transition, the more things slip through if the only safety net is someone reading logs the next morning.</p>
+<h2>I separated gut feeling from evidence to re-judge performance</h2>
+<p>Looking at the cumulative return, I started feeling like there was no reason to keep putting resources into this system if it couldn't beat just holding the index. So I asked an AI advisor for a strict judgment, no slack given.</p>
+<p>The answer differed from how it felt. Against the pre-set benchmark, it wasn't actually underperforming. But there was no evidence the stock selection itself was skillful either — most of the loss came from the market being bad overall, and turnover-driven costs were the one thing draining out for certain.</p>
+<p>I pushed further and asked for an actual money-making structure, not just a monitoring rule. What came back was a two-layer proposal: park most of the capital in index-tracking to remove the downside risk structurally, and concentrate a small remainder on the areas where a signal had actually been observed. Neither result touched the code — both stayed pending approval.</p>
+<h2>Early entry went live; the two-layer structure got shelved over funding</h2>
+<p>An early-entry structure — freezing the ranking ahead of time and moving up the first trading round's execution — got deployed to the live account the next morning, and the freeze, fills, and follow-up rounds all ran as expected through the first day.</p>
+<p>The same day, the execution code for the two-layer structure got finished and merged — but left disabled. A proposal to fund it from new deposits came back, then got discarded once I re-confirmed the premise: no new deposits, no selling existing holdings. The structure itself is on hold. The code is already in, though, so it can be switched on the moment funding is settled.</p>
+<p>Six pre-registered hypotheses also got tested that day, and none showed a statistically meaningful signal. One even had an implementation bug — fixing it didn't change the conclusion, and the test design itself got flagged as too loose to catch an effect even if one existed. Instead of testing hypotheses one by one, I re-registered a longer, stricter version; judgment is pushed to early next year.</p>
+<p>When an advisor suggested consolidating the turnover cap from per-round to daily, I pushed back on the reported number and asked for a re-check. It turned out some of the trades blamed on the turnover cap had actually been rejected for a different limit entirely. Once the attribution got corrected, the fix landed as: keep the cap, aggregate it daily, and raise it slightly — effective next week.</p>
+<h2>Two bugs that had been sitting quietly got traced down</h2>
+<p>A weekly operations report that feeds the blog had been silently skipped every Saturday since mid-September, and I finally dug into why.</p>
+<p>One cause was simple — the snapshot timer itself had been off for a few days, fixed right away. The trickier one: a safety check that verifies the ledger matches the actual account balance was reading from an account-state file that hadn't been updated in over a month. The account had already moved during an earlier migration, but one reference in the reporting path got left pointing at the old account — and it took weeks to surface. Pointing it at the new account let the check pass again.</p>
+<p>Separately, on the <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">data archive</a>(new tab) side, I found and fixed a bug where the market code used to tell minute-bar data apart from different brokers had been set to an aggregated-index definition instead of the actual exchange definition.</p>
+<h2>I built a fund-transfer feature for a December account restructuring, and reviewed it twice</h2>
+<p>Ahead of an account restructuring planned for mid-December, I built a feature to move part of a balance from one account to another. It stays off by default and only gets switched on when actually needed.</p>
+<p>Borrowing the same design patterns used in <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">the execution/safety layer</a>(new tab), I made the withdraw and deposit legs idempotent and added a step that verifies the total balance across accounts doesn't change once the transfer completes.</p>
+<p>An independent review flagged the most serious issue: if the withdrawal succeeds but the deposit fails, the money from one account quietly disappears with no alert and no record. I fixed it so a failed deposit immediately locks the whole transfer and raises an alert.</p>
+<p>A second review of the patched code found another gap — resuming an interrupted transfer with a different amount than originally submitted still went through. The reviewer actually reproduced it by submitting a changed amount. The fix rejects any resume whose amount doesn't match what was originally recorded. Only after that second fix did it get merged — the feature itself stays off until December.</p>
+<h2>The thread through the week</h2>
+<p>What ran through this week was not taking a result at face value and checking it myself.</p>
+<p>On performance, I separated gut feeling from evidence. On the turnover number, I caught the advisor's attribution being wrong by pushing back. The report bug only surfaced after I traced a weeks-long silence myself, and the fund-transfer code only gave up its hidden flaws after two rounds of review.</p>
+<p>A lot gets delegated to automation and AI judgment here, but that doesn't substitute for the final check. This week was a collection of cases where that last check didn't get deferred — it got done by looking directly.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/trading-bot/">#trading bot</a> <a href="../../../../en/tags/devlog/">#devlog</a> <a href="../../../../en/tags/code-review/">#code review</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-10/2026-10-25_devlog/">Cross-Account Fund Transfer - Code Review Caught Two Ways Money Could Go Missing</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-10/2026-10-25_devlog/">Cross-Account Fund Transfer - Code Review Caught Two Ways Money Could Go Missing</a></li><li><a href="../../../../en/devlog/2026-10/2026-10-21_devlog/">Rechecking Live Performance — A Cold-Blooded Verdict Against the Index, and a Design That Actually Makes Money</a></li><li><a href="../../../../en/devlog/2026-10/2026-10-19_devlog/">Consolidating Broker Paths — Swapping Out the Paper-Trading Comparison Track</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>
