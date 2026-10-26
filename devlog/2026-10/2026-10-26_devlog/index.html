@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KRX 접속 차단 - 라이브러리 임포트 크래시를 로그인 실패로 강등 | 퀀트봇 개발일지</title>
+<meta name="description" content="거래소 접속이 막히자 데이터 라이브러리를 불러오는 순간 프로세스가 통째로 죽는 버그가 터졌고, 같은 날 새 리서치 가설 하나를 사전등록부터 병합까지 끝냈습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-26_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-26_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-26_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-26_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KRX 접속 차단 - 라이브러리 임포트 크래시를 로그인 실패로 강등">
+<meta property="og:description" content="거래소 접속이 막히자 데이터 라이브러리를 불러오는 순간 프로세스가 통째로 죽는 버그가 터졌고, 같은 날 새 리서치 가설 하나를 사전등록부터 병합까지 끝냈습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-26_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "KRX 접속 차단 - 라이브러리 임포트 크래시를 로그인 실패로 강등", "description": "거래소 접속이 막히자 데이터 라이브러리를 불러오는 순간 프로세스가 통째로 죽는 버그가 터졌고, 같은 날 새 리서치 가설 하나를 사전등록부터 병합까지 끝냈습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-26_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-26"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-26_devlog/">Read in English</a></p>
+<article>
+<h1>KRX 접속 차단 - 라이브러리 임포트 크래시를 로그인 실패로 강등</h1>
+<p class="post-date"><time datetime="2026-10-26">2026-10-26</time></p>
+<p class="subtitle">거래소 접속이 막히자 데이터 라이브러리를 불러오는 순간 프로세스가 통째로 죽는 버그가 터졌고, 같은 날 새 리서치 가설 하나를 사전등록부터 병합까지 끝냈습니다.</p><h2>거래소 접속이 막히자 생긴 일</h2>
+<p>오늘 정오쯔음, 매매 라운드 하나가 갑자기 크래시했습니다.</p>
+<p>원인을 추적해보니 한국거래소(KRX) 쪽에서 접속 IP를 막은 상태였습니다. 그런데 문제는 매매 로직이 아니라, 거래소 데이터를 가져오는 외부 라이브러리 자체에 있었습니다.</p>
+<p>이 라이브러리는 <strong>불러오는 시점에</strong> 거래소에 로그인을 시도합니다. 평소엔 정상 응답(JSON)이 와서 문제가 없는데, 접속이 막히면 로그인 페이지로 리다이렉트되는 HTML이 돌아옵니다.</p>
+<p>라이브러리는 그 응답을 JSON으로 파싱하려다 그대로 예외를 던졌고, 이게 라이브러리를 불러오는 코드 전체를 끌고 내려가면서 매매 라운드가 통째로 죽어버린 겁니다.</p>
+<h2>원인 추정과 수선</h2>
+<p>같은 날 오전에 외국인 수급 데이터를 백필하면서 거래소에 로그인을 여러 차례 반복한 일이 있었는데, 이게 접속 차단을 유발했을 가능성이 있어 보입니다.</p>
+<p>다만 이건 시간상 겹친다는 정도의 추정이고, 확실한 인과관계까지는 확인하지 못했습니다.</p>
+<p>수선 방향은 명확했습니다. 라이브러리의 로그인 함수를 감싸서, 어떤 예외가 나든(비정상 응답이든 타임아웃이든) "로그인 실패"라는 정상적인 실패 상태로만 처리하게 바꿨습니다.</p>
+<p>그러면 크래시 대신 그 날짜의 거래소 데이터만 조용히 비게 되고, 나머지 매매 로직은 멈추지 않습니다. 다행히 사고 시점엔 실거래 계좌가 이미 다른 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">안전장치</a>(새 창)로 매수가 묶여 있던 상태라 실제 손실로 이어지진 않았습니다.</p>
+<p>차단은 하루가 지나도 완전히 풀리지 않아서, 거래소 재시도는 차단이 더 길어질 위험이 있어 보류하고 내일 아침에 한 번만 더 확인해보기로 했습니다.</p>
+<h2>같은 날, 새 리서치 가설 하나를 사전등록부터 병합까지</h2>
+<p>오후에는 전혀 다른 일을 했습니다. 외국인 수급 데이터를 활용하는 새 리서치 가설을 하나 세웠습니다.</p>
+<p>문제는 이 데이터의 과거 구간을 이미 다른 분석에서 한 번 들여다본 적이 있다는 점이었습니다. 같은 데이터를 다시 보고 "맞았다"고 말하면 통계적으로 신뢰할 수 없습니다.</p>
+<p>그래서 가설을 먼저 문서로 고정해두고(사전등록), 통계적으로 의미 있는 차이를 검출할 수 있는 최소 표본 조건을 미리 못 박아서, 그 기준을 못 넘기면 판정 자체를 열지 않기로 했습니다. 결과를 보고 기준을 바꾸는 건 금지입니다.</p>
+<p>이 가설 코드는 AI에게 구현을 맡기고 외부 AI에게 독립 코드리뷰도 받았습니다.</p>
+<p>리뷰에서 지적이 몇 건 나왔는데, 전부 같은 날 안에 반영해서 병합까지 끝냈습니다. 다만 이 코드는 아직 테스트 데이터로만 돌려본 단계고, 실제 데이터로 검증하는 건 다음 달로 미뤄뒀습니다. 어떤 상주 프로세스도 이 코드를 아직 가져다 쓰지 않아서, 오늘 병합 자체가 실거래에 영향을 준 건 없습니다.</p>
+<h2>그 외: 월요일 오탐과 상주 프로세스 재시작</h2>
+<p>기술적 분석 쪽 모니터링에서, 금요일 밤부터 갱신이 멈춰 있다가 월요일 아침이면 "오래 갱신이 안 됐다"는 경보가 반복해서 뜨는 문제가 있었습니다.</p>
+<p>고정된 시간 기준이 주말과 휴장일을 고려하지 않아서 생긴 오탐이었습니다. 쉬는 날 수만큼 기준 시간을 늘리는 방식으로 고쳤고, 다음 주 월요일에 재발하는지로 완료 여부를 판단할 예정입니다.</p>
+<p>장 마감 뒤에는 오늘 수선한 코드를 반영하기 위해 상주 중인 프로세스 여섯 개를 한꺼번에 재시작했습니다. 실행 스크립트를 미리 준비해둔 덕에 재시작 자체는 매끄럽게 끝났습니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%9E%A5%EC%95%A0%EB%8C%80%EC%9D%91/">#장애대응</a> <a href="../../../tags/%EA%B0%9C%EB%B0%9C%EC%9D%BC%EC%A7%80/">#개발일지</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-10/2026-10-25_weekly/">성과 재판정, 조기진입 실거래, 자금이동 코드리뷰 — 숫자를 두 번씩 확인한 한 주</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다</a></li><li><a href="../../../e1_weekly/2026/2026-09-09_weekly/">실계좌 자동매매 주간 현황</a></li><li><a href="../../../e1_weekly/2026/2026-09-04_weekly/">실계좌 자동매매 주간 현황</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KRX Access Blocked - Demoting an Import-Time Crash to a Login Failure | Quant Bot Devlog</title>
+<meta name="description" content="An exchange IP block turned a data library&#x27;s import step into a process-killing crash, and the same day also saw a new research hypothesis go from pr…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-26_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-26_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-26_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-26_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KRX Access Blocked - Demoting an Import-Time Crash to a Login Failure">
+<meta property="og:description" content="An exchange IP block turned a data library&#x27;s import step into a process-killing crash, and the same day also saw a new research hypothesis go from pr…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-26_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "KRX Access Blocked - Demoting an Import-Time Crash to a Login Failure", "description": "An exchange IP block turned a data library's import step into a process-killing crash, and the same day also saw a new research hypothesis go from pr…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-26_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-26"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-26_devlog/">한국어로 보기</a></p>
+<article>
+<h1>KRX Access Blocked - Demoting an Import-Time Crash to a Login Failure</h1>
+<p class="post-date"><time datetime="2026-10-26">2026-10-26</time></p>
+<p class="subtitle">An exchange IP block turned a data library&#x27;s import step into a process-killing crash, and the same day also saw a new research hypothesis go from preregistration to merge.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>What happened when exchange access got blocked</h2>
+<p>Around midday, one of the trading rounds suddenly crashed.</p>
+<p>Tracing it back, the Korea Exchange (KRX) had blocked the connecting IP. But the real problem wasn't the trading logic — it was in a third-party data library.</p>
+<p>That library tries to log in to the exchange <strong>the moment it's imported</strong>. Normally that returns a clean JSON response, but once the connection is blocked, it instead gets redirected to an HTML login page.</p>
+<p>The library tried to parse that HTML as JSON and threw an exception, which took down the entire import step with it — and that's what killed the trading round.</p>
+<h2>Tracing the cause and fixing it</h2>
+<p>Earlier that morning, a batch backfill of foreign-investor flow data had logged in to the exchange repeatedly, which plausibly triggered the block.</p>
+<p>That said, this is only a timing correlation — the actual cause-and-effect was never confirmed.</p>
+<p>The fix direction was clear: wrap the library's login function so that any exception (bad response, block, timeout) gets downgraded to a normal "login failed" state instead of propagating.</p>
+<p>That way, a crash turns into just that day's exchange data being empty, while the rest of the trading logic keeps running. Fortunately, the live account's buying was already held by a separate <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">safety mechanism</a>(new tab) at the time, so this didn't translate into any actual loss.</p>
+<p>The block hadn't fully lifted a day later, so retrying against the exchange was held off — retrying risks extending the block — with a one-time check planned for the next morning.</p>
+<h2>Same day, a new research hypothesis went from preregistration to merge</h2>
+<p>In the afternoon, a completely different task: a new research hypothesis using foreign-investor flow data.</p>
+<p>The catch was that the historical window of this data had already been looked at once in a separate analysis. Reusing the same window and calling it a "confirmed" result wouldn't be statistically trustworthy.</p>
+<p>So the hypothesis was locked into a document first (preregistration), with a minimum sample condition for detecting a statistically meaningful difference fixed in advance — if that bar isn't cleared, the verdict itself doesn't get opened. Changing the bar after seeing the results is off the table.</p>
+<p>The implementation was handed to AI, and an independent code review was requested from a separate AI.</p>
+<p>The review raised several points, all of which were addressed and merged the same day. That said, the code has only been run against synthetic test data so far — validation against real data is deferred to next month. No resident process imports this code yet, so today's merge had zero effect on live trading.</p>
+<h2>Also today: a Monday false alarm and six resident restarts</h2>
+<p>A monitoring check on technical-analysis data had a recurring false alarm: updates stop over the weekend, and Monday morning triggers a "no update in a long time" alert.</p>
+<p>The fixed time threshold didn't account for weekends and market holidays. It now scales the allowed gap by the number of non-trading days, and whether it recurs next Monday will decide if the fix actually worked.</p>
+<p>After market close, six resident processes were restarted together to pick up today's fixes. A prepared restart script made the restart itself go smoothly.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/trading-bot/">#trading bot</a> <a href="../../../../en/tags/devlog/">#devlog</a> <a href="../../../../en/tags/automated-trading/">#automated trading</a> <a href="../../../../en/tags/incident-response/">#incident response</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-10/2026-10-25_weekly/">Re-judging Performance, Going Live on Early Entry, Two Rounds of Review on a Fund-Transfer Feature — a Week of Double-Checking Numbers</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-10/2026-10-25_devlog/">Cross-Account Fund Transfer - Code Review Caught Two Ways Money Could Go Missing</a></li><li><a href="../../../../en/devlog/2026-10/2026-10-22_devlog/">First Live Day of Early Entry, and a Two-Tier Structure Stalled on Funding</a></li><li><a href="../../../../en/devlog/2026-10/2026-10-18_weekly/">Experiment Bugs, a GPU Incident, and a Live-Account Buy Block — Turning Manual Intervention into Something Monitored</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>
