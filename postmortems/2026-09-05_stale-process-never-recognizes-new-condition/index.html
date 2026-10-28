@@ -69,7 +69,7 @@
 <p><strong>배포와 프로세스 생명주기가 분리된 시스템에서는, 디스패치 로직을 건드리는 배포마다 "이걸 실행하는 프로세스도 재시작이 필요한가"를 체크리스트 항목으로 명시하는 게 안전합니다.</strong> 사람이 매번 기억하기보다, 배포 스크립트가 변경된 파일 목록을 보고 그 파일을 임포트하는 상주 프로세스 목록을 역으로 알려주는 자동화가 있다면 더 좋습니다.</p>
 <p><strong>새로 등록한 것이 예정대로 한 번은 실제로 발화하는지 직접 눈으로 확인하는 습관이 저렴한 보험입니다.</strong> 이번 경우 등록 직후 발화 여부를 확인했다면 한 시간을 기다리지 않고 바로 원인을 좁힐 수 있었을 겁니다. "등록됐다"는 확인과 "실제로 작동한다"는 확인은 다른 질문입니다.</p>
 </article>
-<p class="tags"><a href="../../tags/%EC%86%8C%ED%94%84%ED%8A%B8%EC%9B%A8%EC%96%B4%ED%92%88%EC%A7%88/">#소프트웨어품질</a> <a href="../../tags/%EB%94%94%EB%B2%84%EA%B9%85/">#디버깅</a> <a href="../../tags/postmortem/">#postmortem</a></p><aside class="related">
+<p class="tags"><a href="../../tags/%EC%86%8C%ED%94%84%ED%8A%B8%EC%9B%A8%EC%96%B4%ED%92%88%EC%A7%88/">#소프트웨어품질</a> <a href="../../tags/%EB%B0%B0%ED%8F%AC/">#배포</a> <a href="../../tags/%EB%94%94%EB%B2%84%EA%B9%85/">#디버깅</a> <a href="../../tags/postmortem/">#postmortem</a></p><aside class="related">
 <ul><li>이전 글: <a href="../../postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다</a></li><li>다음 글: <a href="../../postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델</a></li></ul>
 <h2>관련 글</h2><ul><li><a href="../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li><li><a href="../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a></li><li><a href="../../postmortems/2026-10-10_recovery-guidance-double-execution/">에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</a></li></ul>
 </aside>

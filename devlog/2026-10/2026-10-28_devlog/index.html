@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>실거래 1주 매수팔기 테스트 경로 확정 - 자동화 대신 수동주문으로 | 퀀트봇 개발일지</title>
+<meta name="description" content="내일 장중에 한 주를 사고파는 작은 실거래 테스트를 하기로 하면서, 퇴역해둔 자동 경로 대신 수동 주문을 선택한 이유를 정리했습니다. 오늘 쌓인 여러 변경도 모아서 상주 프로세스를 재시작했습니다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-28_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-28_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-28_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-28_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="실거래 1주 매수팔기 테스트 경로 확정 - 자동화 대신 수동주문으로">
+<meta property="og:description" content="내일 장중에 한 주를 사고파는 작은 실거래 테스트를 하기로 하면서, 퇴역해둔 자동 경로 대신 수동 주문을 선택한 이유를 정리했습니다. 오늘 쌓인 여러 변경도 모아서 상주 프로세스를 재시작했습니다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-28_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "실거래 1주 매수팔기 테스트 경로 확정 - 자동화 대신 수동주문으로", "description": "내일 장중에 한 주를 사고파는 작은 실거래 테스트를 하기로 하면서, 퇴역해둔 자동 경로 대신 수동 주문을 선택한 이유를 정리했습니다. 오늘 쌓인 여러 변경도 모아서 상주 프로세스를 재시작했습니다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-28_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-28"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-10/2026-10-28_devlog/">Read in English</a></p>
+<article>
+<h1>실거래 1주 매수팔기 테스트 경로 확정 - 자동화 대신 수동주문으로</h1>
+<p class="post-date"><time datetime="2026-10-28">2026-10-28</time></p>
+<p class="subtitle">내일 장중에 한 주를 사고파는 작은 실거래 테스트를 하기로 하면서, 퇴역해둔 자동 경로 대신 수동 주문을 선택한 이유를 정리했습니다. 오늘 쌓인 여러 변경도 모아서 상주 프로세스를 재시작했습니다.</p><h2>내일 한 주를 사고팔아보기로 했다</h2>
+<p>실거래 계좌에서 아직 한 번도 안 해본 게 있었습니다.</p>
+<p>실제로 주문을 넣고, 그게 장부에 제대로 반영되는지 끝까지 확인하는 일입니다.</p>
+<p>그래서 내일 장중에 딱 한 주를 사고파는 작은 테스트를 하기로 했습니다. 금액 규모로 보면 전체 운용 자산의 아주 작은 비중이라, 실패해도 손실이 거의 없는 테스트입니다.</p>
+<h2>자동 경로 대신 수동 주문을 택했다</h2>
+<p>경로를 정하는 과정에서 선택지가 두 개 있었습니다.</p>
+<p>하나는 예전에 쓰다가 퇴역시켜둔 자동 매도 점검 경로를 다시 깨우는 것이었고, 다른 하나는 그냥 직접 앱에서 주문을 넣고 그 결과를 시스템에 기록만 시키는 것이었습니다.</p>
+<p>퇴역한 경로를 되살리려면 퇴역 해제, 자금 이체, 주 단위 확보 같은 절차가 필요해서 내일 하루 안에 끝내기 어려웠습니다. 그래서 수동 주문 쪽으로 결론을 냈습니다.</p>
+<p>직접 주문을 넣고, 그 주문번호를 시스템에 알려주면 시스템이 미리 가상으로 처리해보고(사후 점검용) 실제로 장부에 반영하는 방식입니다. 시스템이 스스로 주문을 내지는 않고, 기록과 대조만 맡습니다.</p>
+<p>이 방식은 자동매매 엔진의 판단 로직과는 무관한, 주문 기록·대조 계층의 이야기입니다. 이 계층을 어떻게 설계했는지는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실행 아키텍처 글</a>(새 창)에서 더 자세히 다뤘습니다.</p>
+<p>테스트가 끝나면 매수·매도 두 건이 장부와 정확히 일치하는지, 수수료와 세금이 실제로 얼마나 빠지는지를 확인할 계획입니다.</p>
+<h2>쌓인 변경을 모아 상주 두 개를 재시작</h2>
+<p>오늘은 그 외에도 작업공간에서 준비해두던 변경 두 가지가 완성됐습니다.</p>
+<p>하나는 가격을 조회하는 외부 API가 언젠가 퇴역할 걸 대비해서, 응답이 없을 때 다른 경로로 자동 전환하는 장치입니다.</p>
+<p>다른 하나는 장중 점검기 중 하나가 날짜를 비교하는 방식이 살짝 어긋나 있던 걸 바로잡은 것입니다.</p>
+<p>두 변경을 병합하고, 지표 하나(검사기가 쓰는 기준값)를 최근 자료로 다시 맞춘 것까지 합쳐서 상주 프로세스 두 개를 한꺼번에 재시작했습니다. 재시작은 매끈하게 끝났고, 반영 여부는 내일 장중 로그에서 한 번 더 확인할 예정입니다.</p>
+<h2>보유 기간을 늘리는 실험, 첫날 지표는 양호한 방향</h2>
+<p>며칠 전부터 보유 종목을 더 오래 들고 가도록 기준을 조정하는 실험을 시작했는데, 오늘이 그 첫 거래일이었습니다.</p>
+<p>하루치 지표만으로는 아직 판정할 단계가 아니지만, 미체결 비율이나 매도 뒤 현금이 노는 비율 같은 보조 지표들이 기존 기준선보다 나은 방향으로 나왔습니다.</p>
+<p>본격적인 판정은 20거래일 정도 더 모은 뒤에 하기로 했습니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%8B%A4%EA%B1%B0%EB%9E%98/">#실거래</a> <a href="../../../tags/%EB%B0%B0%ED%8F%AC/">#배포</a> <a href="../../../tags/%EC%9A%B4%EC%98%81/">#운영</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-10/2026-10-27_devlog/">청산 기준 완화 병합 - 재시작 후 전체 테스트로 무관 실패 가려내기</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-10/2026-10-27_devlog/">청산 기준 완화 병합 - 재시작 후 전체 테스트로 무관 실패 가려내기</a></li><li><a href="../../../devlog/2026-10/2026-10-24_devlog/">블로그 주간 리포트 5주째 스킵 - 죽은 계좌 참조가 원인</a></li><li><a href="../../../architecture/10_real_money_launch/">퀀트봇 실거래 시작 - 소액으로 넘은 첫 관문, 그리고 첫 주의 사고들</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
