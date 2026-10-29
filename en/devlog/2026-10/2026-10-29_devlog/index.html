@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recurring Toss Token Revocations - A Restart-Order Mismatch | Quant Bot Devlog</title>
+<meta name="description" content="Tracked down why an external quote API&#x27;s auth token kept invalidating itself, and decided to wait for the final verdict on a new-exchange entry exper…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-29_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-29_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-29_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-10/2026-10-29_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Recurring Toss Token Revocations - A Restart-Order Mismatch">
+<meta property="og:description" content="Tracked down why an external quote API&#x27;s auth token kept invalidating itself, and decided to wait for the final verdict on a new-exchange entry exper…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-29_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Recurring Toss Token Revocations - A Restart-Order Mismatch", "description": "Tracked down why an external quote API's auth token kept invalidating itself, and decided to wait for the final verdict on a new-exchange entry exper…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-10/2026-10-29_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-10-29"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-10/2026-10-29_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Recurring Toss Token Revocations - A Restart-Order Mismatch</h1>
+<p class="post-date"><time datetime="2026-10-29">2026-10-29</time></p>
+<p class="subtitle">Tracked down why an external quote API&#x27;s auth token kept invalidating itself, and decided to wait for the final verdict on a new-exchange entry experiment despite failing one criterion early.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The token revocations came back</h2>
+<p>For the past week or so, every time the resident processes got restarted, the auth token for the external quote API would start invalidating itself.</p>
+<p>It happened once earlier this week, then stayed quiet for two days.</p>
+<p>Then early this morning the revocation logs started pouring in again — steadily, every five minutes.</p>
+<h2>The cause was restart order</h2>
+<p>Lining up this recurrence against the earlier one, both shared the same pattern: one of the two resident processes had been restarted while the other was left on its previous run.</p>
+<p>Each process requests its own fresh token on startup. If one process jumps to a new generation while the other stays on the old one, each keeps invalidating the token the other just issued — a tug-of-war.</p>
+<p>The fix seemed obvious: bring both processes onto the same generation. So the lagging process got restarted too.</p>
+<p>Right after that restart, the last revocation log appeared and then nothing — two more five-minute checks came back clean. One more day of monitoring before calling it fully resolved.</p>
+<p>This token only feeds price lookups, not the order path itself, so none of this ever touched live trading. But it's now clear that restarting the two processes separately causes this side effect, so future restarts need to keep them in lockstep.</p>
+<h2>New-exchange entry experiment: failing one bar, but waiting for the final call</h2>
+<p>A multi-week experiment validating order entry on a newly opened exchange hit a snag at its interim checkpoint — it failed one of the criteria.</p>
+<p>The criterion checks whether enough order-book depth is sitting at the price level when an order goes in. Running the numbers, even a perfect run for the remaining days couldn't pull this criterion back into range. It's effectively a confirmed fail.</p>
+<p>The question was whether to kill the experiment now or stick with the originally scheduled final verdict date. Another AI tool was asked for its read on this.</p>
+<p>Its answer: wait. The experiment wasn't only testing this one criterion — it's also collecting evidence for a separate open question, and that answer only becomes available on the final verdict date.</p>
+<p>Taking that advice, the plan is to wait for next week's scheduled final verdict as planned. The failed criterion and the still-unanswered question will be written up separately in the final report.</p>
+<h2>One-share test fee reconciliation pushed to the next deposit cycle</h2>
+<p>Yesterday's planned one-share buy-and-sell test on the live account executed cleanly today.</p>
+<p>It's a small test — buy and sell at the same price to isolate exactly what fees get deducted — but confirming the actual fee and tax amounts only becomes possible once the deposit lands and goes through <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">ledger reconciliation</a>(new tab).</p>
+<p>While checking on that, it turned out another small test from last week was still sitting with its deposit reconciliation unfinished. Both reconciliations are now bundled to run together on the next deposit date.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/trading-bot/">#trading bot</a> <a href="../../../../en/tags/devlog/">#devlog</a> <a href="../../../../en/tags/operations/">#operations</a> <a href="../../../../en/tags/incident-response/">#incident response</a> <a href="../../../../en/tags/live-trading/">#live trading</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-10/2026-10-28_devlog/">Confirming a One-Share Live Test Path - Manual Orders Over Automation</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-10/2026-10-28_devlog/">Confirming a One-Share Live Test Path - Manual Orders Over Automation</a></li><li><a href="../../../../en/devlog/2026-09/2026-09-10_devlog/">Two Bugs on Account-Migration Day, Plus the Real Root Cause of the GPU Failure</a></li><li><a href="../../../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>
