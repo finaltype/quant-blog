@@ -31,6 +31,7 @@
   td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
   img { max-width: 100%; height: auto; border-radius: 6px; }
   aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
   p.tags { margin-top: 2rem; font-size: .9rem; }
   p.tags a { margin-right: .6rem; }
   aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
@@ -44,20 +45,20 @@
 <h1>#자동화 태그 글 모음</h1>
 <p class="subtitle">&#x27;자동화&#x27; 태그가 붙은 글 14편.</p>
 <ul>
-<li><a href="../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a></li>
-<li><a href="../../postmortems/2026-08-22_when-automation-needs-a-human/">완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지</a></li>
-<li><a href="../../postmortems/2026-08-22_silent-automation-failure/">개발일지 자동화가 한 달 가까이 멈춰 있었던 이유</a></li>
-<li><a href="../../devlog/2026-10/2026-10-13_devlog/">GPU 드라이버 버전 꼬임, 사람 없이 재부팅으로 넘긴 날</a></li>
-<li><a href="../../devlog/2026-09/2026-09-19_devlog/">성능측정 하네스 - 자동 재개가 권한 벽에 막혀 GPU를 헛되이 점유했다</a></li>
-<li><a href="../../devlog/2026-09/2026-09-18_devlog/">성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다</a></li>
-<li><a href="../../devlog/2026-09/2026-09-17_devlog/">벤치마크 하네스 첫 검증 - 설정이 새는 지점을 하나씩 막았다</a></li>
-<li><a href="../../devlog/2026-09/2026-09-13_devlog/">킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다</a></li>
-<li><a href="../../devlog/2026-09/2026-09-11_devlog/">이관 방지 플래그가 다른 계좌 매물을 잘못 건드린 사고</a></li>
-<li><a href="../../devlog/2026-09/2026-09-01_devlog/">구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화</a></li>
-<li><a href="../../devlog/2026-08/2026-08-30_weekly/">두 번째 증권사 병행운영을 시작하며 잡아낸 조용한 버그들</a></li>
-<li><a href="../../devlog/2026-08/2026-08-26_devlog/">프로덕션 시작 시각을 당겼다가 발견한 순차 실행 문제, 그리고 새 증권사 연동 검증</a></li>
-<li><a href="../../devlog/2026-08/2026-08-24_devlog/">07:30 리포트 안전장치 정리 + 그래픽카드 반품 결정 번복</a></li>
-<li><a href="../../architecture/03_netwatcher/">아무도 안 보고 있으면 소용없다 — 네트워크 감시 데몬을 만든 이유</a></li>
+<li><a href="../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a><div class="sub">한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다</div></li>
+<li><a href="../../postmortems/2026-08-22_when-automation-needs-a-human/">완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지</a><div class="sub">자동으로 돌아가게 만든 것과, 자동으로 끝까지 처리되는 것은 다른 문장이었습니다</div></li>
+<li><a href="../../postmortems/2026-08-22_silent-automation-failure/">개발일지 자동화가 한 달 가까이 멈춰 있었던 이유</a><div class="sub">로그조차 안 쌓이니, 돌고 있는지 죽어 있는지 구분할 방법이 없었습니다</div></li>
+<li><a href="../../devlog/2026-10/2026-10-13_devlog/">GPU 드라이버 버전 꼬임, 사람 없이 재부팅으로 넘긴 날</a><div class="sub">자동 업데이트가 커널 모듈과 라이브러리 버전을 어긋나게 만들었는데, 재부팅부터 복구 확인까지 전부 자동화해서 넘겼습니다.</div></li>
+<li><a href="../../devlog/2026-09/2026-09-19_devlog/">성능측정 하네스 - 자동 재개가 권한 벽에 막혀 GPU를 헛되이 점유했다</a><div class="sub">어제 고친 측정 도구로 새벽에 자동 재개가 걸렸는데, 첫 트라이얼만 띄운 채 조용히 멈춰버렸습니다. 결국 사람이 직접 이어받아 라운드를 마무리했습니다.</div></li>
+<li><a href="../../devlog/2026-09/2026-09-18_devlog/">성능측정 하네스 - 측정 도구 자체의 계측 오류 두 건을 발견해 고쳤다</a><div class="sub">GPU 사용량을 실제보다 3배 넘게 잘못 계산하고 있었고, 측정 시간제한이 너무 짧아 후보 순위까지 거꾸로 나오고 있었습니다. 두 건 다 오늘 안에 찾아 고쳤습니다.</div></li>
+<li><a href="../../devlog/2026-09/2026-09-17_devlog/">벤치마크 하네스 첫 검증 - 설정이 새는 지점을 하나씩 막았다</a><div class="sub">어제 고친 모델 설정이 새로 만든 성능 측정 도구에는 하나도 안 들어가고 있었던 걸 발견해 하루 종일 하나씩 막았고, 11일째 방치돼 있던 안전장치 항목들도 오늘 전부 정리했습니다.</div></li>
+<li><a href="../../devlog/2026-09/2026-09-13_devlog/">킬스위치 사고 사후검토 - 증상만 지웠던 원인이 남아있었다</a><div class="sub">어제 급하게 지운 킬스위치 오발 증상, 오늘 사후검토에서 뿌리 원인이 월요일 실거래를 다시 막을 위험으로 남아있는 걸 발견해 수선했습니다.</div></li>
+<li><a href="../../devlog/2026-09/2026-09-11_devlog/">이관 방지 플래그가 다른 계좌 매물을 잘못 건드린 사고</a><div class="sub">한쪽 계좌 재매수를 막으려고 걸어둔 플래그가 전역으로 적용되면서, 방금 이관받은 다른 계좌 종목을 도로 강제매도시키고 있었습니다. 같은 날 성능 최적화 자동화 도구도 하나 새로 완성했습니다.</div></li>
+<li><a href="../../devlog/2026-09/2026-09-01_devlog/">구조 자문 리팩터링 4단계 실행과 사후검증, 그리고 재시작 자동화</a><div class="sub">AI에게 프로젝트 구조를 통째로 봐달라고 했고, 고친 뒤엔 다시 검증까지 맡겼다</div></li>
+<li><a href="../../devlog/2026-08/2026-08-30_weekly/">두 번째 증권사 병행운영을 시작하며 잡아낸 조용한 버그들</a><div class="sub">이번 주 가장 큰 진전은 새 증권사 실계좌 검증과 모의투자 병행운영 개시였고, 그 사이사이에서 며칠씩 티 안 나게 실패하던 버그를 여럿 걷어냈습니다</div></li>
+<li><a href="../../devlog/2026-08/2026-08-26_devlog/">프로덕션 시작 시각을 당겼다가 발견한 순차 실행 문제, 그리고 새 증권사 연동 검증</a><div class="sub">시작 시각을 앞당기면서 드러난 순차 실행 버그를 병렬 배칭으로 고치고, 새 증권사 API를 실계좌로 검증했습니다</div></li>
+<li><a href="../../devlog/2026-08/2026-08-24_devlog/">07:30 리포트 안전장치 정리 + 그래픽카드 반품 결정 번복</a><div class="sub">겹쳐 있던 방어장치를 하나로 정리하고, 지난주 반품하기로 했던 카드를 다시 쓰기로 했습니다</div></li>
+<li><a href="../../architecture/03_netwatcher/">아무도 안 보고 있으면 소용없다 — 네트워크 감시 데몬을 만든 이유</a><div class="sub">와이파이가 잠깐 끊겼다가 반쪽짜리로 남아있었던 사고를 계기로, 집 네트워크를 대신 지켜보는 작은 프로그램을 하나 더 만들었습니다</div></li>
 </ul>
 </article>
 

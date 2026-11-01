@@ -34,6 +34,7 @@
   td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
   img { max-width: 100%; height: auto; border-radius: 6px; }
   aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
   p.tags { margin-top: 2rem; font-size: .9rem; }
   p.tags a { margin-right: .6rem; }
   aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
@@ -47,25 +48,25 @@
 <h1>Postmortems</h1>
 <p class="subtitle">Postmortems 전체 글 목록 (19편)</p>
 <ul>
-<li><a href="../postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출</a></li>
-<li><a href="../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li>
-<li><a href="../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a></li>
-<li><a href="../postmortems/2026-10-10_recovery-guidance-double-execution/">에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</a></li>
-<li><a href="../postmortems/2026-10-03_order-dependent-test-pollution/">순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염</a></li>
-<li><a href="../postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까</a></li>
-<li><a href="../postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유</a></li>
-<li><a href="../postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다</a></li>
-<li><a href="../postmortems/2026-09-12_test-cleanup-killed-production-process/">테스트 정리 코드가 운영 서버를 죽인 사고</a></li>
-<li><a href="../postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델</a></li>
-<li><a href="../postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유</a></li>
-<li><a href="../postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다</a></li>
-<li><a href="../postmortems/2026-08-29_swallowed-exception-silent-failure/">조용히 실패하는 except 문 - 새로 만든 모듈이 8일째 아무것도 안 하고 있었다</a></li>
-<li><a href="../postmortems/2026-08-22_when-automation-needs-a-human/">완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지</a></li>
-<li><a href="../postmortems/2026-08-22_verification-tool-blind-spots/">자동매매 검증 도구가 오류를 놓치는 이유 3가지</a></li>
-<li><a href="../postmortems/2026-08-22_silent-automation-failure/">개발일지 자동화가 한 달 가까이 멈춰 있었던 이유</a></li>
-<li><a href="../postmortems/2026-08-22_manual-override-safety-guard/">자동매매 안전장치 오작동 - 판정 기준의 시간 단위가 잘못됐다</a></li>
-<li><a href="../postmortems/2026-08-22_hardware-verdict-reversal/">그래픽카드 교체 성능 비교 - 판정이 두 번 뒤집힌 이유</a></li>
-<li><a href="../postmortems/2026-08-22_building-a-numeric-verifier/">AI 리포트 수치 검증기 - 자기정합 검사만으론 못 잡는 오류들</a></li>
+<li><a href="../postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출</a><div class="sub">연구용 백필이 외부 API 차단을 유발했고, 그 차단이 라이브러리 임포트 단계에서 실거래 프로세스를 통째로 죽였습니다</div></li>
+<li><a href="../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a><div class="sub">워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다</div></li>
+<li><a href="../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a><div class="sub">한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다</div></li>
+<li><a href="../postmortems/2026-10-10_recovery-guidance-double-execution/">에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</a><div class="sub">해피 패스는 수백 개 테스트를 통과했는데, 진짜 치명 결함은 &quot;실패했을 때 뭘 하라&quot;는 안내 문구 안에 있었다</div></li>
+<li><a href="../postmortems/2026-10-03_order-dependent-test-pollution/">순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염</a><div class="sub">단독으로 돌리면 통과하고 전체 스위트에서만 실패하던 테스트, 범인은 다른 파일의 몽키패치였습니다</div></li>
+<li><a href="../postmortems/2026-09-26_nan-marketcap-silently-corrupted-universe/">시가총액 데이터가 전부 결측치로 왔는데 왜 에러가 안 났을까</a><div class="sub">정렬 기준값이 통째로 사라지면, 정렬 함수는 조용히 원래 순서를 돌려준다</div></li>
+<li><a href="../postmortems/2026-09-19_dropped-temperature-parameter-invalidated-ab-test/">LLM 온도 파라미터 유실 사고 - A/B 테스트가 처음부터 무효였던 이유</a><div class="sub">상위 함수에 값을 넘겼다는 것과, 그 값이 실제로 서버에 도착했다는 것은 다른 문장이었습니다</div></li>
+<li><a href="../postmortems/2026-09-15_kis-to-nh-broker-migration-postmortem/">증권사를 하나 더 붙였더니, 사고가 전부 새 쪽에서만 났습니다</a><div class="sub">KIS(한국투자증권)에서 3주 넘게 안 나던 종류의 버그가 NH증권 Open API를 붙이자마자 연달아 터진 이유</div></li>
+<li><a href="../postmortems/2026-09-12_test-cleanup-killed-production-process/">테스트 정리 코드가 운영 서버를 죽인 사고</a><div class="sub">이름이 겹치는 프로세스를 패턴으로 죽이는 정리 코드와, 에러 메시지를 문자열로만 분류하는 로직이 겹쳐서 만든 헛다리 진단</div></li>
+<li><a href="../postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">Qwen3.8-Flash-Next 후기 - RTX 5090 + R9700 두 장으로 돌려본 대형 MoE 모델</a><div class="sub">양자화 버전을 세 번 바꾸고 자문을 열여섯 차례 거친 끝에, 프로덕션에 올린 로컬 모델 교체기</div></li>
+<li><a href="../postmortems/2026-09-05_stale-process-never-recognizes-new-condition/">새로 등록한 조건을 상주 프로세스가 영원히 못 알아본 이유</a><div class="sub">코드는 배포됐는데 그 코드를 실행할 프로세스가 그 전부터 떠 있었던 경우</div></li>
+<li><a href="../postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다</a><div class="sub">이틀 연속 재발하고서야 잡은 근본원인 - 로컬 임포트와 파이썬 기본인자 바인딩</div></li>
+<li><a href="../postmortems/2026-08-29_swallowed-exception-silent-failure/">조용히 실패하는 except 문 - 새로 만든 모듈이 8일째 아무것도 안 하고 있었다</a><div class="sub">캐시 파손을 조용히 넘기려던 except 한 줄이, 의존 라이브러리 자체가 없는 상황까지 함께 삼켜버렸습니다</div></li>
+<li><a href="../postmortems/2026-08-22_when-automation-needs-a-human/">완전자동매매 시스템에 사람이 직접 개입해야 했던 사례 3가지</a><div class="sub">자동으로 돌아가게 만든 것과, 자동으로 끝까지 처리되는 것은 다른 문장이었습니다</div></li>
+<li><a href="../postmortems/2026-08-22_verification-tool-blind-spots/">자동매매 검증 도구가 오류를 놓치는 이유 3가지</a><div class="sub">검증 도구를 새로 붙일 때마다 걸리는 방식이 매번 달랐습니다 — 도구 자신의 버그, 아예 없던 관측, 판독 시점의 착시</div></li>
+<li><a href="../postmortems/2026-08-22_silent-automation-failure/">개발일지 자동화가 한 달 가까이 멈춰 있었던 이유</a><div class="sub">로그조차 안 쌓이니, 돌고 있는지 죽어 있는지 구분할 방법이 없었습니다</div></li>
+<li><a href="../postmortems/2026-08-22_manual-override-safety-guard/">자동매매 안전장치 오작동 - 판정 기준의 시간 단위가 잘못됐다</a><div class="sub">누적 손실을 막으려던 안전장치가 하루 안의 일시적 하락에도 반응했습니다 — 두 지표를 같은 시간 단위로 재고 있는지가 핵심이었습니다</div></li>
+<li><a href="../postmortems/2026-08-22_hardware-verdict-reversal/">그래픽카드 교체 성능 비교 - 판정이 두 번 뒤집힌 이유</a><div class="sub">처음 방향 판정도, 나중 추가구매 판정도 서로 다른 이유로 틀렸습니다 — 벤치마크를 읽는 방식 자체가 문제였습니다</div></li>
+<li><a href="../postmortems/2026-08-22_building-a-numeric-verifier/">AI 리포트 수치 검증기 - 자기정합 검사만으론 못 잡는 오류들</a><div class="sub">문서 안에서는 앞뒤가 맞는데 원본 데이터와는 다른 숫자 — 그런 오류를 잡으려고 검증기를 새로 설계했습니다</div></li>
 </ul>
 </article>
 
