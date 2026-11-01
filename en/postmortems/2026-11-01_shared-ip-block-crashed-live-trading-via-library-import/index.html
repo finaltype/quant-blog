@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Research Backfill&#x27;s Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call | Quant Bot Devlog</title>
+<meta name="description" content="A research backfill triggered an external API block, and that block killed live trading processes during library import">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A Research Backfill&#x27;s Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call">
+<meta property="og:description" content="A research backfill triggered an external API block, and that block killed live trading processes during library import">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "A Research Backfill's Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call", "description": "A research backfill triggered an external API block, and that block killed live trading processes during library import", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-01"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">한국어로 보기</a></p>
+<article>
+<h1>A Research Backfill&#x27;s Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call</h1>
+<p class="post-date"><time datetime="2026-11-01">2026-11-01</time></p>
+<p class="subtitle">A research backfill triggered an external API block, and that block killed live trading processes during library import</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>During the day I was running a one-off research backfill script, pulling a large amount of historical data from an external market/disclosure API.</p>
+<p>A few dozen minutes later, three separate live trading rounds crashed almost simultaneously. None of them were anywhere near the buy/sell decision logic.</p>
+<h2>What happened</h2>
+<p>Right before an intraday round, several independent execution units ("sleeves") crashed in a row with the same error. The pattern was Python's standard JSON parser throwing an exception that meant "expected a value but found none."</p>
+<p>The stack trace was stranger than the error itself. The crash happened before any execution logic even ran — on the line that <strong>imports</strong> a third-party library used for the external API. A crash on a plain <code>import</code> statement meant the library was firing off a network request the moment the module loaded.</p>
+<p>Luckily, buying itself was already blocked by an unrelated safety mechanism during that window, so no bad fills resulted. But the sell replanning for that round got pushed to the next one, and a parallel simulation round I ran for comparison lost that day's record entirely.</p>
+<h2>What I thought at first</h2>
+<p>My first suspicion was a library version issue or a transient network hiccup. The external API was already known to be occasionally slow or to time out, so I assumed today was just worse than usual and reached for a retry.</p>
+<p>Before retrying, though, I counted how many requests my research backfill script had logged around the same time. It had tried logging in with the same account several times in a short window and fired off daily queries dozens to hundreds of times.</p>
+<p>That's when my suspicion shifted. It wasn't "the library occasionally fails" — it was more likely "I overused the account/IP that library depends on."</p>
+<h2>The real cause</h2>
+<p>Looking closer, two separate problems had stacked on top of each other.</p>
+<p><strong>Layer one: shared resources.</strong> The research backfill and the live trading processes were both connecting to the same external service with the same IP and the same account. The two pieces of code had no idea the other existed, but to the external service, they looked like the same client.</p>
+<p>Because the backfill repeated logins and queries in a short burst, the external service flagged the IP and started returning an HTML "access blocked" notice instead of a normal response for every request.</p>
+<p><strong>Layer two: an import-time side effect.</strong> The third-party library in question tried to log in the moment its module was imported, and parsed that response as JSON right at the top of the module.</p>
+<p>Normally the login response was always JSON, so this never caused a problem. But while blocked, the server returned an HTML notice page instead, and the JSON parser threw on it immediately. That exception wasn't wrapped in any <code>try/except</code>, so the <code>import</code> statement itself failed — and every process that depended on this library died before it even started.</p>
+<p>What made it worse: this login call wasn't needed by the execution logic at all. I was only using public, no-login endpoints, but the library was written to always attempt login the instant its module was loaded. A feature I wasn't even using held the entire process's availability hostage.</p>
+<h2>How I fixed it</h2>
+<p>Patching the library's source directly was off the table — forking and maintaining a third-party package is expensive, and every update would need the patch reapplied.</p>
+<p>Instead, I wrapped just the one internal login function the library used. Before importing the library itself, I pre-loaded its internal submodule under the same name and swapped out the login function for a safe version.</p>
+<p>The safe version called the original function but caught any exception — JSON parse failure, timeout, whatever — and downgraded it to a normal "login failed" return value. Since login was an unnecessary side effect to begin with, failing it and proceeding in a logged-out state was fine.</p>
+<p>I added a before/after regression test: feed in a fake server response that mimics the blocked-access HTML page, and confirm the import no longer dies. The test faked only the response object, with no real network calls.</p>
+<p>I also addressed the underlying resource-sharing problem separately. I wrote it into the operating rules that research scripts making bulk external calls should avoid time windows when production uses the same account/IP, and started explicitly stating "don't use production credentials" whenever handing off similar work to someone else, AI agent included.</p>
+<h2>The generalizable lesson</h2>
+<p><strong>If a third-party library does network I/O at import time, that's a hidden single point of failure on its own.</strong> An <code>import</code> statement is normally assumed not to fail, and surrounding code skips error handling on that assumption. It's worth skimming a library's source once to check whether its top-level module code does network calls or file I/O.</p>
+<p><strong>Unused features can still affect availability.</strong> I wasn't using the login feature, yet a failure inside it killed the whole process. "I don't use this feature, so it doesn't matter" is only safe once you've confirmed the feature isn't wired into the import/init path.</p>
+<p><strong>When two independently written pieces of code share an external resource, one's behavior can break the other's availability.</strong> The research script and the live trading processes were completely separate in code, but the moment they shared the same IP and account, they stopped being independent. If multiple jobs hit the same external service, it's worth checking how your combined requests look from that service's side.</p>
+<p><strong>When the symptom (a JSON parse error) is far removed from the cause (an IP block), checking what else was running at the same time is usually the fastest path.</strong> It's tempting to blame a library bug or network flakiness from the error message alone, but lining up the timeline was the faster route here.</p>
+<p>Since this incident, whenever I build a new job that makes bulk external API calls, I add "could this collide with credentials/IP used by another process?" to the checklist before running it.</p>
+</article>
+<p class="tags"><a href="../../../en/tags/software-quality/">#software quality</a> <a href="../../../en/tags/debugging/">#debugging</a> <a href="../../../en/tags/operations/">#operations</a> <a href="../../../en/tags/postmortem/">#postmortem</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">How a Hardcoded sys.path Silently Broke Git Worktree Isolation</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions</a></li><li><a href="../../../en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">How a Hardcoded sys.path Silently Broke Git Worktree Isolation</a></li><li><a href="../../../en/postmortems/2026-10-10_recovery-guidance-double-execution/">How Error-Recovery Guidance Caused a Double-Execution Bug</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

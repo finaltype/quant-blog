@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출 | 퀀트봇 개발일지</title>
+<meta name="description" content="연구용 백필이 외부 API 차단을 유발했고, 그 차단이 라이브러리 임포트 단계에서 실거래 프로세스를 통째로 죽였습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출">
+<meta property="og:description" content="연구용 백필이 외부 API 차단을 유발했고, 그 차단이 라이브러리 임포트 단계에서 실거래 프로세스를 통째로 죽였습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출", "description": "연구용 백필이 외부 API 차단을 유발했고, 그 차단이 라이브러리 임포트 단계에서 실거래 프로세스를 통째로 죽였습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-01"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">Read in English</a></p>
+<article>
+<h1>리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출</h1>
+<p class="post-date"><time datetime="2026-11-01">2026-11-01</time></p>
+<p class="subtitle">연구용 백필이 외부 API 차단을 유발했고, 그 차단이 라이브러리 임포트 단계에서 실거래 프로세스를 통째로 죽였습니다</p><p>낮 시간에 연구용 데이터 백필 스크립트를 돌리고 있었습니다. 외부 시세/공시 API에서 과거 데이터를 대량으로 긁어오는 일회성 작업이었습니다.</p>
+<p>몇십 분 뒤, 실거래 라운드 세 개가 거의 동시에 죽었습니다. 매수·매도 판단을 내리는 핵심 로직과는 전혀 무관한 프로세스들이었습니다.</p>
+<h2>무슨 일이 있었나</h2>
+<p>장중 라운드 실행 직전, 여러 슬리브(독립적으로 도는 실행 단위)에서 같은 에러로 연쇄 크래시가 났습니다. 파이썬 표준 JSON 파서가 "값을 기대했는데 못 찾았다"는 예외를 던지며 죽는 패턴이었습니다.</p>
+<p>스택 트레이스를 보니 더 이상했습니다. 이 에러가 발생한 지점은 실행 로직이 시작되기도 전, 외부 API용 서드파티 라이브러리를 <strong>임포트하는 줄</strong>이었습니다. <code>import</code> 한 줄에서 프로세스가 죽는다는 건, 그 라이브러리가 모듈을 불러오는 시점에 이미 네트워크 요청을 하나 날린다는 뜻이었습니다.</p>
+<p>다행히 매수 자체는 다른 안전장치로 이미 막혀 있던 시간대라 체결 손실로는 이어지지 않았습니다. 다만 그 라운드의 매도 재계획이 다음 라운드로 미뤄졌고, 비교용으로 병행 운영하던 시뮬레이션 라운드 하나는 그날 기록이 통째로 날아갔습니다.</p>
+<h2>처음엔 뭐라고 생각했나</h2>
+<p>가장 먼저 의심한 건 라이브러리 버전이나 네트워크 일시 장애였습니다. 외부 API가 가끔 느려지거나 타임아웃 나는 건 이미 알고 있던 증상이라, "오늘 좀 더 심했나 보다" 하고 재시도부터 시도하려 했습니다.</p>
+<p>그런데 재시도를 누르기 전에, 비슷한 시각에 돌리고 있던 연구용 백필 스크립트가 로그에 남긴 요청 횟수를 세어봤습니다. 짧은 시간 안에 같은 계정으로 로그인을 여러 번 시도하고, 일별 조회를 수십~수백 번 날린 흔적이 있었습니다.</p>
+<p>그 순간부터 의심의 방향이 바뀌었습니다. "라이브러리가 가끔 실패한다"가 아니라 "내가 그 라이브러리가 쓰는 계정/IP를 과도하게 썼다"가 원인일 가능성이 더 컸습니다.</p>
+<h2>진짜 원인</h2>
+<p>실제로 들여다보니 두 겹의 문제가 겹쳐 있었습니다.</p>
+<p><strong>첫 번째 겹: 자원 공유.</strong> 연구용 백필과 실거래 프로세스가 같은 외부 서비스에 같은 IP, 같은 계정으로 접속하고 있었습니다. 둘은 서로의 존재를 전혀 모르는 독립적인 코드였지만, 외부 서비스 입장에서는 같은 클라이언트가 보낸 요청이었습니다.</p>
+<p>백필이 짧은 시간에 로그인과 조회를 반복하자, 외부 서비스가 이 IP를 차단 대상으로 판단하고 모든 요청에 정상 응답 대신 "접근 차단" 안내 페이지(HTML)를 돌려주기 시작했습니다.</p>
+<p><strong>두 번째 겹: 임포트 시점 부작용.</strong> 문제의 서드파티 라이브러리는 모듈을 임포트하는 순간 로그인을 시도하고, 그 응답을 곧바로 JSON으로 파싱하는 코드를 모듈 최상단에 두고 있었습니다.</p>
+<p>평소엔 로그인 응답이 항상 JSON이었으니 문제가 없었습니다. 그런데 차단된 상태에서는 서버가 HTML 안내 페이지를 돌려줬고, JSON 파서는 이걸 보고 그대로 예외를 던졌습니다. 이 예외는 <code>try/except</code>로 감싸져 있지 않았기 때문에, <code>import</code> 문 자체가 실패하면서 그 라이브러리를 쓰는 모든 프로세스가 시작도 못 하고 죽었습니다.</p>
+<p>더 불편한 점은, 이 로그인 호출 자체가 실행 로직에 전혀 필요하지 않았다는 것이었습니다. 로그인하지 않아도 되는 공개 조회 API만 쓰고 있었는데, 라이브러리 내부에서 모듈을 불러오기만 하면 무조건 로그인을 시도하도록 짜여 있었습니다. 쓰지도 않는 기능 하나가 전체 프로세스의 가용성을 쥐고 있었던 셈입니다.</p>
+<h2>어떻게 고쳤나</h2>
+<p>라이브러리 소스를 직접 고치는 건 배제했습니다. 외부 패키지를 포크해서 유지보수하는 비용이 너무 크고, 업데이트할 때마다 다시 패치해야 하는 부담이 생깁니다.</p>
+<p>대신 그 라이브러리가 내부적으로 쓰는 로그인 함수 하나만 감싸는 방식을 택했습니다. 해당 라이브러리를 임포트하기 <strong>전에</strong>, 같은 이름의 내부 모듈을 먼저 직접 로드해서 로그인 함수를 안전한 버전으로 바꿔치기했습니다.</p>
+<p>안전한 버전은 원래 함수를 그대로 호출하되, 어떤 예외든(JSON 파싱 실패든 타임아웃이든) 잡아서 "로그인 실패"라는 정상적인 반환값으로 낮췄습니다. 로그인은 애초에 실행 로직에 필요 없는 부가 기능이었으니, 실패해도 "로그인 안 된 상태로 계속 진행"하면 그만이었습니다.</p>
+<p>수선 전/후 테스트를 하나 추가했습니다. 로그인 응답이 차단 안내 HTML인 상황을 흉내 낸 가짜 서버 응답을 주고, 그래도 임포트가 죽지 않는지 확인하는 테스트입니다. 실제 네트워크 없이 돌아가도록 응답 객체만 흉내 냈습니다.</p>
+<p>근본 원인이었던 자원 공유 문제도 별도로 정리했습니다. 대량 외부 호출이 필요한 연구 스크립트는 프로덕션과 같은 계정/IP를 쓰는 시간대를 피하도록 운영 규칙에 적어뒀고, 비슷한 작업을 다른 사람(혹은 AI 에이전트)에게 맡길 때도 "프로덕션과 같은 자격 증명을 쓰지 말 것"을 작업 지시에 명시하기로 했습니다.</p>
+<h2>일반화하면 무슨 교훈인가</h2>
+<p><strong>서드파티 라이브러리가 임포트 시점에 네트워크 I/O를 한다면, 그 자체가 숨은 장애점입니다.</strong> <code>import</code> 문은 보통 "실패하지 않는 것"으로 간주되고, 그 가정 위에서 주변 코드가 예외 처리를 생략합니다. 라이브러리 문서나 소스를 한 번쯤은 훑어서, 모듈 최상단에 네트워크 호출이나 파일 I/O가 있는지 확인해둘 가치가 있습니다.</p>
+<p><strong>쓰지 않는 기능도 가용성에 영향을 줄 수 있습니다.</strong> 로그인 기능을 쓰지 않았는데도 로그인 코드의 실패가 전체 프로세스를 죽였습니다. "이 기능은 안 쓰니까 상관없다"는 판단은, 그 기능이 임포트/초기화 경로에 끼어 있지 않은지 확인한 뒤에야 안전합니다.</p>
+<p><strong>독립적으로 작성된 두 코드가 외부 자원을 공유하면, 둘 중 하나의 행동이 다른 하나의 가용성을 해칠 수 있습니다.</strong> 연구 스크립트와 실거래 프로세스는 코드상 완전히 분리돼 있었지만, 같은 IP·같은 계정이라는 자원을 공유하는 순간 더는 독립적이지 않았습니다. 여러 작업이 같은 외부 서비스를 쓴다면, 그 서비스 입장에서 자신의 요청들이 어떻게 뭉쳐 보이는지를 한 번은 점검해볼 필요가 있습니다.</p>
+<p><strong>증상(JSON 파싱 에러)과 원인(IP 차단)이 멀리 떨어져 있을 때는, 같은 시간대에 뭐가 같이 돌고 있었는지부터 확인하는 게 빠릅니다.</strong> 에러 메시지만 보고 라이브러리 버그나 네트워크 불안정을 의심하기 쉽지만, 타임라인을 맞춰보는 쪽이 종종 더 빠른 길이었습니다.</p>
+<p>이 사고 이후로는 외부 API를 대량으로 호출하는 작업을 새로 만들 때마다, "이게 다른 프로세스가 쓰는 자격 증명/IP와 충돌할 수 있는가"를 체크리스트에 올려두고 있습니다.</p>
+</article>
+<p class="tags"><a href="../../tags/%EC%86%8C%ED%94%84%ED%8A%B8%EC%9B%A8%EC%96%B4%ED%92%88%EC%A7%88/">#소프트웨어품질</a> <a href="../../tags/%EB%94%94%EB%B2%84%EA%B9%85/">#디버깅</a> <a href="../../tags/%EC%9A%B4%EC%98%81/">#운영</a> <a href="../../tags/postmortem/">#postmortem</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a></li><li><a href="../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li><li><a href="../../postmortems/2026-10-10_recovery-guidance-double-execution/">에러 복구 안내 문구가 이중 실행을 부르는 결함 — 머니패스 사가 재점검</a></li></ul>
+</aside>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
