@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Devlog | Quant Bot Devlog</title>
-<meta name="description" content="All Devlog posts (101)">
+<meta name="description" content="All Devlog posts (102)">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/">
 <link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/">
 <link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/">
 <link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Devlog">
-<meta property="og:description" content="All Devlog posts (101)">
+<meta property="og:description" content="All Devlog posts (102)">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Devlog", "description": "All Devlog posts (101)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Devlog", "description": "All Devlog posts (102)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -46,8 +46,9 @@
 <p class="lang-switch"><a href="../../devlog/">한국어로 보기</a></p>
 <article>
 <h1>Devlog</h1>
-<p class="subtitle">All Devlog posts (101)</p>
+<p class="subtitle">All Devlog posts (102)</p>
 <ul>
+<li><a href="../../en/devlog/2026-11/2026-11-02_devlog/">Toss Token 401 Ping-Pong - The Real Root Cause Was a Missing Cache Re-check</a><div class="sub">Finally tracked down why an external quote API&#x27;s auth token kept invalidating itself, fixed the re-issue logic, and set up an automated check instead of relying on memory to confirm the fix held.</div></li>
 <li><a href="../../en/devlog/2026-11/2026-11-01_weekly/">From an Exchange Lockout to a GPU Teardown — a Week of Chasing Root Causes All the Way</a><div class="sub">I downgraded an exchange-lockout crash into a quiet failure and finished a one-share live-trading test by hand. A recurring token-invalidation bug turned out to be caused by restart-order mismatch, and a secondary GPU cleanup went all the way through instead of stopping halfway.</div></li>
 <li><a href="../../en/devlog/2026-11/2026-11-01_devlog/">Removing a Secondary GPU - A Fail-Loud Registry Flagged the Blast Radius Instantly</a><div class="sub">Pulled a secondary graphics card ahead of a planned sale, and the fail-loud checks I&#x27;d already built pinpointed the exact impact the moment the system rebooted.</div></li>
 <li><a href="../../en/devlog/2026-10/2026-10-29_devlog/">Recurring Toss Token Revocations - A Restart-Order Mismatch</a><div class="sub">Tracked down why an external quote API&#x27;s auth token kept invalidating itself, and decided to wait for the final verdict on a new-exchange entry experiment despite failing one criterion early.</div></li>
