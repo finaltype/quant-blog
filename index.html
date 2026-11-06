@@ -145,6 +145,7 @@
 </ul>
 <h2><a href="postmortems/">Postmortems</a></h2>
 <ul>
+<li><a href="postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">야간 배치 작업 26시간 멈춤 - 타임아웃 없는 외부 API 호출 하나가 원인</a> · <a href="en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">EN</a><div class="sub">처음 고친 줄은 맞았지만 같은 함수 안의 폴백 경로 하나를 놓쳐서, 재발 방지가 반쪽짜리였던 사고를 기록한다</div></li>
 <li><a href="postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출</a> · <a href="en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">EN</a><div class="sub">연구용 백필이 외부 API 차단을 유발했고, 그 차단이 라이브러리 임포트 단계에서 실거래 프로세스를 통째로 죽였습니다</div></li>
 <li><a href="postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a> · <a href="en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">EN</a><div class="sub">워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다</div></li>
 <li><a href="postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a> · <a href="en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">EN</a><div class="sub">한 달 전에 고쳤다고 믿은 버그가, 완전히 다른 원인으로 다시 터졌습니다</div></li>

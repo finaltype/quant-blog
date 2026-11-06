@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>야간 배치 작업 26시간 멈춤 - 타임아웃 없는 외부 API 호출 하나가 원인 | 퀀트봇 개발일지</title>
+<meta name="description" content="처음 고친 줄은 맞았지만 같은 함수 안의 폴백 경로 하나를 놓쳐서, 재발 방지가 반쪽짜리였던 사고를 기록한다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="야간 배치 작업 26시간 멈춤 - 타임아웃 없는 외부 API 호출 하나가 원인">
+<meta property="og:description" content="처음 고친 줄은 맞았지만 같은 함수 안의 폴백 경로 하나를 놓쳐서, 재발 방지가 반쪽짜리였던 사고를 기록한다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "야간 배치 작업 26시간 멈춤 - 타임아웃 없는 외부 API 호출 하나가 원인", "description": "처음 고친 줄은 맞았지만 같은 함수 안의 폴백 경로 하나를 놓쳐서, 재발 방지가 반쪽짜리였던 사고를 기록한다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-07"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">Read in English</a></p>
+<article>
+<h1>야간 배치 작업 26시간 멈춤 - 타임아웃 없는 외부 API 호출 하나가 원인</h1>
+<p class="post-date"><time datetime="2026-11-07">2026-11-07</time></p>
+<p class="subtitle">처음 고친 줄은 맞았지만 같은 함수 안의 폴백 경로 하나를 놓쳐서, 재발 방지가 반쪽짜리였던 사고를 기록한다</p><p>매일 밤 자동으로 돌아가는 핵심 배치 작업이 하나 있다.</p>
+<p>다음 거래일을 준비하려고, 외부 데이터 제공처에서 종목 전체 목록을 가져와 순위 계산용 입력을 만드는 작업이다. 밤에 시작해서 아침이면 끝나 있어야 한다.</p>
+<h2>무슨 일이 있었나</h2>
+<p>아침에 확인해보니 전날 밤 산출물이 그대로 남아 있었다. 밤새 작업이 한 번도 돌지 않은 것이다.</p>
+<p>스케줄러 로그를 보니 더 이상했다. 그 작업을 맡은 틱이 수백 번 돌았는데, 매번 "이미 실행 중이라 건너뜀"이라는 줄만 반복해서 찍혀 있었다.</p>
+<p>실행 중이라고 찍혀 있는데 산출물은 전날 것 그대로였다. 즉 그 작업은 "실패"한 게 아니라, 시작한 자리에서 영원히 멈춰 서 있었다.</p>
+<h2>처음엔 뭐라고 생각했나</h2>
+<p>가장 먼저 의심한 건 스케줄러 설정이었다. 동시 실행 제한이 걸려 있어서 다른 작업과 충돌해 건너뛰는 거라고 생각했다.</p>
+<p>그런데 "건너뜀" 로그가 찍힌 기간을 세어보니 26시간 가까이 쌓여 있었다. 단순 충돌이라면 몇 번 건너뛰고 말아야 하는데, 하룻밤이 넘도록 같은 줄만 반복되고 있었다.</p>
+<p>이 로그는 경고(WARNING) 등급으로만 쌓이고 있었고, 그걸 자동으로 읽어서 알려주는 장치는 없었다. 즉 작업이 멈춘 지 26시간이 지나도록 아무도 몰랐다.</p>
+<h2>진짜 원인</h2>
+<p>실행 중인 프로세스의 스레드 상태를 그대로 떠서 확인해보니(파이썬 스레드 스택을 들여다보는 진단 도구를 썼다), 문제의 스레드는 외부 데이터 제공처에 TLS 연결을 맺는 단계에서 응답을 기다리며 멈춰 있었다.</p>
+<p>종목 목록을 가져오는 데 쓰던 서드파티 라이브러리의 내부 HTTP 호출에 타임아웃이 지정되어 있지 않았다. 평소엔 응답이 금방 오니 문제가 없었는데, 그날은 상대편 연결이 응답도 끊김도 없이 멈춰버렸다. 타임아웃이 없으니 그 호출은 영원히 기다렸다.</p>
+<p>스케줄러는 같은 작업이 동시에 두 번 돌지 않도록 "하나만 실행" 제한을 걸어두고 있었다. 이 제한이 평소엔 안전장치였는데, 이번엔 오히려 사고를 키웠다. 멈춘 스레드 하나가 그 작업 자리를 영원히 차지하고 있으니, 이후의 모든 틱이 "이미 하나가 돌고 있다"고 보고 그냥 건너뛰기만 반복한 것이다.</p>
+<h2>어떻게 고쳤는지</h2>
+<p>가장 자연스러운 수선은 그 호출을 별도 스레드에서 돌리고, 정해진 시간 안에 끝나지 않으면 포기하고 예외를 던지게 만드는 것이었다. 이 패턴은 이미 같은 코드베이스의 다른 곳(과거 비슷한 사고를 겪고 만든 헬퍼)에 있었다. 새로 발명하지 않고 그대로 가져다 썼다.</p>
+<p>타임아웃으로 끝나면 기존에 있던 폴백 경로(다른 소스로 재시도 → 로컬에 저장해둔 직전 성공 결과로 대체)가 그대로 타게 했다. 수정은 몇 줄짜리였고, 테스트도 "영원히 응답 안 하는 호출을 흉내 내면 타임아웃으로 끝난다"는 식으로 쉽게 쓸 수 있었다.</p>
+<p>수정을 배포하고 몇 시간 뒤, 이 수정이 충분한지 다른 눈(외부 자문)에게 재검토를 요청했다. 그런데 거기서 더 중요한 걸 찾았다.</p>
+<p>같은 함수 안에, 처음 멈춘 호출이 실패했을 때를 대비한 <strong>또 다른 폴백 경로</strong>가 있었는데, 그 경로도 같은 호스트에 같은 방식으로 타임아웃 없이 요청을 보내고 있었다. 처음 고친 줄은 "그날 실제로 멈춘 바로 그 줄"이었을 뿐, 같은 함수 안에 구조적으로 똑같은 위험을 가진 또 다른 줄이 남아 있었던 것이다.</p>
+<p>이 두 번째 호출도 같은 방식으로 감쌌다. 그제야 "이 함수 전체가 외부 응답을 무한정 기다리지 않는다"는 말을 할 수 있게 됐다.</p>
+<h2>일반화하면 무슨 교훈인가</h2>
+<p><strong>타임아웃 없는 외부 호출 하나가 전체 시스템을 멈출 수 있다.</strong> 특히 "동시 실행 금지" 같은 안전장치와 결합하면, 멈춤이 "에러"로 드러나지 않고 "그 자리를 영원히 점유"하는 형태로 나타난다. 에러 로그를 아무리 뒤져도 아무것도 안 나오는 이유가 여기에 있다 — 애초에 에러가 발생하지 않았기 때문이다.</p>
+<p><strong>사고가 난 그 줄만 고치는 건 증상 치료에 가깝다.</strong> 같은 함수, 같은 모듈 안에 구조적으로 동일한 패턴(특히 예외 처리·폴백 경로처럼 평소엔 잘 안 타는 분기)이 더 있는지를 뒤져야 재발 방지라고 부를 수 있다. 처음 눈에 보인 범위보다 한 단계 넓게 봐야, "그 줄"이 아니라 "그 클래스"를 막을 수 있다.</p>
+<p><strong>경고 등급 로그는 쌓이기만 할 뿐, 아무도 안 본다는 뜻일 수 있다.</strong> 그 줄이 짧은 시간 안에 비정상적으로 많이 반복되면 등급을 올려서 사람에게 알려주는 장치가 따로 필요하다. 로그에 남겼다는 것과 누군가 그걸 읽는다는 것은 다른 문장이다.</p>
+<p><strong>"에러가 안 난다"와 "진행되고 있다"는 다른 문장이다.</strong> 주기적으로 실행돼야 하는 작업이라면, 에러 감시만으로는 이런 유형의 멈춤을 못 잡는다. "시작했어야 할 시각이 한참 지났는데 그 흔적(산출물·진행 로그)이 없다"는 식의, 데드라인 기반 감시가 별도로 필요하다.</p>
+<p>외부 라이브러리를 쓸 때 타임아웃을 명시했는지는, 코드 리뷰에서 한 번쯤 반드시 체크리스트에 넣을 만한 항목이다. 특히 그 라이브러리 안에 폴백·재시도 경로가 여러 겹이라면, 그중 하나만 확인하고 넘어가지 않았는지 다시 봐야 한다.</p>
+</article>
+<p class="tags"><a href="../../tags/%EC%86%8C%ED%94%84%ED%8A%B8%EC%9B%A8%EC%96%B4%ED%92%88%EC%A7%88/">#소프트웨어품질</a> <a href="../../tags/%EB%94%94%EB%B2%84%EA%B9%85/">#디버깅</a> <a href="../../tags/%EC%9A%B4%EC%98%81/">#운영</a> <a href="../../tags/postmortem/">#postmortem</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출</a></li><li><a href="../../postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">수동 실행이 예약 실행으로 오판된 버그 - systemd 활성화 메타데이터가 생각보다 오래 남았다</a></li><li><a href="../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li></ul>
+</aside>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
