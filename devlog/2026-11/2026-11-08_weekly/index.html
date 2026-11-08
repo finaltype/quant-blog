@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>토큰 핑퐁과 야간배치 행 - 두 번의 근본원인 추적 | 퀀트봇 개발일지</title>
+<meta name="description" content="인증 토큰이 서로를 계속 무효화하던 문제와 야간 배치가 밤새 멈춰 있던 문제, 두 운영 사고를 추적해 고치고 재발방지까지 자동으로 확인하게 만들었다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-08_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-08_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-08_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-08_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="토큰 핑퐁과 야간배치 행 - 두 번의 근본원인 추적">
+<meta property="og:description" content="인증 토큰이 서로를 계속 무효화하던 문제와 야간 배치가 밤새 멈춰 있던 문제, 두 운영 사고를 추적해 고치고 재발방지까지 자동으로 확인하게 만들었다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-08_weekly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "토큰 핑퐁과 야간배치 행 - 두 번의 근본원인 추적", "description": "인증 토큰이 서로를 계속 무효화하던 문제와 야간 배치가 밤새 멈춰 있던 문제, 두 운영 사고를 추적해 고치고 재발방지까지 자동으로 확인하게 만들었다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-08_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-08"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-08_weekly/">Read in English</a></p>
+<article>
+<h1>토큰 핑퐁과 야간배치 행 - 두 번의 근본원인 추적</h1>
+<p class="post-date"><time datetime="2026-11-08">2026-11-08</time></p>
+<p class="subtitle">인증 토큰이 서로를 계속 무효화하던 문제와 야간 배치가 밤새 멈춰 있던 문제, 두 운영 사고를 추적해 고치고 재발방지까지 자동으로 확인하게 만들었다.</p><h2>짧았던 한 주, 사고 두 번</h2>
+<p>이번 주는 devlog가 평소보다 적었습니다. 주중에 올라온 건 11월 2일과 4일, 두 건입니다.</p>
+<p>둘 다 사전에 계획된 기능 개발이 아니라 운영 중 발견된 사고 대응이었고, 공통적으로 "증상만 가라앉히고 끝내지 않는다"는 흐름을 탔습니다.</p>
+<h2>토큰 핑퐁 - 재시작 순서가 아니라 캐시를 안 본 것</h2>
+<p>주 초반에는 외부 시세 API 인증 토큰이 새벽~아침 시간대에 반복적으로 무효화되는 로그가 쌓이고 있었습니다.</p>
+<p>처음엔 상주 프로세스 재시작 시점이 어긋난 일시적 현상으로 보고 넘겼는데, 며칠 뒤 같은 증상이 다시 나타나 원인을 제대로 짚어야 했습니다. 다른 AI에게 코드 분석을 맡겨 좁힌 결과, 진짜 원인은 재시작 순서가 아니라 "토큰이 거부당하면 곧바로 새 토큰을 발급받을 뿐, 그 전에 다른 프로세스가 이미 새로 받아둔 토큰이 있는지 확인하지 않는다"는 구조였습니다.</p>
+<p>이 API를 쓰는 프로세스가 여러 개 떠 있다 보니, 한쪽이 새 토큰을 받으면 그 순간 상대방 토큰이 무효화되고, 상대방도 같은 방식으로 반응해 또 새 토큰을 받으면서 서로가 서로를 계속 무효화하는 핑퐁이 반복된 것이었습니다.</p>
+<p>수정은 거부당했을 때 캐시를 먼저 다시 읽어 이미 바뀐 토큰이 있으면 그걸로 재시도하고, 그래도 거부당할 때만 파일 잠금을 걸고 하나의 프로세스만 발급하도록 바꾸는 방향이었습니다. 격리된 작업 공간에서 구현·테스트를 마친 뒤 병합했고, 이 API를 쓰는 상주 프로세스 6개를 모두 재시작해 확인했습니다.</p>
+<p>말로만 고쳤다고 끝내지 않으려고 토큰 무효화 로그를 집계하는 전용 확인 스크립트를 만들어, 수정 전 구간에서 수십 건이던 무효화가 배포 이후 0건으로 줄었는지 직접 확인했습니다. 이후로도 사람이 매번 기억해서 확인하는 대신, 다음 거래일들에 자동으로 집계를 돌려 텔레그램으로 결과를 받도록 예약해 뒀습니다.</p>
+<p>같은 날 별도로 진행하던 통계적 가설 검증 하나도 결론이 났습니다. 수급 데이터 기반의 새 신호 후보가 예측력에 도움이 되는지 사전에 정해둔 절차대로 검증했는데 기준을 넘지 못했습니다. 기준을 못 넘었다고 임계값을 낮추거나 구간을 바꿔 재시도하지 않고, 검증 전에 정해둔 규칙 그대로 가설을 종결했습니다.</p>
+<h2>야간배치 정지 - 고치고 나서 "이걸로 충분한가"를 다시 물었다</h2>
+<p>11월 4일에는 전날 밤 종목평가 배치가 전혀 돌지 않은 걸 아침 점검에서 발견했습니다.</p>
+<p>원인은 외부 상장목록 조회 호출 하나가 타임아웃 없이 걸려 있었던 것이었습니다. 네트워크 응답이 끝까지 오지 않으면 그 호출이 영원히 대기 상태로 남는 구조였고, 스케줄러는 "작업이 이미 실행 중"이라 판단해 같은 배치를 계속 건너뛰기만 했습니다.</p>
+<p>문제가 된 호출에 타임아웃을 씌우고, 이 수정을 제거하면 테스트가 실패하는 걸 확인해 수정이 실제로 동작하는지도 검증했습니다. 관련 상주 프로세스를 모두 재시작해 다시 정상적으로 도는 것까지 확인했습니다.</p>
+<p>여기서 끝내지 않고, 이 수정이 재발을 막기에 충분한지 다른 AI에게 다시 검토를 맡긴 게 이날의 전환점이었습니다. 검토 결과는 "조건부로는 아니다"였습니다.</p>
+<p>같은 외부 데이터 소스를 쓰는 호출이 하나 더 있었는데, 그쪽에는 아직 타임아웃이 없어서 처음 고친 곳과 똑같은 방식으로 영원히 멈출 수 있는 구멍이 남아 있었습니다. 같은 유형의 결함이 코드베이스 안에 또 숨어 있을 수 있다는 뜻이라, 그 호출도 같은 방식으로 타임아웃을 씌우고 테스트를 추가해 막았습니다.</p>
+<p>수정이 실전에서 제대로 동작하는지는 다음 날 밤 배치가 정상적으로 도는 걸 봐야 확인됩니다. 그 확인을 사람이 기억해서 챙기는 대신, 다음 날 새벽 특정 시각에 한 번 자동으로 배치 진행 상태를 점검하고 결과를 알려주는 1회성 점검 작업을 예약해 뒀습니다.</p>
+<h2>왜 중요한가</h2>
+<p>이번 주 두 사고를 관통한 공통점은 "수정은 끝이 아니라 안전망의 시작"이라는 태도입니다.</p>
+<p>토큰 핑퐁은 재시작으로 증상이 가라앉았을 때 멈추지 않고, 재발할 때까지 기다려 다른 AI의 코드 분석으로 캐시 미확인이라는 근본원인을 찾아냈습니다.</p>
+<p>야간배치 정지도 타임아웃을 씌워 증상을 없앤 뒤 바로 끝내지 않고, "이 수정이 충분한가"를 다시 물어 같은 유형의 숨은 구멍을 하나 더 찾아냈습니다.</p>
+<p>두 경우 모두 수정 뒤에는 사람이 기억해서 재확인하는 대신 자동 점검을 깔아, 재발하면 바로 알 수 있는 구조를 만들어 뒀습니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%9A%B4%EC%98%81/">#운영</a> <a href="../../../tags/%EB%B2%84%EA%B7%B8%EC%88%98%EC%A0%95/">#버그수정</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-04_devlog/">TA 배치 밤새 멈춤 원인 - 타임아웃 없는 외부 호출 2건</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-04_devlog/">TA 배치 밤새 멈춤 원인 - 타임아웃 없는 외부 호출 2건</a></li><li><a href="../../../devlog/2026-11/2026-11-02_devlog/">Toss 토큰 401 핑퐁 근본원인 - 캐시 재확인 없는 즉시 재발급</a></li><li><a href="../../../devlog/2026-11/2026-11-01_weekly/">거래소 접속차단부터 GPU 제거까지 - 장애 원인을 끝까지 추적한 한 주</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
