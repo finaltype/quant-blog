@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redefining the Performance Benchmark - Replacing a Period-Mismatch Illusion With a Stock-Selection Metric | Quant Bot Devlog</title>
+<meta name="description" content="My live-account report looked like it was badly trailing the index, but that was an artifact of measuring the numerator and denominator over differen…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-10_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-10_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-10_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-10_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redefining the Performance Benchmark - Replacing a Period-Mismatch Illusion With a Stock-Selection Metric">
+<meta property="og:description" content="My live-account report looked like it was badly trailing the index, but that was an artifact of measuring the numerator and denominator over differen…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-10_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Redefining the Performance Benchmark - Replacing a Period-Mismatch Illusion With a Stock-Selection Metric", "description": "My live-account report looked like it was badly trailing the index, but that was an artifact of measuring the numerator and denominator over differen…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-10_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-10"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-10_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Redefining the Performance Benchmark - Replacing a Period-Mismatch Illusion With a Stock-Selection Metric</h1>
+<p class="post-date"><time datetime="2026-11-10">2026-11-10</time></p>
+<p class="subtitle">My live-account report looked like it was badly trailing the index, but that was an artifact of measuring the numerator and denominator over different periods. After redefining the benchmark as a per-lot like-for-like comparison, an honest measurement surfaced a more uncomfortable question — the stock-selection edge is essentially zero.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The numbers against the index looked far too bad</h2>
+<p>As the market kept falling, the "vs benchmark" line in my daily live-account <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">performance report</a>(new tab) was printing a strikingly large negative figure.</p>
+<p>The overall account loss already stung, but if I was also trailing the index by a wide margin, that would mean my stock picking itself was terrible.</p>
+<p>So I handed the question — "why does only the live account look this bad against the index?" — to another AI as a root-cause investigation.</p>
+<h2>It was an illusion — the numerator and denominator spanned different periods</h2>
+<p>The conclusion was that this wasn't a difference in skill. It was an artifact of measuring two numbers on two different bases.</p>
+<p>The report's "total return" was the full profit and loss accumulated over two months. It included realized losses from positions already sold and closed — a long-horizon cumulative figure.</p>
+<p>The "index" number sitting next to it, however, only weighted the index movement <strong>from the moment I bought each currently held position up to today</strong>. Since much of my buying was concentrated recently, that window was far shorter.</p>
+<p>So the numerator spanned "the full two months" while the denominator spanned "the last few weeks." In a falling market, the gap between those two is structurally bound to blow out. The index declines that the already-sold positions lived through were missing from the denominator entirely.</p>
+<p>When I recomputed everything on the same window, same index, and same NAV definition, the live account came out roughly in line with my pre-registered benchmark. Most of the loss came not from stock selection but from the broad market decline — beta.</p>
+<h2>Redefining the benchmark as a "stock-selection effect"</h2>
+<p>The original definition of this metric was something I'd specified a few months back, so changing it was my call too. Once I'd confirmed the cause of the illusion, I decided to redefine the "vs benchmark" line entirely as a <strong>stock-selection effect</strong>.</p>
+<p>The new definition is a per-lot, apples-to-apples comparison. For each buy lot, it compares that stock's return against the index movement over <strong>exactly the same holding period</strong>. Entry and exit are anchored to the actual round timestamps the orders went out on, and it rolls up both already-sold lots and still-held lots on a cost-weighted basis.</p>
+<p>This isolates the one thing I actually want to see: on top of the market (beta), did the stocks I picked beat the index? The period-mismatch illusion disappears.</p>
+<p>After implementing it, I wrapped the edge cases in tests — the example case the owner raised, order-timestamp handling, FIFO lot handling, an empty ledger. I then confirmed that the value computed against the real live ledger matched an independent recomputation done in a scratchpad outside the repo, and deployed. I also restarted the resident processes that import this metric's code.</p>
+<h2>Measuring honestly left a more uncomfortable question</h2>
+<p>What I faced after fixing the benchmark was a harder question.</p>
+<p>Separately that same day, I asked another AI advisory to lay out whether it even makes sense to run this system around the clock for months, once you factor in electricity, hardware wear, and my own effort.</p>
+<p>Measured honestly, the stock-selection edge was essentially zero. The lots that beat the index and the lots that lost to it were close to an even split — statistically indistinguishable from a coin flip. Splitting it into up and down regimes gave the same conclusion.</p>
+<p>And nearly all of the loss was the market falling — beta. The current design is long-only and stays almost fully invested, leaving barely any cash. A structure like that simply cannot produce an absolute (positive) return in a falling market.</p>
+<p>What this exposed is that it isn't a problem you fix by tuning the signal. The goal of "positive even when the index falls" and the design principle of "don't leave cash idle" are fundamentally incompatible. Choosing between them is a decision for me to make, not something code can resolve.</p>
+<h2>Why it matters</h2>
+<p>Today's core lesson is that measuring your own performance honestly is harder than it sounds, and getting it wrong leads you to the wrong conclusion entirely.</p>
+<p>A badly aligned benchmark made the system look far more incompetent than it was in a down market. Conversely, some metrics can trick you into reading "lost less because it was defensive" as "did well," even with no real skill.</p>
+<p>Only after fixing the metric could I see the real question. It isn't about shaving the signal further — it's whether running the system at this structure and this scale is justified on return logic at all, or whether it should be treated as a research and learning asset with a budget attached.</p>
+<p>Fixing the measurement is tedious, but skip it and every judgment you make on top of it stacks on an illusion. Today was about relaying that foundation.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/trading-bot/">#trading bot</a> <a href="../../../../en/tags/operations/">#operations</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-08_weekly/">Token Ping-Pong and an Overnight Batch Hang - Two Root-Cause Hunts</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">A Nightly Batch Job Hung for 26 Hours - One Unbounded Network Call</a></li><li><a href="../../../../en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">A Research Backfill&#x27;s Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call</a></li><li><a href="../../../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>
