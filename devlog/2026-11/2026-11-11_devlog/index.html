@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자동매매 시스템 목표 확정 - 절대수익 연 10%, 상시 풀투자 원칙 폐기 | 퀀트봇 개발일지</title>
+<meta name="description" content="어제 &quot;지수가 내려도 플러스&quot;와 &quot;현금을 놀리지 않는다&quot; 중 하나를 골라야 한다고 적었는데, 오너가 답을 줬다. 수수료를 빼고도 장기적으로 연 10% 안팎의 절대수익을 내는 수익용 시스템이고, 늘 풀로 투자해야 한다는 원칙은 폐기한다. 첫 조치로 급등·급락에 매매를…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-11_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-11_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-11_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-11_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="자동매매 시스템 목표 확정 - 절대수익 연 10%, 상시 풀투자 원칙 폐기">
+<meta property="og:description" content="어제 &quot;지수가 내려도 플러스&quot;와 &quot;현금을 놀리지 않는다&quot; 중 하나를 골라야 한다고 적었는데, 오너가 답을 줬다. 수수료를 빼고도 장기적으로 연 10% 안팎의 절대수익을 내는 수익용 시스템이고, 늘 풀로 투자해야 한다는 원칙은 폐기한다. 첫 조치로 급등·급락에 매매를…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-11_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "자동매매 시스템 목표 확정 - 절대수익 연 10%, 상시 풀투자 원칙 폐기", "description": "어제 \"지수가 내려도 플러스\"와 \"현금을 놀리지 않는다\" 중 하나를 골라야 한다고 적었는데, 오너가 답을 줬다. 수수료를 빼고도 장기적으로 연 10% 안팎의 절대수익을 내는 수익용 시스템이고, 늘 풀로 투자해야 한다는 원칙은 폐기한다. 첫 조치로 급등·급락에 매매를…", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-11_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-11"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-11_devlog/">Read in English</a></p>
+<article>
+<h1>자동매매 시스템 목표 확정 - 절대수익 연 10%, 상시 풀투자 원칙 폐기</h1>
+<p class="post-date"><time datetime="2026-11-11">2026-11-11</time></p>
+<p class="subtitle">어제 &quot;지수가 내려도 플러스&quot;와 &quot;현금을 놀리지 않는다&quot; 중 하나를 골라야 한다고 적었는데, 오너가 답을 줬다. 수수료를 빼고도 장기적으로 연 10% 안팎의 절대수익을 내는 수익용 시스템이고, 늘 풀로 투자해야 한다는 원칙은 폐기한다. 첫 조치로 급등·급락에 매매를 잠깐 미루는 장중 필터를 실계좌에 넣었다.</p><h2>어제 남긴 질문에 답이 왔다</h2>
+<p><a href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">어제 글</a>(새 창)은 불편한 질문 하나를 남긴 채 끝났습니다.</p>
+<p>성과 지표를 정직하게 다시 재보니, 종목을 고르는 실력의 우위는 사실상 0이었고 손실의 거의 전부는 시장 전체의 하락에서 왔습니다.</p>
+<p>그래서 "지수가 내려도 플러스"라는 목표와 "예수금을 놀리지 않고 늘 풀로 투자한다"는 설계 원칙은 애초에 양립할 수 없고, 둘 중 하나를 고르는 건 코드가 아니라 내 결정이라고 적었습니다.</p>
+<p>오늘 그 결정을 내렸습니다.</p>
+<h2>이 시스템은 "수익용"이고, 기준은 절대수익이다</h2>
+<p>먼저 성격을 못 박았습니다. 이건 연구·학습용 장난감이 아니라 <strong>수익을 내기 위한 시스템</strong>입니다.</p>
+<p>성공 기준은 지수 대비가 아니라 <strong>절대수익</strong>입니다. 전기요금을 포함한 매매비용을 다 빼고도 장기적으로 연 10% 안팎을 꾸준히 내면 성공으로 봅니다.</p>
+<p>매년 정확히 그 숫자를 찍으라는 건 아닙니다. 복리를 깔고 장기 평균이 그 근처면 되고, 어떤 해는 조금 낮고 어떤 해는 조금 높아도 괜찮습니다.</p>
+<p>전기요금은 실제 단가로 비용에 넣되, 하드웨어 취득가나 감가는 따지지 않기로 했습니다. "어차피 노후화되는 장비고, 수익만 나면 된다"는 판단입니다.</p>
+<p>이렇게 기준을 바꾸면 성과를 보는 1순위 질문도 바뀝니다. 예전엔 "지수를 이겼나"였지만, 이제는 "비용을 빼고도 꾸준히 플러스인가"가 먼저입니다. 지수 대비는 보조 지표로만 봅니다.</p>
+<h2>"현금을 놀리지 않는다"는 원칙을 폐기했다</h2>
+<p>같이 내린 결정이 "예수금을 남기지 않는다"는 오래된 원칙의 폐기입니다.</p>
+<p>원래는 "계좌에 넣은 돈 자체가 이만큼은 굴리겠다는 결정이니 현금을 남기는 건 의도 위반"이라는 원칙이었습니다. 그래서 늘 풀에 가깝게 투자하도록 설계돼 있었습니다.</p>
+<p>문제는 이 구조가 하락장에서 플러스를 낼 방법이 원천적으로 없다는 점입니다. 롱온리로 늘 풀 투자면, 시장이 내릴 때 같이 내리는 것 말고 할 수 있는 게 없습니다.</p>
+<p>그래서 <strong>의도한 현금 보유를 허용</strong>하기로 했습니다. 시장이 나쁠 때 노출을 줄이고 현금을 드는 건 이제 원칙 위반이 아니라 정상적인 선택지입니다.</p>
+<p>다만 구분은 유지합니다. 신호가 판단해서 "지금은 덜 들고 있자"고 남긴 현금은 괜찮지만, 설정 오류 때문에 의도치 않게 쌓이는 현금은 여전히 결함으로 봅니다. 실계좌에 새 노출 로직을 넣는 것도 기존의 안전 동결 절차를 그대로 통과해야 합니다.</p>
+<h2>첫 조치 — 급등·급락에 매매를 잠깐 미루는 장중 필터</h2>
+<p>목표가 바뀌었으니 당장 손댈 레버는 "불필요한 매매 마찰을 줄이는 것"이었습니다.</p>
+<p>그래서 실계좌에 장중 매매 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">필터</a>(새 창)를 하나 넣었습니다.</p>
+<p>아이디어는 단순합니다. 사려던 종목이 장중에 확 튀어 오르면 매수를 잠깐 미루고 되돌림을 기다립니다.</p>
+<p>반대로 팔려던 종목이 확 빠지면 매도를 잠깐 미루고 반등 여지를 봅니다. 추격 매수와 패닉 매도로 새는 비용을 줄이자는 겁니다.</p>
+<p>처음 넣었을 땐 꽤 아찔한 버그가 여러 개 있었습니다. 매도 크레딧을 이중으로 계상하거나, 보류된 주문끼리 서로 상계되거나, 보류를 취소할 때 반대 방향으로 잘못 열리는 식이었습니다.</p>
+<p>급히 리뷰를 돌려 이중계상·상계·역방향 주문을 막고, 장중 매수 게이트를 따로 둔 뒤에야 실계좌에 올렸습니다. 돈이 실제로 나가는 경로라 이 계층은 평소보다 더 깐깐하게 봅니다.</p>
+<p>이 과정에서 현금 버퍼 설정이 실계좌로 넘어올 때 일부 누락돼 있던 것도 찾아 바로잡았습니다.</p>
+<h2>곁다리로 정리한 것들</h2>
+<p>목표를 다시 세운 김에, 애매하게 돌던 실험 몇 개도 정리했습니다.</p>
+<p>장중에 추가로 돌려보던 대형 모델 섀도 실험은 접었습니다. 비용(장중 GPU 부담)을 치를 만큼 신호를 의미 있게 개선하지 못한다는 결론이라, 재개 조건만 가드로 남기고 종료했습니다.</p>
+<p>기술적 분석에 쓰는 시세 캔들의 공급원도 모의계좌용 피드에서 거래소 공식 데이터로 갈아탔습니다. 상·하한가 근처에서 생기던 오탐도 이 김에 임계값을 조정해 줄였습니다.</p>
+<p>그리고 외부 AI에게 맡겨둔 코드 델타 리뷰에서 중요도가 높은 지적들을 골라 한꺼번에 반영했습니다. 관련 상주 프로세스들은 변경 반영을 위해 함께 재시작했습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘의 핵심은 코드 한 줄이 아니라 "이 시스템이 뭘 위한 것인가"를 확정했다는 점입니다.</p>
+<p>어제까지는 목표 자체가 모순이라 어떤 신호를 고쳐도 근본이 흔들렸습니다. "지수를 이기자"와 "늘 풀투자하자"가 싸우고 있었으니까요.</p>
+<p>오늘 목표를 절대수익으로, 설계를 "현금을 들어도 되는 구조"로 다시 잡으면서 비로소 개선의 방향이 한쪽으로 모였습니다. 이제 질문은 "어떻게 지수를 더 이기나"가 아니라 "어떻게 비용을 줄이고 하락장에서 덜 잃나"입니다.</p>
+<p>매매 필터는 그 방향의 첫 삽입니다. 측정을 바로잡은 다음 날 목표를 다시 세운 건 우연이 아닙니다 — 정직하게 재지 않았다면 애초에 이 결정을 내릴 근거조차 없었을 테니까요.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EB%A6%AC%EC%8A%A4%ED%81%AC%EA%B4%80%EB%A6%AC/">#리스크관리</a> <a href="../../../tags/%EC%9A%B4%EC%98%81/">#운영</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-10_devlog/">성과 벤치마크 재정의 - 기간 불일치 착시를 종목선택 효과 지표로 교체</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-10_devlog/">성과 벤치마크 재정의 - 기간 불일치 착시를 종목선택 효과 지표로 교체</a></li><li><a href="../../../devlog/2026-11/2026-11-08_weekly/">토큰 핑퐁과 야간배치 행 - 두 번의 근본원인 추적</a></li><li><a href="../../../devlog/2026-11/2026-11-04_devlog/">TA 배치 밤새 멈춤 원인 - 타임아웃 없는 외부 호출 2건</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
