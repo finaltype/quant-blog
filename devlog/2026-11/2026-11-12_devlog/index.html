@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>장중 매매 필터 전일 종가 기준 교정 - 포털 일봉의 종가 정의 결함 | 퀀트봇 개발일지</title>
+<meta name="description" content="어제 실계좌에 넣은 장중 필터가 급등·급락을 판정하는 기준값(전일 종가)을 틀린 데이터로 보고 있었다. 원인은 한 포털 일봉의 종가 정의가 장후 거래를 포함하도록 바뀐 것이었고, 증권사 API의 정규장 종가로 교정한 v1.1을 다시 올렸다. 같은 날 회귀 테스트를 돌…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-12_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-12_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-12_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-12_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="장중 매매 필터 전일 종가 기준 교정 - 포털 일봉의 종가 정의 결함">
+<meta property="og:description" content="어제 실계좌에 넣은 장중 필터가 급등·급락을 판정하는 기준값(전일 종가)을 틀린 데이터로 보고 있었다. 원인은 한 포털 일봉의 종가 정의가 장후 거래를 포함하도록 바뀐 것이었고, 증권사 API의 정규장 종가로 교정한 v1.1을 다시 올렸다. 같은 날 회귀 테스트를 돌…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-12_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "장중 매매 필터 전일 종가 기준 교정 - 포털 일봉의 종가 정의 결함", "description": "어제 실계좌에 넣은 장중 필터가 급등·급락을 판정하는 기준값(전일 종가)을 틀린 데이터로 보고 있었다. 원인은 한 포털 일봉의 종가 정의가 장후 거래를 포함하도록 바뀐 것이었고, 증권사 API의 정규장 종가로 교정한 v1.1을 다시 올렸다. 같은 날 회귀 테스트를 돌…", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-12_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-12"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-12_devlog/">Read in English</a></p>
+<article>
+<h1>장중 매매 필터 전일 종가 기준 교정 - 포털 일봉의 종가 정의 결함</h1>
+<p class="post-date"><time datetime="2026-11-12">2026-11-12</time></p>
+<p class="subtitle">어제 실계좌에 넣은 장중 필터가 급등·급락을 판정하는 기준값(전일 종가)을 틀린 데이터로 보고 있었다. 원인은 한 포털 일봉의 종가 정의가 장후 거래를 포함하도록 바뀐 것이었고, 증권사 API의 정규장 종가로 교정한 v1.1을 다시 올렸다. 같은 날 회귀 테스트를 돌리다 실제 알림 6건이 바깥으로 나가는 사고도 있었다.</p><h2>하루 만에 드러난 기준값 결함</h2>
+<p>어제 실계좌에 장중 매매 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">필터</a>(새 창)를 넣었다고 적었습니다.</p>
+<p>사려던 종목이 장중에 확 튀면 매수를 잠깐 미루고, 팔려던 종목이 확 빠지면 매도를 잠깐 미루는 장치입니다.</p>
+<p>그런데 "확 튀었다/빠졌다"를 판정하려면 비교 기준이 필요합니다. 전일 종가 대비 지금 가격이 얼마나 움직였는지를 봐야 합니다.</p>
+<p>오늘 아침, 그 기준으로 쓰던 전일 종가 자체가 틀려 있다는 걸 발견했습니다.</p>
+<h2>종가가 두 개였다</h2>
+<p>원인은 데이터 소스에 있었습니다. 필터는 <a href="https://finaltype.github.io/quant-blog/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">시세 데이터</a>(새 창)에서 가져온 전일 종가를 쓰는데, 그 값이 거래소 정규장 종가와 미묘하게 달랐습니다.</p>
+<p>추적해 보니 한 포털이 제공하는 일봉의 "종가" 정의가 어느 시점부터 장 마감 후 거래(시간외 단일가 등)까지 포함하도록 바뀌어 있었습니다.</p>
+<p>즉 "정규장이 끝난 가격"과 "장후까지 반영된 가격"이라는 두 개의 종가가 있었던 셈입니다. 필터는 뒤쪽을 전일 종가로 알고 비교하고 있었습니다.</p>
+<p>작은 차이처럼 보이지만, 급등·급락을 판정하는 임계 근처에서는 이 차이 하나로 보류할지 말지가 뒤집힐 수 있습니다.</p>
+<h2>정규장 종가로 교정한 v1.1</h2>
+<p>그래서 기준값을 증권사 API가 주는 정규장 종가로 갈아끼운 v1.1을 만들어 올렸습니다.</p>
+<p>어제 올린 첫 버전(v1.0)은 기준값이 오염돼 있었으니 "효과가 있었나"를 판정할 자격이 없습니다. 미판정으로 종결했습니다.</p>
+<p>대신 교정한 v1.1을 두 달가량의 검증 창으로 다시 사전등록했습니다. 규칙과 임계를 미리 글로 박아두고, 창이 끝나기 전엔 결과를 보고 규칙을 바꾸지 않는다는 조건입니다.</p>
+<p>아직 닫지 못한 확인이 하나 남아 있습니다. 장 초반에 API가 주는 "전일 종가"가 정말 전날 정규장 마감가와 같은지는, 다음 거래일 첫 라운드 기록을 대조해 봐야 확정됩니다.</p>
+<h2>테스트가 진짜 알림을 6건 쏜 사고</h2>
+<p>오후엔 성격이 다른 사고가 하나 있었습니다.</p>
+<p>리뷰 반영분을 확인하려고 회귀 테스트 전체를 돌렸는데, 그 와중에 실제 알림 메시지 6건이 바깥으로 나가버렸습니다.</p>
+<p>테스트는 외부로 나가는 발송이나 실시세 조회 같은 "진짜 바깥세상"과의 접점을 전부 가짜로 바꿔치기(목킹)한 상태에서 돌아야 합니다.</p>
+<p>그런데 알림 발송 경로 하나와, 새로 들어온 필터가 기준값을 조회하는 경로가 그 차단망에 안 걸려 있었습니다. 테스트가 실제 발송과 실제 시세 조회를 그대로 수행한 것입니다.</p>
+<p>다행히 나간 건 내부로 가는 알림이라 바깥에 피해는 없었지만, "테스트가 실제 부작용을 일으킬 수 있다"는 건 그 자체로 위험합니다.</p>
+<p>그래서 테스트 환경에서는 전역으로 알림 발송과 기준값 조회를 원천 차단하도록 막아두고, 문제의 회귀 테스트를 다시 돌려 통과를 확인했습니다.</p>
+<h2>곁다리 — 운용 점검과 오경보 정리</h2>
+<p>저녁엔 이 필터를 계속 끌고 갈지 외부 AI에게 운용 점검을 맡겼습니다.</p>
+<p>저는 "이 필터로 지수보다 꾸준히 앞설 수 있지 않을까" 하는 기대를 품고 있었는데, 점검 결과는 그 기대를 상당히 낮춰 잡으라는 쪽이었습니다.</p>
+<p>필터는 매매에서 새는 비용을 줄이는 작은 레버일 뿐이고, 훨씬 큰 레버는 "거래 자체를 덜 하는 것(회전율 줄이기)"이라는 결론이었습니다. 다만 그런 큰 변경은 전부 지금 돌고 있는 다른 검증이 끝난 뒤에, 정식 절차로만 건드리기로 했습니다.</p>
+<p>그밖에 하루 요약 리포트가 필터 보류·장중 집행을 실제 장부가 아닌 계획 기준으로 표시해 "숫자가 안 맞는다"는 오경보를 내던 것도 장부 기준으로 고쳤습니다.</p>
+<p>재부팅 뒤 일부 상주 프로세스(시뮬레이터·실시간 감시)가 멈춰 있던 것도 점검해 다시 띄웠습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 두 사고는 결이 달라 보이지만 교훈은 같습니다. 판단 로직이 멀쩡해도, 그 로직이 먹는 입력과 그 로직을 둘러싼 환경이 틀리면 결과는 틀립니다.</p>
+<p>필터 자체의 아이디어는 어제와 똑같았습니다. 다만 그게 비교하는 "전일 종가"가 오염돼 있어서, 하루 동안은 멀쩡한 규칙이 잘못된 데이터 위에서 돌고 있었습니다.</p>
+<p>테스트도 마찬가지였습니다. 테스트 코드 자체는 옳았지만, 바깥세상과의 접점을 덜 막아둔 탓에 "검증"이 "실제 행동"으로 새어나갔습니다.</p>
+<p>그래서 요즘은 로직을 고치는 일만큼이나 "이 로직이 보는 데이터가 내가 생각한 그 데이터가 맞나", "이 테스트가 진짜 격리돼 있나"를 의심하는 데 시간을 씁니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%ED%92%88%EC%A7%88/">#데이터품질</a> <a href="../../../tags/%EC%9A%B4%EC%98%81/">#운영</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-11_devlog/">자동매매 시스템 목표 확정 - 절대수익 연 10%, 상시 풀투자 원칙 폐기</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-11_devlog/">자동매매 시스템 목표 확정 - 절대수익 연 10%, 상시 풀투자 원칙 폐기</a></li><li><a href="../../../devlog/2026-11/2026-11-10_devlog/">성과 벤치마크 재정의 - 기간 불일치 착시를 종목선택 효과 지표로 교체</a></li><li><a href="../../../devlog/2026-11/2026-11-08_weekly/">토큰 핑퐁과 야간배치 행 - 두 번의 근본원인 추적</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>

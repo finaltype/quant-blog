@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal&#x27;s Daily-Bar Close Definition Had Changed | Quant Bot Devlog</title>
+<meta name="description" content="The intraday filter I added to the live account yesterday was judging spikes and drops against a wrong reference (the prior-day close). A portal&#x27;s da…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-12_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-12_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-12_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-12_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal&#x27;s Daily-Bar Close Definition Had Changed">
+<meta property="og:description" content="The intraday filter I added to the live account yesterday was judging spikes and drops against a wrong reference (the prior-day close). A portal&#x27;s da…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-12_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal's Daily-Bar Close Definition Had Changed", "description": "The intraday filter I added to the live account yesterday was judging spikes and drops against a wrong reference (the prior-day close). A portal's da…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-12_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-12"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-12_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal&#x27;s Daily-Bar Close Definition Had Changed</h1>
+<p class="post-date"><time datetime="2026-11-12">2026-11-12</time></p>
+<p class="subtitle">The intraday filter I added to the live account yesterday was judging spikes and drops against a wrong reference (the prior-day close). A portal&#x27;s daily-bar &quot;close&quot; had started including after-hours trades, so I recut it to use the broker API&#x27;s regular-session close as v1.1. The same day, a regression run accidentally fired six real notifications.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>A reference-value defect that surfaced one day later</h2>
+<p>Yesterday I wrote about adding an intraday trade <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">filter</a>(new tab) to the live account.</p>
+<p>It's a simple guard: if a stock I meant to buy spikes intraday, it delays the buy; if one I meant to sell drops sharply, it delays the sell.</p>
+<p>But to decide "spiked" or "dropped," you need a baseline. You have to measure how far the current price has moved against the prior-day close.</p>
+<p>This morning I found that the prior-day close I'd been using as that baseline was itself wrong.</p>
+<h2>There were two closing prices</h2>
+<p>The root cause was in the data source. The filter reads a prior-day close from the <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">market data</a>(new tab) feed, and that value differed subtly from the exchange's regular-session close.</p>
+<p>Tracing it, a portal's daily-bar "close" definition had, at some point, started including after-hours trading (such as the post-market single-price session).</p>
+<p>So there were effectively two closes — "the price when the regular session ended" and "the price after after-hours was folded in." The filter was treating the latter as the prior-day close.</p>
+<p>It looks like a tiny gap, but near the threshold where a spike or drop gets judged, that one difference can flip a hold into a trade or vice versa.</p>
+<h2>Recut to the regular-session close as v1.1</h2>
+<p>So I built and deployed v1.1, which swaps the baseline to the regular-session close provided by the broker API.</p>
+<p>The first version I shipped yesterday (v1.0) ran on a contaminated baseline, so it has no standing to answer "did it work." I closed it out as undecided.</p>
+<p>Instead I pre-registered the corrected v1.1 under a validation window of roughly two months. The rule and thresholds are written down in advance, and I won't change the rule based on results before the window closes.</p>
+<p>One check is still open. Whether the "prior-day close" the API returns early in the session really equals the previous day's regular-session close has to be confirmed by cross-checking the next trading day's first-round record.</p>
+<h2>A regression run that fired six real notifications</h2>
+<p>In the afternoon there was an incident of a different kind.</p>
+<p>I ran the full regression suite to verify a batch of review fixes, and in the middle of it six real notification messages went out.</p>
+<p>Tests are supposed to run with every touchpoint to the "real outside world" — outbound sends, live quote lookups — swapped out for fakes (mocked).</p>
+<p>But one notification path, and the path the newly added filter uses to look up its baseline, weren't caught by that blocking net. The test performed real sends and real quote lookups.</p>
+<p>Luckily the messages that went out were internal notifications, so there was no external harm — but "a test can cause real side effects" is dangerous in itself.</p>
+<p>So I globally blocked notification sending and baseline lookups in the test environment at the source, then reran the offending regression suite and confirmed it passed.</p>
+<h2>Side notes — an operational review and a false alarm cleanup</h2>
+<p>In the evening I handed the question of whether to keep running this filter to an external AI for an operational review.</p>
+<p>I'd been nursing the hope that this filter could let the system steadily beat the index, but the review's conclusion was to dial that expectation back considerably.</p>
+<p>The filter is only a small lever that trims leakage from trading costs; the far bigger lever is "trading less in the first place" (cutting turnover). That said, any change that large gets touched only after the other validation currently in flight finishes, and only through the formal process.</p>
+<p>Separately, the daily summary report had been showing filter holds and intraday executions against plan figures rather than the actual ledger, raising a "the numbers don't add up" false alarm — I switched that to the ledger basis.</p>
+<p>I also checked some resident processes (the simulator and the live monitor) that had stayed down after a reboot, and brought them back up.</p>
+<h2>Why it matters</h2>
+<p>The two incidents today look different in texture, but the lesson is the same: even when the judgment logic is sound, if the input it consumes and the environment around it are wrong, the output is wrong.</p>
+<p>The filter's idea was identical to yesterday's. But the "prior-day close" it compares against was contaminated, so for a full day a perfectly good rule was running on top of bad data.</p>
+<p>Tests were the same story. The test code itself was correct, but because the touchpoints to the outside world weren't fully sealed, "verification" leaked into "real action."</p>
+<p>So lately I spend as much time doubting "is the data this logic sees really the data I think it is" and "is this test actually isolated" as I spend fixing the logic itself.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/trading-bot/">#trading bot</a> <a href="../../../../en/tags/devlog/">#devlog</a> <a href="../../../../en/tags/data-quality/">#data quality</a> <a href="../../../../en/tags/test-isolation/">#test isolation</a> <a href="../../../../en/tags/operations/">#operations</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-11_devlog/">Setting the Trading System&#x27;s Goal - Absolute Return ~10%/yr, Scrapping the Always-Fully-Invested Rule</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">A Nightly Batch Job Hung for 26 Hours - One Unbounded Network Call</a></li><li><a href="../../../../en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">A Research Backfill&#x27;s Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call</a></li><li><a href="../../../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

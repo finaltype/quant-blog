@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Posts tagged #devlog | Quant Bot Devlog</title>
-<meta name="description" content="99 posts tagged &#x27;devlog&#x27;.">
+<meta name="description" content="100 posts tagged &#x27;devlog&#x27;.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/tags/devlog/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Posts tagged #devlog">
-<meta property="og:description" content="99 posts tagged &#x27;devlog&#x27;.">
+<meta property="og:description" content="100 posts tagged &#x27;devlog&#x27;.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/tags/devlog/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #devlog", "description": "99 posts tagged 'devlog'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #devlog", "description": "100 posts tagged 'devlog'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,8 +43,9 @@
 
 <article>
 <h1>Posts tagged #devlog</h1>
-<p class="subtitle">99 posts tagged &#x27;devlog&#x27;.</p>
+<p class="subtitle">100 posts tagged &#x27;devlog&#x27;.</p>
 <ul>
+<li><a href="../../../en/devlog/2026-11/2026-11-12_devlog/">Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal&#x27;s Daily-Bar Close Definition Had Changed</a><div class="sub">The intraday filter I added to the live account yesterday was judging spikes and drops against a wrong reference (the prior-day close). A portal&#x27;s daily-bar &quot;close&quot; had started including after-hours trades, so I recut it to use the broker API&#x27;s regular-session close as v1.1. The same day, a regression run accidentally fired six real notifications.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-08_weekly/">Token Ping-Pong and an Overnight Batch Hang - Two Root-Cause Hunts</a><div class="sub">Tracked down two operational incidents this week - an auth token that kept invalidating itself, and a nightly batch job that silently hung overnight - and set up automated checks to confirm the fixes actually held.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-04_devlog/">Overnight Scoring Batch Stall - Two Unbounded External Calls</a><div class="sub">An overnight stock-scoring batch stalled; fixed the first timeout-less call, then asked whether the fix was enough and found a second one hiding in the same codebase.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-02_devlog/">Toss Token 401 Ping-Pong - The Real Root Cause Was a Missing Cache Re-check</a><div class="sub">Finally tracked down why an external quote API&#x27;s auth token kept invalidating itself, fixed the re-issue logic, and set up an automated check instead of relying on memory to confirm the fix held.</div></li>
