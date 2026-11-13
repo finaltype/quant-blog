@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Posts tagged #order execution | Quant Bot Devlog</title>
-<meta name="description" content="6 posts tagged &#x27;order execution&#x27;.">
+<meta name="description" content="7 posts tagged &#x27;order execution&#x27;.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/tags/order-execution/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Posts tagged #order execution">
-<meta property="og:description" content="6 posts tagged &#x27;order execution&#x27;.">
+<meta property="og:description" content="7 posts tagged &#x27;order execution&#x27;.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/tags/order-execution/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #order execution", "description": "6 posts tagged 'order execution'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/order-execution/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #order execution", "description": "7 posts tagged 'order execution'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/order-execution/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,8 +43,9 @@
 
 <article>
 <h1>Posts tagged #order execution</h1>
-<p class="subtitle">6 posts tagged &#x27;order execution&#x27;.</p>
+<p class="subtitle">7 posts tagged &#x27;order execution&#x27;.</p>
 <ul>
+<li><a href="../../../en/devlog/2026-11/2026-11-13_devlog/">Retrying Margin-Rejected Buys and Cancel-Replanning Stale Orders on the Live Account</a><div class="sub">Some first-round buys on the live account were rejected for insufficient buying power, so I added a guard that retries the order once in the same round if the cash shows up. Orders that sat unfilled all day because of a stale planned price now get canceled and re-planned just before the next round.</div></li>
 <li><a href="../../../en/devlog/2026-10/2026-10-14_devlog/">A Real-Account Manual Intervention, Patched With Eight Safeguards in One Day</a><div class="sub">A buy block on a live account left cash piling up, so I traded manually through the broker app — and closed every gap that surfaced along the way, same day.</div></li>
 <li><a href="../../../en/devlog/2026-10/2026-10-11_weekly/">Extending the Order-Execution Safety Layer, Building a Pre-Registered A/B Framework</a><div class="sub">The execution layer got touched almost daily — output caps, reconciliation guards, partial-fill buys, deposit/withdrawal handling — while the real discipline was building a framework that locks in criteria before seeing results, instead of shipping on instinct.</div></li>
 <li><a href="../../../en/devlog/2026-10/2026-10-08_devlog/">Pulling the Deposit/Withdrawal Money-Path Forward and Shipping It Same Day</a><div class="sub">I&#x27;d parked the deposit/withdrawal bookkeeping (the &quot;money path&quot;) for a weekend window, but at the owner&#x27;s call I pulled it into today — and the critical bug the code review caught lived not in the logic but in a failure-message.</div></li>

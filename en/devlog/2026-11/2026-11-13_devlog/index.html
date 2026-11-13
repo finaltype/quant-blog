@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retrying Margin-Rejected Buys and Cancel-Replanning Stale Orders on the Live Account | Quant Bot Devlog</title>
+<meta name="description" content="Some first-round buys on the live account were rejected for insufficient buying power, so I added a guard that retries the order once in the same rou…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-13_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-13_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-13_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-13_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Retrying Margin-Rejected Buys and Cancel-Replanning Stale Orders on the Live Account">
+<meta property="og:description" content="Some first-round buys on the live account were rejected for insufficient buying power, so I added a guard that retries the order once in the same rou…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-13_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Retrying Margin-Rejected Buys and Cancel-Replanning Stale Orders on the Live Account", "description": "Some first-round buys on the live account were rejected for insufficient buying power, so I added a guard that retries the order once in the same rou…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-13_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-13"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-13_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Retrying Margin-Rejected Buys and Cancel-Replanning Stale Orders on the Live Account</h1>
+<p class="post-date"><time datetime="2026-11-13">2026-11-13</time></p>
+<p class="subtitle">Some first-round buys on the live account were rejected for insufficient buying power, so I added a guard that retries the order once in the same round if the cash shows up. Orders that sat unfilled all day because of a stale planned price now get canceled and re-planned just before the next round.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Couldn't buy even though the money was there</h2>
+<p>Since moving to the live account, a small problem showed up on the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution</a>(new tab) side.</p>
+<p>A few of the morning's first-round buys were being rejected for "insufficient buying power."</p>
+<p>At first I assumed the cash plan was wrong, but when I looked closer the cause was different.</p>
+<p>A stock I'd planned to sell hadn't filled yet, so it hadn't turned into cash — and the buy that was counting on that cash got rejected for "no money."</p>
+<p>In other words, the money was about to arrive, but a timing gap of a few seconds to a few minutes meant a buy I should have made never happened before the round ended.</p>
+<h2>Trying once more within the same round</h2>
+<p>So I added a guard that retries a margin-rejected buy exactly once, within the same round.</p>
+<p>Instead of giving up immediately, it polls the available buying power a few times at short intervals, and once the cash is there, it resubmits the order.</p>
+<p>The thing I was most careful about here was "the same order going out twice."</p>
+<p>The retry order carries a tag that distinguishes it from the original, so even if the original order comes back to life late, it won't turn into a duplicate buy.</p>
+<p>I kept the scope narrow too. The retry applies only to the morning's first-round buys, and only once.</p>
+<h2>Orders wearing a stale price tag</h2>
+<p>Separately, I noticed orders that just sat there all day and never filled.</p>
+<p>The cause was a "stale planned price."</p>
+<p>When an order goes out, its limit price is set from the price at the moment the round was planned. But if the market moves after that, the original price tag won't fill for the rest of the day.</p>
+<p>So I changed it to cancel any of the day's still-unfilled orders right before moving to the next round, and re-plan them based on the price at that moment.</p>
+<p>If the price tag is stale, peel it off and put a fresh one on.</p>
+<h2>Cancellation gets the stricter treatment</h2>
+<p>Cancel-and-replan is the kind of action where "a wrong cancellation is more dangerous," so I handed the design diff off to an external AI for a separate review.</p>
+<p>There were no critical defects, but a few important points came back.</p>
+<p>One was that when confirming "what was canceled," I should cross-check the order date, symbol, and side all together, so I never mistake some other order for the one I canceled.</p>
+<p>Another was to not cancel at all once the time is close to the market close. If you cancel and the re-order can't get in, that slot ends the day empty.</p>
+<p>I also applied its advice to not put orders whose cancellation isn't confirmed into the "confirmed rejected" list. Treating an ambiguous state as confirmed throws off every judgment downstream.</p>
+<p>With those points folded in, I shipped both guards to the live account together.</p>
+<h2>The close price again, this time in the opposite direction</h2>
+<p>Yesterday I found that the "prior-day close" the intraday filter uses was contaminated — the <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">data source</a>(new tab) had a value that included after-hours trades — and I recut it to use the broker API's regular-session close.</p>
+<p>Today that same close-price question came up from another direction.</p>
+<p>This time it was about which close to treat as the canonical one for the internal data the model looks at.</p>
+<p>The conclusion was the opposite of yesterday's. Here we decided to use the close that's finalized after the market has fully closed.</p>
+<p>So I also pushed back the time of the daily data re-export and re-scoring — not right after the close, but after the post-session close is finalized. The monitoring window that checks the reconciliation moved to that evening time to match.</p>
+<p>The same word, "close," but used in a different place means a different standard to match — something I ran into on both sides over two days.</p>
+<h2>Why it matters</h2>
+<p>What I fixed today isn't about making the judgment "smarter." The judgment stays the same; I worked on the path by which that judgment turns into an actual order.</p>
+<p>No matter how well you pick a stock, if the cash arrives a few seconds late and you can't buy, or the price tag is stale and it never fills, that judgment stays only on paper.</p>
+<p>So these days I spend as much time on "does it actually fill" as on "what to buy."</p>
+<p>And the harder an action is to undo — like a cancellation — the more I'm building the habit of not trusting my own call, but holding it up to an outside eye once more before shipping.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/trading-bot/">#trading bot</a> <a href="../../../../en/tags/devlog/">#devlog</a> <a href="../../../../en/tags/order-execution/">#order execution</a> <a href="../../../../en/tags/operations/">#operations</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-12_devlog/">Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal&#x27;s Daily-Bar Close Definition Had Changed</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">A Nightly Batch Job Hung for 26 Hours - One Unbounded Network Call</a></li><li><a href="../../../../en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">A Research Backfill&#x27;s Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call</a></li><li><a href="../../../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

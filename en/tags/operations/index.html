@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Posts tagged #operations | Quant Bot Devlog</title>
-<meta name="description" content="15 posts tagged &#x27;operations&#x27;.">
+<meta name="description" content="16 posts tagged &#x27;operations&#x27;.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/tags/operations/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Posts tagged #operations">
-<meta property="og:description" content="15 posts tagged &#x27;operations&#x27;.">
+<meta property="og:description" content="16 posts tagged &#x27;operations&#x27;.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/tags/operations/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #operations", "description": "15 posts tagged 'operations'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/operations/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #operations", "description": "16 posts tagged 'operations'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/operations/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,11 +43,12 @@
 
 <article>
 <h1>Posts tagged #operations</h1>
-<p class="subtitle">15 posts tagged &#x27;operations&#x27;.</p>
+<p class="subtitle">16 posts tagged &#x27;operations&#x27;.</p>
 <ul>
 <li><a href="../../../en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">A Nightly Batch Job Hung for 26 Hours - One Unbounded Network Call</a><div class="sub">My first fix targeted the exact line that hung, but missed a sibling fallback call in the same function — a postmortem on why the recurrence-prevention fix was only half right</div></li>
 <li><a href="../../../en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">A Research Backfill&#x27;s Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call</a><div class="sub">A research backfill triggered an external API block, and that block killed live trading processes during library import</div></li>
 <li><a href="../../../en/postmortems/2026-10-17_scheduled-vs-manual-trigger-systemd-activation-details/">A Manual Run Misclassified as a Scheduled Run - systemd Activation Metadata Outlived My Assumptions</a><div class="sub">A bug I thought I&#x27;d fixed a month earlier came back with a completely different root cause</div></li>
+<li><a href="../../../en/devlog/2026-11/2026-11-13_devlog/">Retrying Margin-Rejected Buys and Cancel-Replanning Stale Orders on the Live Account</a><div class="sub">Some first-round buys on the live account were rejected for insufficient buying power, so I added a guard that retries the order once in the same round if the cash shows up. Orders that sat unfilled all day because of a stale planned price now get canceled and re-planned just before the next round.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-12_devlog/">Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal&#x27;s Daily-Bar Close Definition Had Changed</a><div class="sub">The intraday filter I added to the live account yesterday was judging spikes and drops against a wrong reference (the prior-day close). A portal&#x27;s daily-bar &quot;close&quot; had started including after-hours trades, so I recut it to use the broker API&#x27;s regular-session close as v1.1. The same day, a regression run accidentally fired six real notifications.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-11_devlog/">Setting the Trading System&#x27;s Goal - Absolute Return ~10%/yr, Scrapping the Always-Fully-Invested Rule</a><div class="sub">Yesterday I wrote that &quot;stay positive even when the index drops&quot; and &quot;never leave cash idle&quot; couldn&#x27;t both be true, and that choosing between them was my call. Today the owner decided: this is a profit system aiming for a long-run absolute return of around 10% a year net of costs, and the rule that it must always be fully invested is gone. As a first step, an intraday filter that briefly defers trades on sharp spikes and drops went live on the real account.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-10_devlog/">Redefining the Performance Benchmark - Replacing a Period-Mismatch Illusion With a Stock-Selection Metric</a><div class="sub">My live-account report looked like it was badly trailing the index, but that was an artifact of measuring the numerator and denominator over different periods. After redefining the benchmark as a per-lot like-for-like comparison, an honest measurement surfaced a more uncomfortable question — the stock-selection edge is essentially zero.</div></li>

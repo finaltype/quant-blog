@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획 | 퀀트봇 개발일지</title>
+<meta name="description" content="실계좌 1라운드 매수가 주문가능금액 부족으로 거부되는 일이 있어, 같은 라운드에서 자금이 차면 한 번 다시 주문하는 장치를 넣었다. 묵은 계획가 탓에 하루 종일 안 체결되던 주문은 다음 라운드 직전에 취소하고 다시 계획하도록 고쳤다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-13_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-13_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-13_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-13_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획">
+<meta property="og:description" content="실계좌 1라운드 매수가 주문가능금액 부족으로 거부되는 일이 있어, 같은 라운드에서 자금이 차면 한 번 다시 주문하는 장치를 넣었다. 묵은 계획가 탓에 하루 종일 안 체결되던 주문은 다음 라운드 직전에 취소하고 다시 계획하도록 고쳤다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-13_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획", "description": "실계좌 1라운드 매수가 주문가능금액 부족으로 거부되는 일이 있어, 같은 라운드에서 자금이 차면 한 번 다시 주문하는 장치를 넣었다. 묵은 계획가 탓에 하루 종일 안 체결되던 주문은 다음 라운드 직전에 취소하고 다시 계획하도록 고쳤다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-13_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-13"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-13_devlog/">Read in English</a></p>
+<article>
+<h1>실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획</h1>
+<p class="post-date"><time datetime="2026-11-13">2026-11-13</time></p>
+<p class="subtitle">실계좌 1라운드 매수가 주문가능금액 부족으로 거부되는 일이 있어, 같은 라운드에서 자금이 차면 한 번 다시 주문하는 장치를 넣었다. 묵은 계획가 탓에 하루 종일 안 체결되던 주문은 다음 라운드 직전에 취소하고 다시 계획하도록 고쳤다.</p><h2>돈이 있는데도 못 산 매수</h2>
+<p>실계좌로 넘어온 뒤, <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 집행</a>(새 창) 쪽에서 작은 문제가 하나 보였습니다.</p>
+<p>아침 첫 라운드 매수 몇 건이 "주문가능금액 부족"으로 거부되고 있었습니다.</p>
+<p>처음엔 자금 계획이 틀린 줄 알았는데, 들여다보니 원인이 달랐습니다.</p>
+<p>한쪽에서 팔기로 한 종목이 아직 안 팔려서 현금화가 안 됐고, 그 돈을 쓰기로 계획한 매수가 "돈이 없다"며 거부된 것입니다.</p>
+<p>즉 실제로는 곧 들어올 돈인데, 그 몇 초~몇 분의 타이밍 차이 때문에 사야 할 걸 못 사고 라운드가 끝나버린 셈입니다.</p>
+<h2>같은 라운드에서 한 번 다시 시도하기</h2>
+<p>그래서 증거금이 모자라 거부된 매수를, 같은 라운드 안에서 딱 한 번 다시 시도하는 장치를 넣었습니다.</p>
+<p>바로 포기하지 않고 주문가능금액을 몇 초 간격으로 몇 번 들여다보다가, 돈이 차면 그때 다시 주문을 냅니다.</p>
+<p>여기서 제일 조심한 건 "같은 주문이 두 번 나가는 것"입니다.</p>
+<p>재시도로 낸 주문에는 원래 주문과 구분되는 꼬리표를 붙여서, 혹시 원래 주문이 뒤늦게 살아나더라도 중복 매수가 되지 않도록 막았습니다.</p>
+<p>범위도 좁게 잡았습니다. 재시도는 아침 첫 라운드 매수에 대해, 딱 한 번만 돕니다.</p>
+<h2>묵은 가격표를 붙인 주문</h2>
+<p>별개로, 하루 종일 걸려만 있고 안 체결되는 주문이 보였습니다.</p>
+<p>원인은 "묵은 계획가"였습니다.</p>
+<p>주문을 낼 때 지정가는 라운드를 계획한 시점의 가격을 기준으로 정해집니다. 그런데 그 뒤로 시세가 움직여 버리면, 처음 붙인 가격표로는 하루 내내 체결이 안 됩니다.</p>
+<p>그래서 다음 라운드로 넘어가기 직전에, 아직 안 체결된 당일 주문을 취소하고 그 시점 기준으로 다시 계획하도록 고쳤습니다.</p>
+<p>가격표가 낡았으면 떼고 새로 붙이는 셈입니다.</p>
+<h2>취소는 더 까다롭게</h2>
+<p>취소·재계획은 "잘못 취소하면 더 위험한" 동작이라, 외부 AI에게 설계 변경분(diff)을 따로 리뷰 맡겼습니다.</p>
+<p>치명적인 결함은 없었지만, 중요한 지적이 몇 건 나왔습니다.</p>
+<p>하나는 "무엇을 취소했는지"를 확정할 때 주문일·종목·방향을 전부 대조해서, 엉뚱한 주문을 취소한 걸로 착각하지 않게 하라는 것이었습니다.</p>
+<p>또 하나는 장 마감이 가까운 시각 이후로는 취소를 아예 하지 말라는 것이었습니다. 취소해 놓고 재주문이 못 들어가면 그 자리가 빈 채로 하루가 끝나버리기 때문입니다.</p>
+<p>취소가 확정되지 않은 주문은 "거절 확정" 목록에 넣지 않도록 하는 것도 반영했습니다. 상태가 애매한 걸 섣불리 확정 처리하면 뒤의 판단이 전부 어긋납니다.</p>
+<p>이 지적들을 반영해 두 장치를 함께 실계좌에 올렸습니다.</p>
+<h2>종가를 다시, 이번엔 반대 방향으로</h2>
+<p>어제는 장중 필터가 쓰는 "전일 종가"가 <a href="https://finaltype.github.io/quant-blog/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">데이터 소스</a>(새 창)에서 장후 거래까지 포함한 값으로 오염돼 있던 걸 발견해, 증권사 API의 정규장 종가로 교정했습니다.</p>
+<p>오늘은 그 종가 얘기가 다른 쪽에서 한 번 더 나왔습니다.</p>
+<p>이번엔 모델이 보는 내부 데이터의 "정본 종가"를 어느 쪽으로 할지 정하는 문제였습니다.</p>
+<p>결론은 어제와 반대였습니다. 여기서는 장이 완전히 끝난 뒤 확정되는 종가를 정본으로 쓰기로 했습니다.</p>
+<p>그래서 매일 돌리는 데이터 재수출·재채점 시각도, 장 마감 직후가 아니라 장후 종가가 확정된 다음으로 미뤘습니다. 정산을 점검하는 감시 창도 그 시각에 맞춰 저녁으로 옮겼습니다.</p>
+<p>같은 "종가"라도 쓰는 자리가 다르면 맞춰야 할 기준도 달라진다는 걸, 이틀에 걸쳐 양쪽에서 겪은 셈입니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 고친 것들은 "판단을 더 똑똑하게" 하는 일이 아닙니다. 판단은 그대로 두고, 그 판단이 실제 주문으로 나가는 길목을 손본 일입니다.</p>
+<p>살 종목을 아무리 잘 골라도, 돈이 몇 초 늦게 들어와 못 사거나 가격표가 낡아 안 체결되면 그 판단은 종이 위에만 남습니다.</p>
+<p>그래서 요즘은 "무엇을 살까"만큼이나 "그게 실제로 체결되는가"를 들여다보는 데 시간을 씁니다.</p>
+<p>그리고 취소처럼 되돌리기 어려운 동작일수록, 내가 맞다고 믿지 말고 바깥의 눈으로 한 번 더 비춰본 뒤에 올리는 습관을 들이고 있습니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/">#안전장치</a> <a href="../../../tags/%EC%9A%B4%EC%98%81/">#운영</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-12_devlog/">장중 매매 필터 전일 종가 기준 교정 - 포털 일봉의 종가 정의 결함</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-12_devlog/">장중 매매 필터 전일 종가 기준 교정 - 포털 일봉의 종가 정의 결함</a></li><li><a href="../../../devlog/2026-11/2026-11-11_devlog/">자동매매 시스템 목표 확정 - 절대수익 연 10%, 상시 풀투자 원칙 폐기</a></li><li><a href="../../../devlog/2026-11/2026-11-10_devlog/">성과 벤치마크 재정의 - 기간 불일치 착시를 종목선택 효과 지표로 교체</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
