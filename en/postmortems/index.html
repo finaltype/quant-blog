@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Postmortems | Quant Bot Devlog</title>
-<meta name="description" content="All Postmortems posts (20)">
+<meta name="description" content="All Postmortems posts (21)">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/postmortems/">
 <link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/">
 <link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/">
 <link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Postmortems">
-<meta property="og:description" content="All Postmortems posts (20)">
+<meta property="og:description" content="All Postmortems posts (21)">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/postmortems/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Postmortems", "description": "All Postmortems posts (20)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Postmortems", "description": "All Postmortems posts (21)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/postmortems/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -46,8 +46,9 @@
 <p class="lang-switch"><a href="../../postmortems/">한국어로 보기</a></p>
 <article>
 <h1>Postmortems</h1>
-<p class="subtitle">All Postmortems posts (20)</p>
+<p class="subtitle">All Postmortems posts (21)</p>
 <ul>
+<li><a href="../../en/postmortems/2026-11-14_tests-sent-real-notifications/">A Test Run Sent Real Push Notifications - Because Mocking Side Effects Was Left to Each Test</a><div class="sub">The habit of letting each test intercept notification-sending leaked into a real send through one newly added alert path — a postmortem on why blocking side effects has to be the test harness&#x27;s global default</div></li>
 <li><a href="../../en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">A Nightly Batch Job Hung for 26 Hours - One Unbounded Network Call</a><div class="sub">My first fix targeted the exact line that hung, but missed a sibling fallback call in the same function — a postmortem on why the recurrence-prevention fix was only half right</div></li>
 <li><a href="../../en/postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">A Research Backfill&#x27;s Bulk Calls Crashed Live Trading - Root Cause Was an Import-Time Network Call</a><div class="sub">A research backfill triggered an external API block, and that block killed live trading processes during library import</div></li>
 <li><a href="../../en/postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">How a Hardcoded sys.path Silently Broke Git Worktree Isolation</a><div class="sub">Every worktree&#x27;s test suite passed — but that didn&#x27;t mean it had actually tested that worktree&#x27;s code</div></li>

@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>#테스트 태그 글 모음 | 퀀트봇 개발일지</title>
-<meta name="description" content="&#x27;테스트&#x27; 태그가 붙은 글 5편.">
+<meta name="description" content="&#x27;테스트&#x27; 태그가 붙은 글 6편.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/tags/%ED%85%8C%EC%8A%A4%ED%8A%B8/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="#테스트 태그 글 모음">
-<meta property="og:description" content="&#x27;테스트&#x27; 태그가 붙은 글 5편.">
+<meta property="og:description" content="&#x27;테스트&#x27; 태그가 붙은 글 6편.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/tags/%ED%85%8C%EC%8A%A4%ED%8A%B8/">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "#테스트 태그 글 모음", "description": "'테스트' 태그가 붙은 글 5편.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/tags/%ED%85%8C%EC%8A%A4%ED%8A%B8/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "#테스트 태그 글 모음", "description": "'테스트' 태그가 붙은 글 6편.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/tags/%ED%85%8C%EC%8A%A4%ED%8A%B8/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,8 +43,9 @@
 
 <article>
 <h1>#테스트 태그 글 모음</h1>
-<p class="subtitle">&#x27;테스트&#x27; 태그가 붙은 글 5편.</p>
+<p class="subtitle">&#x27;테스트&#x27; 태그가 붙은 글 6편.</p>
 <ul>
+<li><a href="../../postmortems/2026-11-14_tests-sent-real-notifications/">테스트가 실제 푸시 알림을 발송한 사고 - 부수효과 모킹을 개별 테스트에 맡긴 탓</a><div class="sub">알림 전송을 테스트마다 각자 가로채던 관행이, 새로 생긴 경보 경로 하나에서 실제 발송으로 샜다 — 부수효과 차단은 테스트 하네스의 전역 기본값이어야 한다는 postmortem</div></li>
 <li><a href="../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a><div class="sub">워크트리마다 돌린 테스트가 전부 통과했는데, 그 통과가 정작 그 워크트리의 코드를 검증한 게 아니었습니다</div></li>
 <li><a href="../../postmortems/2026-10-03_order-dependent-test-pollution/">순서 의존적으로 실패하는 테스트 - 복원하지 않은 몽키패치가 남긴 오염</a><div class="sub">단독으로 돌리면 통과하고 전체 스위트에서만 실패하던 테스트, 범인은 다른 파일의 몽키패치였습니다</div></li>
 <li><a href="../../postmortems/2026-09-03_pytest-mock-gap-polluted-production-db/">테스트가 목킹하지 않은 함수 하나가 운영 DB를 오염시켰다</a><div class="sub">이틀 연속 재발하고서야 잡은 근본원인 - 로컬 임포트와 파이썬 기본인자 바인딩</div></li>

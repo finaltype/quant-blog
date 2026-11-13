@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>테스트가 실제 푸시 알림을 발송한 사고 - 부수효과 모킹을 개별 테스트에 맡긴 탓 | 퀀트봇 개발일지</title>
+<meta name="description" content="알림 전송을 테스트마다 각자 가로채던 관행이, 새로 생긴 경보 경로 하나에서 실제 발송으로 샜다 — 부수효과 차단은 테스트 하네스의 전역 기본값이어야 한다는 postmortem">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-14_tests-sent-real-notifications/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-14_tests-sent-real-notifications/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-11-14_tests-sent-real-notifications/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-14_tests-sent-real-notifications/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="테스트가 실제 푸시 알림을 발송한 사고 - 부수효과 모킹을 개별 테스트에 맡긴 탓">
+<meta property="og:description" content="알림 전송을 테스트마다 각자 가로채던 관행이, 새로 생긴 경보 경로 하나에서 실제 발송으로 샜다 — 부수효과 차단은 테스트 하네스의 전역 기본값이어야 한다는 postmortem">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-11-14_tests-sent-real-notifications/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "테스트가 실제 푸시 알림을 발송한 사고 - 부수효과 모킹을 개별 테스트에 맡긴 탓", "description": "알림 전송을 테스트마다 각자 가로채던 관행이, 새로 생긴 경보 경로 하나에서 실제 발송으로 샜다 — 부수효과 차단은 테스트 하네스의 전역 기본값이어야 한다는 postmortem", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-11-14_tests-sent-real-notifications/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-14"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-11-14_tests-sent-real-notifications/">Read in English</a></p>
+<article>
+<h1>테스트가 실제 푸시 알림을 발송한 사고 - 부수효과 모킹을 개별 테스트에 맡긴 탓</h1>
+<p class="post-date"><time datetime="2026-11-14">2026-11-14</time></p>
+<p class="subtitle">알림 전송을 테스트마다 각자 가로채던 관행이, 새로 생긴 경보 경로 하나에서 실제 발송으로 샜다 — 부수효과 차단은 테스트 하네스의 전역 기본값이어야 한다는 postmortem</p><p>코드를 고칠 때마다 돌리는 회귀 테스트 묶음이 있다.</p>
+<p>저녁에 그날의 변경분을 반영하고, 관련 테스트를 전부 돌려서 깨진 데가 없는지 확인하는 평범한 작업이다.</p>
+<h2>무슨 일이 있었나</h2>
+<p>저녁 회귀 실행을 걸어두고 다른 일을 하는데, 휴대폰으로 운영 경보 푸시 알림이 왔다. 한 건이 아니라 몇 분 사이에 여섯 건이 연달아 왔다.</p>
+<p>내용은 평소 실제 운영 중에 뜨는 경보와 똑같은 형식이었다. "어떤 기준값이 비어 있다"는 경고였다.</p>
+<p>문제는 그 시각에 실제 운영 라운드가 돌 일이 없었다는 것이다. 돌고 있던 건 테스트뿐이었다.</p>
+<p>즉, 운영 시스템이 보낸 알림이 아니라 <strong>테스트가 실제 알림 채널로 진짜 메시지를 쏜 것</strong>이었다.</p>
+<h2>처음엔 뭐라고 생각했나</h2>
+<p>처음엔 혹시 내가 모르는 사이에 실제 라운드가 한 번 돈 건 아닌가 의심했다.</p>
+<p>그래서 운영 쪽 기록을 먼저 확인했다. 그 시각에 실제 판단이 돌았다면 운영 저널에 흔적이 남아야 하는데, 해당 시각대에는 아무 평가 기록도 없었다.</p>
+<p>반대로 알림 전송 원장(어떤 메시지를 언제 보냈는지 적어두는 로그)에는 그 여섯 건이 또렷이 찍혀 있었다. 전송 시각이 회귀 실행 창과 정확히 겹쳤다.</p>
+<p>운영은 조용했고 전송 원장만 울렸다. 결론은 하나였다 — 알림을 보낸 주체는 운영이 아니라 테스트였다.</p>
+<h2>진짜 원인</h2>
+<p>이 코드베이스에는 알림을 보내는 함수가 하나로 모여 있다. 그리고 테스트에서 그 함수를 어떻게 다뤄 왔느냐가 이번 사고의 핵심이다.</p>
+<p>그동안의 관행은 <strong>개별 테스트가 각자 알림 전송 함수를 가로채는(mock) 방식</strong>이었다. 알림을 검증하는 테스트는 자기 안에서 전송 함수를 가짜로 바꿔치기하고, 가짜가 몇 번 불렸는지만 확인했다.</p>
+<p>문제는 이게 "옵트인(opt-in)"이라는 점이다. 전송을 막을지 말지가 각 테스트의 선의에 달려 있었다.</p>
+<p>그날 돌린 회귀에는 새로 추가한 코드 경로가 하나 있었다. 어떤 입력값이 비어 있을 때 경고를 보내는 경로였다.</p>
+<p>그 경로를 건드리는 테스트는 "전송 함수를 가로채야 한다"는 사실을 몰랐다. 새 경보라서 기존의 가로채기 관행이 적용된 적이 없었기 때문이다.</p>
+<p>그래서 테스트가 그 분기를 실행하자, 아무도 막지 않은 전송 함수가 진짜 알림 채널로 메시지를 보냈다. 테스트 환경과 실제 알림 채널 사이에 기본 차단벽이 없었던 것이다.</p>
+<p>곁가지 원인도 하나 있었다. 그 경보 경로는 경고를 보내기 전에 외부 API로 기준값을 조회하고 있었다. 전송만 샌 게 아니라, 테스트가 실제 외부 API까지 부를 뻔했다.</p>
+<h2>어떻게 고쳤는지</h2>
+<p>수정 자체는 짧았다. 테스트 하네스 전역에 "기본적으로 알림 전송을 막는다"는 장치를 하나 넣었다.</p>
+<p>구체적으로는 모든 테스트에 자동으로 적용되는(autouse) 픽스처를 하나 추가해서, 알림 전송 함수를 아무 일도 안 하는 가짜로 기본 교체했다.</p>
+<p>전송 자체를 검증하는 기존 테스트들은 자기 안에서 다시 가짜로 덮어쓰므로 영향이 없다. 바뀐 건 "기본값"뿐이다 — 아무도 명시적으로 막지 않아도 실제 전송은 절대 안 나간다.</p>
+<p>같은 픽스처에서 외부 기준값 조회도 기본적으로 "값 없음"을 돌려주게 고정했다. 그 조회를 정말 시험하는 테스트는 역시 자기 patch로 덮는다.</p>
+<p>사고를 확인하고 전송 차단을 넣기까지 몇 분, 재실행까지 포함해도 한 시간 안짝이었다. 코드는 몇 줄이다. 중요한 건 줄 수가 아니라 기본값의 방향을 뒤집은 것이다.</p>
+<h2>일반화하면 무슨 교훈인가</h2>
+<p><strong>부수효과 차단은 옵트인이 아니라 옵트아웃이어야 한다.</strong> 알림 전송, 외부 API 호출, 결제, 메일 발송처럼 테스트 밖 세계를 건드리는 I/O는, 각 테스트가 알아서 막는 방식으로는 반드시 샌다.</p>
+<p>옵트인 모킹의 구조적 약점은 <strong>새 코드 경로가 생길 때마다 구멍이 뚫린다</strong>는 데 있다. 기존 테스트들이 전부 전송을 가로채고 있었어도, 그 관행을 모르는 새 경로 하나면 충분하다. 안전이 "모두가 규칙을 안다"에 의존하면, 규칙을 모르는 새 코드가 들어오는 순간 깨진다.</p>
+<p>그래서 이런 I/O는 테스트 하네스 레벨에서 기본 차단(default-deny)으로 깔고, 전송 자체를 검증하는 소수의 테스트만 명시적으로 그 차단을 풀게 하는 게 맞다. 그러면 깜빡해서 안전한 쪽으로 틀리지, 깜빡해서 실제로 쏘는 일은 없다.</p>
+<p><strong>사고 주체를 가를 수 있는 관측 장치가 따로 있으면 진단이 빠르다.</strong> 이번엔 운영 저널에는 흔적이 없고 전송 원장에만 기록이 있다는 대조 덕분에, "운영이 보낸 건가 테스트가 보낸 건가"를 몇 분 만에 갈랐다. 어떤 부수효과를 기록할 때는 "누가/어떤 맥락에서" 그걸 일으켰는지도 같이 남겨두면, 이런 순간에 그 한 줄이 범인을 가린다.</p>
+<p><strong>"대부분의 테스트가 막고 있다"는 "하네스가 막는다"와 다른 문장이다.</strong> 안전장치를 개별 구성원의 습관에 맡기면, 그 습관을 공유하지 않는 새 구성원이 들어온 순간 무너진다. 기본값을 안전한 쪽으로 깔아두는 것 — 그게 사람의 기억력에 기대지 않는 유일한 방법이다.</p>
+</article>
+<p class="tags"><a href="../../tags/%EC%86%8C%ED%94%84%ED%8A%B8%EC%9B%A8%EC%96%B4%ED%92%88%EC%A7%88/">#소프트웨어품질</a> <a href="../../tags/%ED%85%8C%EC%8A%A4%ED%8A%B8/">#테스트</a> <a href="../../tags/%EB%94%94%EB%B2%84%EA%B9%85/">#디버깅</a> <a href="../../tags/%EC%9A%B4%EC%98%81/">#운영</a> <a href="../../tags/postmortem/">#postmortem</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">야간 배치 작업 26시간 멈춤 - 타임아웃 없는 외부 API 호출 하나가 원인</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">야간 배치 작업 26시간 멈춤 - 타임아웃 없는 외부 API 호출 하나가 원인</a></li><li><a href="../../postmortems/2026-11-01_shared-ip-block-crashed-live-trading-via-library-import/">리서치 스크립트의 대량 조회가 실거래 라운드를 크래시시킨 사고 - 원인은 임포트 시점 네트워크 호출</a></li><li><a href="../../postmortems/2026-10-24_hardcoded-sys-path-broke-worktree-isolation/">병렬 Git 워크트리에서 테스트가 조용히 오염된 사례 - 하드코딩된 sys.path 하나의 문제</a></li></ul>
+</aside>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
