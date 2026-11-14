@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Posts tagged #quant | Quant Bot Devlog</title>
-<meta name="description" content="116 posts tagged &#x27;quant&#x27;.">
+<meta name="description" content="117 posts tagged &#x27;quant&#x27;.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/tags/quant/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Posts tagged #quant">
-<meta property="og:description" content="116 posts tagged &#x27;quant&#x27;.">
+<meta property="og:description" content="117 posts tagged &#x27;quant&#x27;.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/tags/quant/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #quant", "description": "116 posts tagged 'quant'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/quant/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #quant", "description": "117 posts tagged 'quant'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/quant/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,7 +43,7 @@
 
 <article>
 <h1>Posts tagged #quant</h1>
-<p class="subtitle">116 posts tagged &#x27;quant&#x27;.</p>
+<p class="subtitle">117 posts tagged &#x27;quant&#x27;.</p>
 <ul>
 <li><a href="../../../en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">Qwen3.8-Flash-Next Review - Running It on an RTX 5090 + R9700 Pair</a><div class="sub">Three quantization swaps and sixteen rounds of advice later, the story of a local model swap that shipped to production</div></li>
 <li><a href="../../../en/postmortems/2026-08-29_swallowed-exception-silent-failure/">The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days</a><div class="sub">A single except line meant to quietly skip cache corruption also swallowed the case where the dependency library wasn&#x27;t even installed</div></li>
@@ -58,6 +58,7 @@
 <li><a href="../../../en/e1_weekly/2026/2026-09-09_weekly/">Live Account Auto-Trading Weekly Report</a><div class="sub">This week&#x27;s live-account snapshot, told through position weights and the NAV index</div></li>
 <li><a href="../../../en/e1_weekly/2026/2026-09-04_weekly/">Live Account Auto-Trading Weekly Report</a><div class="sub">This week&#x27;s live-account snapshot, told through position weights and the NAV index</div></li>
 <li><a href="../../../en/e1_weekly/2026/2026-08-28_weekly/">Live Account Auto-Trading Weekly Report</a><div class="sub">This week&#x27;s live-account snapshot, told through position weights and the NAV index</div></li>
+<li><a href="../../../en/devlog/2026-11/2026-11-14_devlog/">A Roadmap for Improving Predictive Power, and the &quot;If You Can&#x27;t Tell, Keep Current&quot; Rule</a><div class="sub">Re-scoring the same model on the window we actually trade showed its predictive power wasn&#x27;t as near-zero as it looked. Six years of narrowing-the-universe experiments all came back &quot;can&#x27;t tell,&quot; so I left the universe alone, and I added a non-inferiority gate against a fixed anchor model for retraining deploys.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-13_devlog/">Retrying Margin-Rejected Buys and Cancel-Replanning Stale Orders on the Live Account</a><div class="sub">Some first-round buys on the live account were rejected for insufficient buying power, so I added a guard that retries the order once in the same round if the cash shows up. Orders that sat unfilled all day because of a stale planned price now get canceled and re-planned just before the next round.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-12_devlog/">Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal&#x27;s Daily-Bar Close Definition Had Changed</a><div class="sub">The intraday filter I added to the live account yesterday was judging spikes and drops against a wrong reference (the prior-day close). A portal&#x27;s daily-bar &quot;close&quot; had started including after-hours trades, so I recut it to use the broker API&#x27;s regular-session close as v1.1. The same day, a regression run accidentally fired six real notifications.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-11_devlog/">Setting the Trading System&#x27;s Goal - Absolute Return ~10%/yr, Scrapping the Always-Fully-Invested Rule</a><div class="sub">Yesterday I wrote that &quot;stay positive even when the index drops&quot; and &quot;never leave cash idle&quot; couldn&#x27;t both be true, and that choosing between them was my call. Today the owner decided: this is a profit system aiming for a long-run absolute return of around 10% a year net of costs, and the rule that it must always be fully invested is gone. As a first step, an intraday filter that briefly defers trades on sharp spikes and drops went live on the real account.</div></li>

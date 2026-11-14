@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>예측력 개선 로드맵과 &quot;판정 불능이면 현행 유지&quot; 규칙 | 퀀트봇 개발일지</title>
+<meta name="description" content="모델을 실제로 사고파는 구간으로 다시 채점하니 예측력이 생각만큼 바닥은 아니었다. 종목군을 좁히는 6년 실험은 전부 &quot;판정 불능&quot;으로 나와 현행을 그대로 뒀고, 재학습 배포에는 기준 모델 대비 비열등 게이트를 넣었다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-14_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-14_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-14_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-14_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="예측력 개선 로드맵과 &quot;판정 불능이면 현행 유지&quot; 규칙">
+<meta property="og:description" content="모델을 실제로 사고파는 구간으로 다시 채점하니 예측력이 생각만큼 바닥은 아니었다. 종목군을 좁히는 6년 실험은 전부 &quot;판정 불능&quot;으로 나와 현행을 그대로 뒀고, 재학습 배포에는 기준 모델 대비 비열등 게이트를 넣었다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-14_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "예측력 개선 로드맵과 \"판정 불능이면 현행 유지\" 규칙", "description": "모델을 실제로 사고파는 구간으로 다시 채점하니 예측력이 생각만큼 바닥은 아니었다. 종목군을 좁히는 6년 실험은 전부 \"판정 불능\"으로 나와 현행을 그대로 뒀고, 재학습 배포에는 기준 모델 대비 비열등 게이트를 넣었다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-14_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-14"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-14_devlog/">Read in English</a></p>
+<article>
+<h1>예측력 개선 로드맵과 &quot;판정 불능이면 현행 유지&quot; 규칙</h1>
+<p class="post-date"><time datetime="2026-11-14">2026-11-14</time></p>
+<p class="subtitle">모델을 실제로 사고파는 구간으로 다시 채점하니 예측력이 생각만큼 바닥은 아니었다. 종목군을 좁히는 6년 실험은 전부 &quot;판정 불능&quot;으로 나와 현행을 그대로 뒀고, 재학습 배포에는 기준 모델 대비 비열등 게이트를 넣었다.</p><h2>"예측 점수가 낮다"는 말부터 다시 봤다</h2>
+<p>오늘 출발점은 "수익을 더 내려면 모델의 예측력을 어떻게 올리나"라는 질문이었습니다.</p>
+<p>바로 "데이터를 더 붙이자"로 가기 전에, 지금 낮아 보이는 그 점수가 대체 무엇을 재고 있는 건지부터 들여다봤습니다.</p>
+<p>모델은 한 구간(어느 날의 종가에서 다음 날의 종가까지)을 맞히도록 배우고, 또 그 구간으로 채점받습니다.</p>
+<p>그런데 실제 매매는 그렇게 하지 않습니다. 다음 날 아침 시가에 사서 며칠 들고 있습니다.</p>
+<p>같은 모델을 "실제로 사고파는 구간"으로 다시 채점해 보니, 점수는 0 근처가 아니라 눈에 띄게 높았습니다.</p>
+<p>즉 예측력이 없는 게 아니었습니다. 있는 예측력이 거래 비용에 상당 부분 먹히고, 남은 것도 "살 종목"보다 "피할 종목"을 가리는 쪽에 몰려 있는 것이었습니다.</p>
+<h2>그래서 "데이터부터 붙이자"가 아니었다</h2>
+<p>외부 AI에게 예측력 개선 로드맵을 뽑아 달라고 했는데, 결론은 "새 데이터를 붙여 점수를 올리자"가 아니었습니다.</p>
+<p>먼저 모델이 배우는 목표를 실제 매매 방식(아침에 사서 며칠 보유)에 맞추고, 그다음에야 공시·재무 같은 공개 데이터를 같은 틀에서 하나씩 시험해 보자는 순서였습니다.</p>
+<p>기대치는 일부러 냉정하게 낮춰 잡았습니다. 이 정도 크기의 개선은 실전 섀도만으로는 몇 달 안에 가려낼 수 없고, 채택 근거는 결국 긴 기간의 오프라인 시험이 될 수밖에 없다는 점을 먼저 받아들이고 가기로 했습니다.</p>
+<h2>숫자를 보기 전에 규칙부터 박았다</h2>
+<p>첫 후보(모델의 학습 목표를 실제 매매에 맞추기)를 시험하려고, 결과 숫자를 단 하나도 보기 전에 사전등록 문서를 먼저 썼습니다.</p>
+<p>비교할 가지, 기간, 합격선, 시드를 전부 미리 못 박고, 그 문서를 커밋한 해시 자체가 "아무도 결과를 보기 전에 규칙이 얼어붙었다"는 증거가 됩니다.</p>
+<p>이렇게 하는 이유는 하나입니다. 일단 숫자를 보고 나면, 합격선을 "통과시키는 방향으로" 슬쩍 옮기고 싶은 유혹을 이기기가 어렵기 때문입니다.</p>
+<p>이 시험은 프로덕션 코드도, 자본도, 실제 주문도 건드리지 않습니다. CPU에서 도는 순수 오프라인 계산입니다.</p>
+<p>판정은 세 값뿐입니다. 합격 / 기각 / 판정 불능.</p>
+<p>그리고 "판정 불능"은 "현행 유지"를 뜻하지, "조금만 더 돌려보자"가 아닙니다.</p>
+<h2>종목군을 좁혀봤지만 전부 "판정 불능"</h2>
+<p>같은 자리에서 별개의 실험도 하나 돌렸습니다. 거래 대상 종목군을 더 좁게(거래가 잘 되는 종목 위주로) 잡으면 나아지는지를 봤습니다.</p>
+<p>여섯 가지 변형을 6년 구간으로 돌렸는데, 여섯 개 전부 "판정 불능"으로 나왔습니다. 차이가 잡음 범위 안이었다는 뜻입니다.</p>
+<p>위에서 정한 규칙대로, 판정 불능이면 현행 유지입니다. 그래서 종목군은 지금 그대로 두기로 했습니다.</p>
+<p>반대로 종목군을 넓히는 쪽도 다시 확인했는데, 역시 판정 불능이라 손대지 않았습니다.</p>
+<h2>재학습 배포에도 같은 잣대</h2>
+<p>모델을 다시 학습시켜 내보낼 때를 대비한 배포 관문도 하나 넣었습니다.</p>
+<p>새로 학습한 모델은, 고정해 둔 기준(앵커) 모델보다 나빠지지 않았다는 게 확인돼야만 실제로 올라갈 수 있습니다.</p>
+<p>그리고 이건 "확인 안 되면 막는다(fail-closed)" 쪽으로 설계했습니다. 비열등을 확정하지 못하면 배포를 그냥 보류합니다.</p>
+<p>같은 입력이면 같은 판정이 나오도록 재현 기록도 함께 남깁니다. 재학습이라는 가장 조용하게 성능이 샐 수 있는 길목에 자물쇠를 하나 더 건 셈입니다.</p>
+<h2>종가 정본도 한 번 더 조였다</h2>
+<p>어제 다뤘던 "종가" 얘기에 오늘 후속 작업이 하나 붙었습니다.</p>
+<p>장후 재채점 단계에서, 확정된 봉과 한 번 더 대조하고, <a href="https://finaltype.github.io/quant-blog/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">데이터 소스</a>(새 창)의 정규장 값과 어긋나는 비율을 매일 기록해 두도록 했습니다.</p>
+<p>이 비율이 슬금슬금 올라가면 경보가 뜹니다. 조용히 틀어지는 걸 사람이 뒤늦게 발견하는 상황을 막으려는 장치입니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 한 일은 거의 전부 "판단을 더 똑똑하게"가 아니라 "개선인지 아닌지를 어떻게 믿을 만하게 재느냐"에 관한 것이었습니다.</p>
+<p>솔직히 말하면, 이 정도 크기의 개선은 실전으로 몇 달 돌려본다고 가려지지 않습니다. 작은 개선과 그냥 운의 차이를 구분하려면 몇 년이 걸립니다.</p>
+<p>그래서 결정은 얼려둔 오프라인 시험과 보수적인 관문 위에 올려야 합니다.</p>
+<p>가장 몸에 붙이기 어려운 습관은 "판정 불능이면 아무것도 바꾸지 않는다"입니다. 뭔가 좋아 보일 때까지 계속 만지고 싶은 마음이 늘 이깁니다.</p>
+<p>사전등록, 세 값 판정, 고정 앵커, fail-closed 관문. 이름은 다르지만 전부 같은 동작입니다. 숫자를 보기 전에 내 손을 미리 묶어두는 것입니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-13_devlog/">실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
