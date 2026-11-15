@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>성과 측정 교정과 목표 재정의 - 절대수익 전환과 집행 레이어 정비 | 퀀트봇 개발일지</title>
+<meta name="description" content="벤치마크 착시를 걷어내니 종목선택의 우위가 사실상 0이었고, 오너가 시스템 목표를 절대수익 연 10% 안팎으로 못 박으며 &quot;상시 풀투자&quot; 원칙을 폐기했다. 남은 한 주는 그 결정이 부른 장중 필터·주문 재시도·측정 규율 작업으로 채웠다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-15_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-15_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-15_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-15_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="성과 측정 교정과 목표 재정의 - 절대수익 전환과 집행 레이어 정비">
+<meta property="og:description" content="벤치마크 착시를 걷어내니 종목선택의 우위가 사실상 0이었고, 오너가 시스템 목표를 절대수익 연 10% 안팎으로 못 박으며 &quot;상시 풀투자&quot; 원칙을 폐기했다. 남은 한 주는 그 결정이 부른 장중 필터·주문 재시도·측정 규율 작업으로 채웠다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-15_weekly/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "성과 측정 교정과 목표 재정의 - 절대수익 전환과 집행 레이어 정비", "description": "벤치마크 착시를 걷어내니 종목선택의 우위가 사실상 0이었고, 오너가 시스템 목표를 절대수익 연 10% 안팎으로 못 박으며 \"상시 풀투자\" 원칙을 폐기했다. 남은 한 주는 그 결정이 부른 장중 필터·주문 재시도·측정 규율 작업으로 채웠다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-15_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-15"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-15_weekly/">Read in English</a></p>
+<article>
+<h1>성과 측정 교정과 목표 재정의 - 절대수익 전환과 집행 레이어 정비</h1>
+<p class="post-date"><time datetime="2026-11-15">2026-11-15</time></p>
+<p class="subtitle">벤치마크 착시를 걷어내니 종목선택의 우위가 사실상 0이었고, 오너가 시스템 목표를 절대수익 연 10% 안팎으로 못 박으며 &quot;상시 풀투자&quot; 원칙을 폐기했다. 남은 한 주는 그 결정이 부른 장중 필터·주문 재시도·측정 규율 작업으로 채웠다.</p><h2>한 주를 관통한 질문</h2>
+<p>이번 주는 하루하루가 따로 놀지 않고 하나의 줄기로 이어졌습니다.</p>
+<p>시작은 "성과를 어떻게 재는가"였고, 그 측정을 바로잡자 "이 시스템이 대체 뭘 위한 것인가"라는 결정이 뒤따랐습니다.</p>
+<p>그리고 그 결정이 다시 집행 레이어와 측정 규율 작업을 한 주 내내 끌고 갔습니다.</p>
+<p>관통한 질문은 하나였습니다. 지금 눈앞에 보이는 숫자가 진짜인가, 아니면 착시이거나 잡음인가.</p>
+<h2>먼저 측정을 바로잡았다</h2>
+<p>월요일의 출발점은 실계좌 <a href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">성과 추적 리포트</a>(새 창)의 "지수 대비" 줄이 하락장에서 유독 심하게 마이너스로 찍히던 것이었습니다.</p>
+<p>원인분석을 외부 AI에 맡겨 좁혀 보니, 실력 차이가 아니라 분자와 분모의 기간이 서로 다른 착시였습니다.</p>
+<p>"총 운용수익"은 두 달 누적치인데, 비교로 붙던 "지수"는 지금 들고 있는 종목을 산 시점부터만 재고 있었습니다. 하락장에서는 이 기간 불일치가 구조적으로 크게 벌어질 수밖에 없었습니다.</p>
+<p>그래서 이 줄을 아예 <strong>종목선택 효과</strong>로 다시 정의했습니다. 로트 하나하나를 정확히 같은 보유 기간의 지수 변동과 비교하는 사과 대 사과 방식입니다.</p>
+<p>정직하게 다시 재니 더 불편한 답이 나왔습니다. 종목선택의 우위는 사실상 0이었고, 손실의 거의 전부는 종목이 아니라 시장 전체의 하락(베타)에서 온 것이었습니다.</p>
+<p>여기서 모순이 드러났습니다. "지수가 내려도 플러스"라는 목표와 "예수금을 놀리지 않고 늘 풀로 투자한다"는 설계 원칙은 애초에 양립할 수 없었습니다.</p>
+<p>롱온리로 늘 풀 투자면, 시장이 내릴 때 같이 내리는 것 말고는 할 수 있는 게 없기 때문입니다. 둘 중 하나를 고르는 건 신호를 깎아서 될 일이 아니라 결정의 문제였습니다.</p>
+<h2>그 다음, 목표를 다시 세웠다</h2>
+<p>화요일, 그 결정이 내려졌습니다. 이번 주의 전환점입니다.</p>
+<p>시스템의 성격을 먼저 못 박았습니다. 이건 연구용 장난감이 아니라 <strong>수익을 내기 위한 시스템</strong>이고, 성공 기준은 지수 대비가 아니라 <strong>절대수익</strong>입니다.</p>
+<p>전기요금을 포함한 매매비용을 다 빼고도 장기적으로 연 10% 안팎을 꾸준히 내면 성공으로 봅니다. 매년 정확히 그 숫자가 아니라 복리를 깐 장기 평균이 그 근처면 됩니다.</p>
+<p>같이 내린 결정이 "현금을 놀리지 않는다"는 오래된 원칙의 폐기입니다.</p>
+<p>시장이 나쁠 때 노출을 줄이고 현금을 드는 건 이제 원칙 위반이 아니라 정상적인 선택지입니다.</p>
+<p>다만 구분은 유지합니다. 신호가 판단해 남긴 현금은 괜찮지만, 설정 오류로 의도치 않게 쌓인 현금은 여전히 결함입니다.</p>
+<p>측정을 바로잡은 바로 다음 날 목표를 다시 세운 건 우연이 아닙니다. 정직하게 재지 않았다면 애초에 이 결정을 내릴 근거조차 없었을 테니까요.</p>
+<h2>바뀐 목표가 부른 집행 레이어 작업</h2>
+<p>목표가 "비용을 줄이고 하락장에서 덜 잃는다"로 바뀌자, 당장 손댈 레버는 매매 마찰을 줄이는 쪽이었습니다.</p>
+<p>첫 조치로 실계좌에 장중 매매 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">필터</a>(새 창)를 넣었습니다. 사려던 종목이 장중에 확 튀면 매수를, 팔려던 종목이 확 빠지면 매도를 잠깐 미루는 장치입니다.</p>
+<p>처음엔 매도 크레딧 이중계상, 보류 주문끼리의 상계, 역방향 재주문 같은 아찔한 버그가 여럿 있었습니다. 돈이 실제로 나가는 경로라, 리뷰를 돌려 이것들을 막은 뒤에야 올렸습니다.</p>
+<p>그런데 하루 만에 더 근본적인 결함이 드러났습니다. 필터가 급등·급락을 판정하는 기준값인 "전일 종가" 자체가 틀려 있었습니다.</p>
+<p>한 포털의 일봉 "종가" 정의가 어느 시점부터 장후 거래까지 포함하도록 바뀌어, <a href="https://finaltype.github.io/quant-blog/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">시세 데이터</a>(새 창)에서 가져온 값이 거래소 정규장 종가와 미묘하게 달랐던 것입니다.</p>
+<p>그래서 기준값을 증권사 API의 정규장 종가로 교정한 v1.1을 두 달 검증 창으로 다시 사전등록했습니다. 기준값이 오염됐던 첫 버전은 효과를 판정할 자격이 없어 미판정으로 종결했습니다.</p>
+<p>같은 날 결이 다른 사고도 있었습니다. 회귀 테스트를 돌리는 중에 실제 알림 6건이 바깥으로 나가버린 것입니다.</p>
+<p>알림 발송 경로 하나와 새 필터의 기준값 조회 경로가 목킹 차단망에 안 걸려 있었습니다. 테스트 환경에서 이 둘을 전역으로 원천 차단하고 다시 통과를 확인했습니다.</p>
+<p>수요일에는 집행 경로의 나머지 거친 데를 다듬었습니다. 곧 들어올 매도 대금의 타이밍 차이로 아침 첫 매수가 "주문가능금액 부족"으로 거부되던 걸, 같은 라운드 안에서 딱 한 번 재시도하도록 고쳤습니다.</p>
+<p>재시도 주문에는 구분 꼬리표를 붙여 중복 매수를 막았습니다. 묵은 계획가로 하루 종일 안 체결되던 주문은, 다음 라운드 직전에 취소하고 그 시점 기준으로 다시 계획하게 했습니다.</p>
+<p>취소는 잘못하면 더 위험한 동작이라, 설계 변경분을 외부 AI에 따로 리뷰 맡겼습니다. 주문일·종목·방향을 전부 대조해 취소 대상을 확정하고, 장 마감이 가까우면 취소를 아예 하지 않으며, 상태가 애매한 주문을 섣불리 "거절 확정"으로 처리하지 않도록 반영했습니다.</p>
+<h2>"안 된다"와 "잴 수 없다"를 가르는 규율</h2>
+<p>주 후반은 집행이 아니라 "개선인지 아닌지를 어떻게 믿을 만하게 재는가"에 쏠렸습니다.</p>
+<p>목요일, "예측 점수가 낮다"는 말부터 다시 봤습니다. 모델은 하루 구간으로 배우고 채점받는데, 실제 매매는 다음 날 아침에 사서 며칠 들고 있습니다.</p>
+<p>같은 모델을 실제 매매 구간으로 다시 채점하니 점수는 0 근처가 아니라 눈에 띄게 높았습니다. 예측력이 없는 게 아니라, 있는 걸 거래 비용이 상당 부분 먹고 남은 것도 "피할 종목"을 가리는 쪽에 몰려 있었습니다.</p>
+<p>그래서 로드맵은 "데이터부터 붙이자"가 아니라, 먼저 모델의 학습 목표를 실제 매매 방식에 맞추고 그다음에야 공개 데이터를 하나씩 시험하자는 순서가 됐습니다.</p>
+<p>그 첫 후보를 시험하려고, 결과 숫자를 하나도 보기 전에 합격선·기간·시드를 사전등록 문서에 못 박았습니다. 숫자를 보고 나면 합격선을 통과시키는 방향으로 슬쩍 옮기고 싶은 유혹을 이기기 어렵기 때문입니다.</p>
+<p>판정은 세 값뿐입니다. 합격 / 기각 / 판정 불능. 그리고 "판정 불능"은 "조금만 더 돌려보자"가 아니라 "현행 유지"를 뜻합니다.</p>
+<p>이 규율은 다른 실험에도 그대로 적용됐습니다. 거래 종목군을 좁히는 여섯 변형을 6년 구간으로 돌렸는데 전부 판정 불능이라, 종목군은 그대로 뒀습니다.</p>
+<p>재학습 배포에도 같은 잣대를 걸었습니다. 새로 학습한 모델은 고정한 앵커 모델보다 나빠지지 않았음이 확인돼야만 올라가고, 확인 안 되면 막는 fail-closed로 설계했습니다.</p>
+<p>일요일, 어제 박아둔 규칙대로 학습 목표 재설계 실험을 돌려 판독했습니다. 결과는 합격 0이라 현행을 그대로 뒀습니다.</p>
+<p>여기서 중요한 교정이 있었습니다. "순위는 좋아졌는데 수익이 안 난다"는 자연스러운 해석을, 판독 직후 외부 AI가 뒤집어 준 것입니다.</p>
+<p>핵심은 검정력이었습니다. 이 실험이 수익 쪽에서 검출할 수 있는 최소 효과 크기가, 이 전략이 가진 엣지 전체보다도 컸습니다.</p>
+<p>즉 "효과가 없다"가 아니라 "효과가 있는지 없는지 이 자료로는 잴 수 없다"가 맞는 서술이었습니다. 쪼개 보면 회전이 줄어 비용이 절감된 부분은 또렷한 양수였고, 총수익 쪽은 잡음 범위였습니다.</p>
+<p>그래서 후속으로, 이번에 실제로 측정된 검정력을 다음 후보들의 사전등록 설계에 그대로 반영하기로 했습니다. 애초에 검출 가능한 효과 크기를 알고 실험을 설계하자는 뜻입니다.</p>
+<h2>왜 중요한가</h2>
+<p>이번 주를 한 줄로 요약하면 "보이는 차이가 진짜인지부터 묻는 한 주"였습니다.</p>
+<p>측정을 바로잡지 않았다면, 하락장의 손실을 종목선택 실패로 오해한 채 엉뚱한 신호를 계속 깎고 있었을 겁니다. 벤치마크를 고치고 나서야 진짜 질문과 진짜 결정이 보였습니다.</p>
+<p>목표를 절대수익으로 다시 세우자 개선의 방향이 한쪽으로 모였습니다. 질문이 "어떻게 지수를 더 이기나"에서 "어떻게 비용을 줄이고 덜 잃나"로 바뀐 겁니다.</p>
+<p>집행 레이어 작업은 전부 그 방향이었습니다. 다만 멀쩡한 로직도 틀린 입력(오염된 전일 종가)이나 덜 격리된 환경(테스트가 쏜 실제 알림) 위에서는 틀린 결과를 낸다는 걸 이틀에 걸쳐 다시 배웠습니다.</p>
+<p>가장 몸에 붙이기 어려운 습관은 "안 된다"와 "잴 수 없다"를 구분하는 일입니다. 둘 다 결과는 "현행 유지"지만, 전자는 문을 닫는 것이고 후자는 아직 문을 열지도 못한 것입니다.</p>
+<p>그 유혹을 이기는 방법은 하나뿐이었습니다. 숫자를 보기 전에 합격선을 얼려두고, 검출할 수 없는 건 "모른다"로 남겨두는 것.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%9A%B4%EC%98%81/">#운영</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-15_devlog/">학습 목표 재설계 실험 판독 - 합격 0, 효과 없음이 아니라 측정 불가</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-11_devlog/">자동매매 시스템 목표 확정 - 절대수익 연 10%, 상시 풀투자 원칙 폐기</a></li><li><a href="../../../devlog/2026-11/2026-11-10_devlog/">성과 벤치마크 재정의 - 기간 불일치 착시를 종목선택 효과 지표로 교체</a></li><li><a href="../../../devlog/2026-11/2026-11-13_devlog/">실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
