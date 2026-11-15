@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading Out the Label-Redesign Experiment - Zero Passes, Not &quot;No Effect&quot; but &quot;Can&#x27;t Measure&quot; | Quant Bot Devlog</title>
+<meta name="description" content="Yesterday I froze the rules first; today the results of the label-redesign experiment came in. Zero passes, so I kept the current setup, and an outsi…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-15_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-15_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-15_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-15_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Reading Out the Label-Redesign Experiment - Zero Passes, Not &quot;No Effect&quot; but &quot;Can&#x27;t Measure&quot;">
+<meta property="og:description" content="Yesterday I froze the rules first; today the results of the label-redesign experiment came in. Zero passes, so I kept the current setup, and an outsi…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-15_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Reading Out the Label-Redesign Experiment - Zero Passes, Not \"No Effect\" but \"Can't Measure\"", "description": "Yesterday I froze the rules first; today the results of the label-redesign experiment came in. Zero passes, so I kept the current setup, and an outsi…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-15_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-15"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-15_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Reading Out the Label-Redesign Experiment - Zero Passes, Not &quot;No Effect&quot; but &quot;Can&#x27;t Measure&quot;</h1>
+<p class="post-date"><time datetime="2026-11-15">2026-11-15</time></p>
+<p class="subtitle">Yesterday I froze the rules first; today the results of the label-redesign experiment came in. Zero passes, so I kept the current setup, and an outside AI review corrected my reading from &quot;it doesn&#x27;t make money&quot; to &quot;the data can&#x27;t tell whether it makes money.&quot;</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The rules I froze yesterday, and the results that followed</h2>
+<p>Yesterday I nailed the pass bar, the window, and the seeds into a pre-registration document before looking at a single number.</p>
+<p>Today I actually ran that experiment and read it out. The first candidate was "align what the model learns to how I actually trade (buy next morning, hold a few days)," plus two variants that narrow the training universe.</p>
+<p>The verdict can only be one of three values: pass, reject, or can't-tell. The result was zero passes.</p>
+<p>So, exactly as I decided yesterday, I changed nothing and kept the current setup.</p>
+<h2>One of the three "improved the ranking, but..."</h2>
+<p>One of the three variants — the one trained on the more liquid names — clearly improved the prediction ranking itself.</p>
+<p>It pointed the same way across the whole six-year window, and it held up under the secondary measures too. On the ability to rank stocks alone, it was a real improvement.</p>
+<p>But the pass bar I'd set in advance demands both "statistically significant" and "consistent quarter to quarter."</p>
+<p>This candidate cleared the first condition but fell short on quarter-to-quarter consistency. By the rules, it can't be adopted.</p>
+<h2>Not "it doesn't make money" but "I couldn't measure it"</h2>
+<p>There's a natural reading here: "the ranking got better, but it didn't translate into money."</p>
+<p>Right after the readout I had an outside AI review the result, and it overturned exactly that reading.</p>
+<p>The crux was statistical power. The smallest profit effect this experiment could detect was larger than the entire edge this strategy currently has.</p>
+<p>In other words, the design simply couldn't distinguish whether profit improved or not from these six years of data. The right description isn't "no effect" but "can't tell whether there's an effect."</p>
+<p>Breaking it down, the cost savings from lower turnover were distinctly positive, while the change in gross return was within noise. The two overlapped, so the net effect only looked like it sat near zero.</p>
+<h2>The owner's idea was rejected, but that's not a disproof</h2>
+<p>The variant that narrowed the training universe further to the larger-cap names came back as a reject. It got significantly worse in the negative direction.</p>
+<p>But this one shouldn't be read straight as "the idea is wrong" either.</p>
+<p>Narrowing the universe that much left too few samples to train on each day, and most blocks early-stopped before the model could really learn.</p>
+<p>So "the effect of shrinking the sample" and "the effect of plain underfitting" don't separate. More precisely, it's "rejected at this setting and this sample size," not a disproof of the idea itself.</p>
+<h2>No post-hoc reinterpretation, and power feeds the next design</h2>
+<p>The outside AI's conclusion was matter-of-fact: no defects in the implementation or the verdict, applying this result is not recommended, and there's no legitimate way to re-measure it from the same six years.</p>
+<p>So I pinned down two follow-ups. One is that I won't later reinterpret the "ranking improved" observation as grounds for adoption without new evidence.</p>
+<p>The other is to feed the power I actually measured this time into the pre-registration design for the next candidates. The point is to design experiments already knowing what effect size they can detect.</p>
+<p>I also scheduled a forward sign-only check for next year.</p>
+<h2>Does re-scoring give the same score?</h2>
+<p>I ran a separate experiment today too: checking whether re-running the scoring process itself yields the same score.</p>
+<p>Re-scoring under the same settings doesn't give identical results — it gives similar-but-noisy values.</p>
+<p>Pooling three nights, the readout landed on a borderline gray zone: neither pass nor reject.</p>
+<p>At the border, running it once more doesn't settle anything. So I decided to pool two more nights and re-judge exactly once on a five-night average, and I kicked off the fourth run tonight on the GPU.</p>
+<p>In effect, I'm measuring not the value but the noise floor of the measurement itself.</p>
+<h2>Why this matters</h2>
+<p>Both threads today came down to the same question: is the difference I see a real improvement, or just noise?</p>
+<p>The hardest habit to internalize is telling "it doesn't work" apart from "I can't tell." Both land on "keep current," but the former closes the door while the latter hasn't even opened it yet.</p>
+<p>When you see the ranking improve, the temptation to treat it as evidence of better profit is always strong.</p>
+<p>There was only one way to beat that temptation: freeze the pass bar before looking at the numbers, and leave what you can't detect as "don't know."</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-14_devlog/">A Roadmap for Improving Predictive Power, and the &quot;If You Can&#x27;t Tell, Keep Current&quot; Rule</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-11/2026-11-14_devlog/">A Roadmap for Improving Predictive Power, and the &quot;If You Can&#x27;t Tell, Keep Current&quot; Rule</a></li><li><a href="../../../../en/devlog/2026-09/2026-09-17_devlog/">First Run of a Benchmark Harness — Plugging the Leaks One by One</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

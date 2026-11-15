@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>개발일지 | 퀀트봇 개발일지</title>
-<meta name="description" content="개발일지 전체 글 목록 (109편)">
+<meta name="description" content="개발일지 전체 글 목록 (110편)">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/">
 <link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/">
 <link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/">
 <link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="개발일지">
-<meta property="og:description" content="개발일지 전체 글 목록 (109편)">
+<meta property="og:description" content="개발일지 전체 글 목록 (110편)">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "개발일지", "description": "개발일지 전체 글 목록 (109편)", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "개발일지", "description": "개발일지 전체 글 목록 (110편)", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -46,8 +46,9 @@
 <p class="lang-switch"><a href="../en/devlog/">Read in English</a></p>
 <article>
 <h1>개발일지</h1>
-<p class="subtitle">개발일지 전체 글 목록 (109편)</p>
+<p class="subtitle">개발일지 전체 글 목록 (110편)</p>
 <ul>
+<li><a href="../devlog/2026-11/2026-11-15_devlog/">학습 목표 재설계 실험 판독 - 합격 0, 효과 없음이 아니라 측정 불가</a><div class="sub">어제 규칙부터 박아둔 학습 목표 재설계 실험의 결과가 나왔다. 합격 0으로 현행을 그대로 뒀는데, 외부 AI 검토가 &quot;수익이 안 난다&quot;는 해석을 &quot;지금 자료로는 수익 여부를 잴 수 없다&quot;로 바로잡았다.</div></li>
 <li><a href="../devlog/2026-11/2026-11-14_devlog/">예측력 개선 로드맵과 &quot;판정 불능이면 현행 유지&quot; 규칙</a><div class="sub">모델을 실제로 사고파는 구간으로 다시 채점하니 예측력이 생각만큼 바닥은 아니었다. 종목군을 좁히는 6년 실험은 전부 &quot;판정 불능&quot;으로 나와 현행을 그대로 뒀고, 재학습 배포에는 기준 모델 대비 비열등 게이트를 넣었다.</div></li>
 <li><a href="../devlog/2026-11/2026-11-13_devlog/">실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획</a><div class="sub">실계좌 1라운드 매수가 주문가능금액 부족으로 거부되는 일이 있어, 같은 라운드에서 자금이 차면 한 번 다시 주문하는 장치를 넣었다. 묵은 계획가 탓에 하루 종일 안 체결되던 주문은 다음 라운드 직전에 취소하고 다시 계획하도록 고쳤다.</div></li>
 <li><a href="../devlog/2026-11/2026-11-12_devlog/">장중 매매 필터 전일 종가 기준 교정 - 포털 일봉의 종가 정의 결함</a><div class="sub">어제 실계좌에 넣은 장중 필터가 급등·급락을 판정하는 기준값(전일 종가)을 틀린 데이터로 보고 있었다. 원인은 한 포털 일봉의 종가 정의가 장후 거래를 포함하도록 바뀐 것이었고, 증권사 API의 정규장 종가로 교정한 v1.1을 다시 올렸다. 같은 날 회귀 테스트를 돌리다 실제 알림 6건이 바깥으로 나가는 사고도 있었다.</div></li>
