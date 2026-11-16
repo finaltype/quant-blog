@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Posts tagged #devlog | Quant Bot Devlog</title>
-<meta name="description" content="102 posts tagged &#x27;devlog&#x27;.">
+<meta name="description" content="103 posts tagged &#x27;devlog&#x27;.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/tags/devlog/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Posts tagged #devlog">
-<meta property="og:description" content="102 posts tagged &#x27;devlog&#x27;.">
+<meta property="og:description" content="103 posts tagged &#x27;devlog&#x27;.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/tags/devlog/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #devlog", "description": "102 posts tagged 'devlog'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #devlog", "description": "103 posts tagged 'devlog'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,8 +43,9 @@
 
 <article>
 <h1>Posts tagged #devlog</h1>
-<p class="subtitle">102 posts tagged &#x27;devlog&#x27;.</p>
+<p class="subtitle">103 posts tagged &#x27;devlog&#x27;.</p>
 <ul>
+<li><a href="../../../en/devlog/2026-11/2026-11-16_devlog/">First Live Trading Day - Most of the Safety Machinery Never Fired</a><div class="sub">The first time I ran the live-order code on a real trading session, orders filled cleanly and none of the safety paths — margin retry, order cancellation — ever triggered. This is about how I decide to trust safety code that has never fired, and how I blocked a calendar edge case the code didn&#x27;t know about (a special late-open exam day).</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-15_weekly/">Fixing the Measurement, Then Redefining the Goal - Absolute Return and Execution-Layer Cleanup</a><div class="sub">Clearing away a benchmark illusion showed the stock-selection edge was essentially zero, the owner locked the system&#x27;s goal to roughly 10% absolute return per year, and the &quot;always fully invested&quot; principle was scrapped. The rest of the week went to the intraday filter, order retries, and measurement discipline that decision demanded.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-13_devlog/">Retrying Margin-Rejected Buys and Cancel-Replanning Stale Orders on the Live Account</a><div class="sub">Some first-round buys on the live account were rejected for insufficient buying power, so I added a guard that retries the order once in the same round if the cash shows up. Orders that sat unfilled all day because of a stale planned price now get canceled and re-planned just before the next round.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-12_devlog/">Intraday Trade Filter Fixed to Use the Regular-Session Close - A Portal&#x27;s Daily-Bar Close Definition Had Changed</a><div class="sub">The intraday filter I added to the live account yesterday was judging spikes and drops against a wrong reference (the prior-day close). A portal&#x27;s daily-bar &quot;close&quot; had started including after-hours trades, so I recut it to use the broker API&#x27;s regular-session close as v1.1. The same day, a regression run accidentally fired six real notifications.</div></li>

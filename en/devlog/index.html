@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Devlog | Quant Bot Devlog</title>
-<meta name="description" content="All Devlog posts (111)">
+<meta name="description" content="All Devlog posts (112)">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/">
 <link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/">
 <link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/">
 <link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Devlog">
-<meta property="og:description" content="All Devlog posts (111)">
+<meta property="og:description" content="All Devlog posts (112)">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Devlog", "description": "All Devlog posts (111)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Devlog", "description": "All Devlog posts (112)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -46,8 +46,9 @@
 <p class="lang-switch"><a href="../../devlog/">한국어로 보기</a></p>
 <article>
 <h1>Devlog</h1>
-<p class="subtitle">All Devlog posts (111)</p>
+<p class="subtitle">All Devlog posts (112)</p>
 <ul>
+<li><a href="../../en/devlog/2026-11/2026-11-16_devlog/">First Live Trading Day - Most of the Safety Machinery Never Fired</a><div class="sub">The first time I ran the live-order code on a real trading session, orders filled cleanly and none of the safety paths — margin retry, order cancellation — ever triggered. This is about how I decide to trust safety code that has never fired, and how I blocked a calendar edge case the code didn&#x27;t know about (a special late-open exam day).</div></li>
 <li><a href="../../en/devlog/2026-11/2026-11-15_weekly/">Fixing the Measurement, Then Redefining the Goal - Absolute Return and Execution-Layer Cleanup</a><div class="sub">Clearing away a benchmark illusion showed the stock-selection edge was essentially zero, the owner locked the system&#x27;s goal to roughly 10% absolute return per year, and the &quot;always fully invested&quot; principle was scrapped. The rest of the week went to the intraday filter, order retries, and measurement discipline that decision demanded.</div></li>
 <li><a href="../../en/devlog/2026-11/2026-11-15_devlog/">Reading Out the Label-Redesign Experiment - Zero Passes, Not &quot;No Effect&quot; but &quot;Can&#x27;t Measure&quot;</a><div class="sub">Yesterday I froze the rules first; today the results of the label-redesign experiment came in. Zero passes, so I kept the current setup, and an outside AI review corrected my reading from &quot;it doesn&#x27;t make money&quot; to &quot;the data can&#x27;t tell whether it makes money.&quot;</div></li>
 <li><a href="../../en/devlog/2026-11/2026-11-14_devlog/">A Roadmap for Improving Predictive Power, and the &quot;If You Can&#x27;t Tell, Keep Current&quot; Rule</a><div class="sub">Re-scoring the same model on the window we actually trade showed its predictive power wasn&#x27;t as near-zero as it looked. Six years of narrowing-the-universe experiments all came back &quot;can&#x27;t tell,&quot; so I left the universe alone, and I added a non-inferiority gate against a fixed anchor model for retraining deploys.</div></li>
