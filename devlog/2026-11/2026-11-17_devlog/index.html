@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>가격 기반 매매 규칙 백테스트 전부 미달 - 실거래 대신 주문 없는 전방 기록으로 | 퀀트봇 개발일지</title>
+<meta name="description" content="리포트에 들어있는 가격 값(진입가·손절가·목표가)으로 수익을 더 낼 수 있을지 하루 종일 과거 데이터로 검증했는데, 판정한 규칙이 전부 기준선을 넘지 못했다. 그래서 실거래에 넣는 대신 주문을 내지 않는 전방 기록기를 세워 몇 달 뒤 판정하기로 한 과정과, 그 와중에…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-17_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-17_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-17_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-17_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="가격 기반 매매 규칙 백테스트 전부 미달 - 실거래 대신 주문 없는 전방 기록으로">
+<meta property="og:description" content="리포트에 들어있는 가격 값(진입가·손절가·목표가)으로 수익을 더 낼 수 있을지 하루 종일 과거 데이터로 검증했는데, 판정한 규칙이 전부 기준선을 넘지 못했다. 그래서 실거래에 넣는 대신 주문을 내지 않는 전방 기록기를 세워 몇 달 뒤 판정하기로 한 과정과, 그 와중에…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-17_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "가격 기반 매매 규칙 백테스트 전부 미달 - 실거래 대신 주문 없는 전방 기록으로", "description": "리포트에 들어있는 가격 값(진입가·손절가·목표가)으로 수익을 더 낼 수 있을지 하루 종일 과거 데이터로 검증했는데, 판정한 규칙이 전부 기준선을 넘지 못했다. 그래서 실거래에 넣는 대신 주문을 내지 않는 전방 기록기를 세워 몇 달 뒤 판정하기로 한 과정과, 그 와중에…", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-17_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-17"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-17_devlog/">Read in English</a></p>
+<article>
+<h1>가격 기반 매매 규칙 백테스트 전부 미달 - 실거래 대신 주문 없는 전방 기록으로</h1>
+<p class="post-date"><time datetime="2026-11-17">2026-11-17</time></p>
+<p class="subtitle">리포트에 들어있는 가격 값(진입가·손절가·목표가)으로 수익을 더 낼 수 있을지 하루 종일 과거 데이터로 검증했는데, 판정한 규칙이 전부 기준선을 넘지 못했다. 그래서 실거래에 넣는 대신 주문을 내지 않는 전방 기록기를 세워 몇 달 뒤 판정하기로 한 과정과, 그 와중에 발견한 사전등록 규칙 위반을 정리했다.</p><h2>"그 가격 값, 그냥 버리긴 아깝지 않아?"</h2>
+<p>종목을 추천해주는 리포트에는 가격에 관한 값이 몇 개 들어 있습니다.</p>
+<p>진입가, 손절가, 목표가와 그 목표가가 유효한 기간 같은 것들입니다.</p>
+<p>지금까지 매매 판단은 이 값들을 거의 쓰지 않고 돌아갔습니다. 그래서 "이 가격 정보를 매매 규칙에 끌어다 쓰면 수익이 더 나오지 않을까"가 오늘의 출발점이었습니다.</p>
+<h2>하루 종일 과거 데이터로 돌렸다</h2>
+<p>이 질문에 답하는 방법은 하나였습니다. 넉 달 남짓 쌓인 과거 데이터에 그 규칙들을 얹어서 돌려보고, 미리 정해둔 합격선을 넘는지 보는 것입니다.</p>
+<p>손절가로 파는 규칙, 목표가에 도달하면 파는 규칙, 목표가로 살 자리를 정하는 규칙, 그 둘을 묶은 규칙, 가격 값으로 종목 비중을 조절하는 규칙까지.</p>
+<p>하루 동안 판정 대상으로 돌린 규칙만 스무 개가 넘습니다.</p>
+<p>결과는 한 방향이었습니다. 판정한 규칙이 <strong>전부</strong> 기준선을 넘지 못했습니다.</p>
+<p>여기서 중요한 건 "넘지 못했다"가 "손해였다"는 뜻은 아니라는 점입니다. 엣지가 있다는 증거도 못 찾았지만, 반대로 해롭다는 증거도 거의 없었습니다. 대부분은 그냥 0과 구별되지 않는 잡음이었습니다.</p>
+<h2>네 번 반복해서 나온 같은 신호</h2>
+<p>재미있게도, 매수 쪽에서 같은 현상이 하루에 네 번 반복됐습니다.</p>
+<p>매수에 가격 상한(이 가격 위로는 안 산다)을 걸면, 그 상한 때문에 못 산 종목들이 며칠 뒤 오히려 시장보다 더 많이 올라 있었습니다.</p>
+<p>즉 "비싸 보여서 거른" 종목이 사실은 더 갔던 겁니다. 매수에 가격 밴드를 씌우는 아이디어는 이 한 가지 이유로 계속 손해를 봤습니다.</p>
+<p>반대로 매도 쪽은 가격 값이 조금 나아 보이는 구간이 있었습니다. 하지만 그 이득은 시장이 크게 흔들린 특정 며칠에 몰려 있었고, 평상시엔 사라졌습니다. 상승장 구간은 데이터가 적어 아예 검증이 안 됐습니다.</p>
+<h2>"왜 당장 내릴 수 있는 판정을 미루냐"</h2>
+<p>오늘 작업의 또 다른 축은 속도에 대한 것이었습니다.</p>
+<p>원래 외부 AI에게 받은 설계 자문은 "과거 넉 달로 후보를 좁히고, 앞으로 쌓일 데이터로 몇 달 뒤 확정하자"는 2단 구조였습니다.</p>
+<p>그런데 이렇게 돌려보니 과거 데이터만으로도 대부분 그 자리에서 "미달"이 나왔습니다. 그래서 "당장 판정할 수 있는 걸 왜 내년 2월까지 미루냐"가 합당한 질문이 됐고, 오늘 돌린 시뮬레이션은 전부 그 자리에서 결론을 내는 쪽으로 갔습니다.</p>
+<h2>다른 AI에게 "오늘 시뮬레이션이 제대로 된 거냐"를 따로 물었다</h2>
+<p>하루에 이렇게 많은 검증을 몰아서 돌리면, 중간에 설계가 자문 의도에서 벗어났을 위험이 큽니다.</p>
+<p>그래서 오늘 돌린 시뮬레이션 전체를, 작업을 맡은 것과는 별개의 다른 AI에게 "원래 자문 의도대로 충실하게 된 게 맞느냐"고 독립 검토를 맡겼습니다. 결론을 미리 알려주지 않은 채였습니다.</p>
+<p>검토 결과 다섯 개 결론은 대체로 유지됐지만(재실행은 불필요), 몇 가지 문제가 드러났습니다.</p>
+<p>가장 중요한 건 사전등록 규칙을 하나 어긴 것이었습니다. 어떤 예측력 지표를 계산할 때, "봉인해둔 검증 기간은 끝나기 전까지 들여다보지 않는다"는 규칙을 지켰어야 했는데, 그 기간 일부가 계산에 섞여 들어가 결과 문서에까지 적혔습니다.</p>
+<p>작업 브리프에 그 봉인 제약을 넣어두지 않은 게 원인이었습니다. 발견 즉시 섞여 들어간 값들을 지우고, 요약에서도 가리고, 같은 실수가 안 나도록 날짜 가드를 코드에 박았습니다.</p>
+<p>나머지 지적은 "가드 문구가 실제 증거보다 과하게 단정적이다"는 쪽이었습니다. 예컨대 "어떤 기준으로 봐도 효과 없음"이라고 쓴 문장이, 실제로는 그렇게까지 강하게 말할 근거가 없었습니다. 과장된 표현들을 사실에 맞게 다듬었습니다.</p>
+<h2>그래서 넣지 않기로 했다 — 대신 주문 없이 기록만</h2>
+<p>이 모든 걸 종합한 결정은 이렇습니다.</p>
+<p>가격 기반 매매 규칙은 지금 실거래에 넣지 않습니다. 넉 달치 과거 데이터로는 미세한 효과를 가려낼 검정력이 부족하다는 게 핵심 이유입니다.</p>
+<p>대신 "주문을 내지 않는 전방 기록기"를 세웠습니다.</p>
+<p>매일 장이 끝나면 리포트의 가격 값들을 정해진 형식으로 추출해 저장하고, 후보 규칙 일곱 개를 과거가 아니라 앞으로의 데이터에 매일 재생해서 별도 원장에 쌓습니다. 실제 주문은 한 건도 나가지 않습니다.</p>
+<p>핵심은 이게 <strong>과거를 다시 들여다보는 백테스트가 아니라, 오늘 이후의 새 데이터로만 쌓이는 전방 기록</strong>이라는 점입니다. 과거 데이터를 아무리 쥐어짜도 못 가리던 효과를, 미리 규칙을 못 박아 둔 채 앞으로의 실제 시장에서 검증하겠다는 겁니다.</p>
+<p>평일 저녁마다 스스로 켜지는 예약 작업으로 돌리고, 중간에 컴퓨터가 재부팅돼도 살아남게 해뒀습니다. 내년 2월 중순에는 "이제 판정할 때가 됐다"고 알려주는 리마인더도 걸어 뒀습니다. 이런 식으로 조용히 돌아가는 배관은 <a href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">운영 구조</a>(새 창) 쪽에 속합니다.</p>
+<p>여기서 작은 손질도 하나 했습니다. 이 기록기는 처음엔 돌 때마다 성공 알림을 보냈는데, 평일마다 "잘 돌았음" 알림이 오는 건 소음이라 성공 알림은 끄고 실패했을 때만 경보가 오도록 바꿨습니다.</p>
+<h2>왜 중요한가</h2>
+<p>오늘 하루는 "새 규칙을 하나 넣었다"가 아니라 "스무 개 넘는 후보를 넣지 않기로 했다"로 끝났습니다.</p>
+<p>이게 아깝게 느껴질 수도 있지만, 백테스트에서 아슬아슬하게 좋아 보이는 규칙을 그대로 실거래에 넣는 게 가장 흔한 함정입니다. 과거 데이터는 늘 과하게 좋아 보이고, 그 "좋아 보임"의 상당 부분은 우연입니다.</p>
+<p>그래서 오늘의 결론은 두 겹입니다.</p>
+<p>하나는 과거 데이터로 못 가리는 효과는 "없다"가 아니라 "지금은 잴 수 없다"로 적어두는 것. 다른 하나는 그걸 확인할 유일한 방법 — 미리 규칙을 못 박고, 주문은 내지 않은 채, 앞으로의 데이터로만 검증하는 전방 기록 — 을 세워두는 것입니다.</p>
+<p>사전등록 규칙을 하루 어겼다가 다른 AI의 독립 검토로 잡아낸 일도 같은 결입니다. 검증 기간을 미리 봉인해두는 규율은, 지키기 번거롭지만 어기면 "우연히 좋아 보이는 것"을 "진짜"로 착각하게 만듭니다. 그래서 어긴 흔적까지 지우고 가드를 박아 두는 게, 넣지 않기로 한 결정만큼이나 중요했습니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EB%B0%B1%ED%85%8C%EC%8A%A4%ED%8A%B8/">#백테스트</a> <a href="../../../tags/%EC%82%AC%EC%A0%84%EB%93%B1%EB%A1%9D/">#사전등록</a> <a href="../../../tags/%EC%B8%A1%EC%A0%95%EA%B7%9C%EC%9C%A8/">#측정규율</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-16_devlog/">자동매매 실전 첫 거래일 - 안전장치는 대부분 발동하지 않았다</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-15_devlog/">학습 목표 재설계 실험 판독 - 합격 0, 효과 없음이 아니라 측정 불가</a></li><li><a href="../../../devlog/2026-11/2026-11-14_devlog/">예측력 개선 로드맵과 &quot;판정 불능이면 현행 유지&quot; 규칙</a></li><li><a href="../../../devlog/2026-10/2026-10-17_devlog/">60일 섀도 실험 종료 — 사전등록한 기준대로 접었다</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>

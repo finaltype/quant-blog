@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Price-Based Trading Rules All Failed the Backtest - Switching to an Order-Free Forward Recorder | Quant Bot Devlog</title>
+<meta name="description" content="I spent a whole day backtesting whether the price fields in my recommendation reports (entry, stop, target) could squeeze out more return, and every…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-17_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-17_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-17_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-17_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Price-Based Trading Rules All Failed the Backtest - Switching to an Order-Free Forward Recorder">
+<meta property="og:description" content="I spent a whole day backtesting whether the price fields in my recommendation reports (entry, stop, target) could squeeze out more return, and every…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-17_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Price-Based Trading Rules All Failed the Backtest - Switching to an Order-Free Forward Recorder", "description": "I spent a whole day backtesting whether the price fields in my recommendation reports (entry, stop, target) could squeeze out more return, and every…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-17_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-17"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-17_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Price-Based Trading Rules All Failed the Backtest - Switching to an Order-Free Forward Recorder</h1>
+<p class="post-date"><time datetime="2026-11-17">2026-11-17</time></p>
+<p class="subtitle">I spent a whole day backtesting whether the price fields in my recommendation reports (entry, stop, target) could squeeze out more return, and every rule I judged fell short of the bar. So instead of putting any of them into live trading, I stood up an order-free forward recorder to judge them months from now. This is that process, plus a pre-registration rule I caught myself breaking.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>"Isn't it a waste to just throw those price fields away?"</h2>
+<p>The reports that recommend stocks carry a few price-related fields.</p>
+<p>Things like an entry price, a stop-loss price, a target price, and the horizon over which that target is supposed to hold.</p>
+<p>Up to now my trading logic barely touched these values. So the starting point today was a simple question: if I pull this price information into the trading rules, would returns improve?</p>
+<h2>A full day of running them against historical data</h2>
+<p>There was only one way to answer that. Lay the rules over roughly four months of accumulated history, run them, and see whether they clear a bar I set in advance.</p>
+<p>Rules that sell at the stop-loss price, rules that sell when the target is hit, rules that use the target to decide where to buy, rules combining both, rules that tilt position sizing by the price values.</p>
+<p>By the end of the day I had judged more than twenty rules.</p>
+<p>The result pointed one way. Every rule I judged fell short of the bar.</p>
+<p>The important part is that "fell short" does not mean "lost money." I found no evidence of an edge — but no real evidence of harm either. Most of it was just noise indistinguishable from zero.</p>
+<h2>The same signal, repeated four times</h2>
+<p>Interestingly, one pattern on the buy side repeated four separate times in a single day.</p>
+<p>Whenever I put a price ceiling on buying ("don't buy above this price"), the stocks I was blocked from buying because of that ceiling had, a few days later, risen more than the market.</p>
+<p>In other words, the names I filtered out for "looking expensive" were actually the ones that kept running. Putting a price band on buying lost money for this one reason, every time.</p>
+<p>The sell side looked slightly better in spots. But that gain was concentrated in a few days when the market swung hard, and in normal times it vanished. Rising-market stretches had too little data to test at all.</p>
+<h2>"Why defer a verdict I can reach right now?"</h2>
+<p>The other axis of the day was about speed.</p>
+<p>The original design advice I'd gotten from an external AI was a two-stage structure: narrow the candidates on four months of history, then confirm months later on data that would accumulate going forward.</p>
+<p>But once I ran things, most of them returned a "fail" right there on the historical data alone. That made "why defer until next February a verdict I can reach today?" a fair question — so every simulation I ran today was pushed to a conclusion on the spot.</p>
+<h2>I asked a separate AI whether today's simulations were done right</h2>
+<p>When you cram this many tests into one day, there's a real risk that a design drifts away from the advice's intent somewhere along the line.</p>
+<p>So I handed the entire batch of today's simulations to a different AI — separate from the one doing the work — and asked it to independently review whether they were faithful to the original advice. I did not tell it my conclusions beforehand.</p>
+<p>The review kept most of the five conclusions intact (no re-runs needed), but it surfaced a few problems.</p>
+<p>The most important one was that I had broken a pre-registration rule. When computing a certain predictive-power metric, I should have honored the rule "do not look at a sealed validation window until it's over" — but part of that window leaked into the computation and even made it into the result document.</p>
+<p>The cause was that I hadn't written the sealing constraint into the work brief. As soon as it was found, I deleted the leaked values, redacted them from the summary, and baked a date guard into the code so the same mistake can't recur.</p>
+<p>The rest of the review was that some guard wording was more absolute than the evidence warranted. A sentence I'd written as "no effect by any measure," for instance, didn't actually have the grounds to be stated that strongly. I toned those overstatements down to match the facts.</p>
+<h2>So I decided not to ship them — and to record only, with no orders</h2>
+<p>Pulling all of this together, the decision was this.</p>
+<p>Price-based trading rules do not go into live trading right now. The core reason is that four months of history simply lack the statistical power to resolve such a faint effect.</p>
+<p>Instead I stood up an "order-free forward recorder."</p>
+<p>Every day after the close, it extracts the report's price values into a fixed format and stores them, then replays seven candidate rules — not on the past, but on the data going forward — accumulating results into a separate ledger each day. Not a single real order is placed.</p>
+<p>The key is that this is <strong>not a backtest that keeps re-examining the past, but a forward record that only accumulates on new data from today onward</strong>. An effect that no amount of squeezing the history could resolve, I'll instead test on the real market going forward, with the rules nailed down in advance.</p>
+<p>It runs on a scheduled job that wakes itself every weekday evening, and I made it survive a reboot in the middle. I also set a reminder for mid-February next year to say "now it's time to judge." Quiet plumbing like this belongs to the <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">operations side</a>(new tab).</p>
+<p>One small tweak went in here too. The recorder initially sent a success notification every time it ran, but a "ran fine" ping every weekday is just noise — so I turned off success notifications and left only the failure alert.</p>
+<h2>Why it matters</h2>
+<p>Today ended not with "I added one new rule" but with "I decided not to add more than twenty candidates."</p>
+<p>That can feel like a waste, but shipping a rule that looks marginally good in a backtest straight into live trading is the most common trap there is. History always looks too good, and much of that "looking good" is luck.</p>
+<p>So today's conclusion has two layers.</p>
+<p>One is to write down an effect the history can't resolve as "can't measure yet," not as "doesn't exist." The other is to stand up the only way to actually settle it — nail the rules down in advance, place no orders, and verify only on data going forward.</p>
+<p>Catching myself breaking a pre-registration rule for a day, only for a different AI's independent review to flag it, is the same thread. The discipline of sealing a validation window in advance is a hassle to keep, but breaking it tricks you into mistaking "looks good by chance" for "real." So scrubbing even the trace of the breach and baking in a guard mattered as much as the decision not to ship.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/pre-registration/">#pre-registration</a> <a href="../../../../en/tags/measurement-discipline/">#measurement discipline</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-16_devlog/">First Live Trading Day - Most of the Safety Machinery Never Fired</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-11/2026-11-15_devlog/">Reading Out the Label-Redesign Experiment - Zero Passes, Not &quot;No Effect&quot; but &quot;Can&#x27;t Measure&quot;</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-14_devlog/">A Roadmap for Improving Predictive Power, and the &quot;If You Can&#x27;t Tell, Keep Current&quot; Rule</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>
