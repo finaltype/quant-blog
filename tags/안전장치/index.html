@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>#안전장치 태그 글 모음 | 퀀트봇 개발일지</title>
-<meta name="description" content="&#x27;안전장치&#x27; 태그가 붙은 글 15편.">
+<meta name="description" content="&#x27;안전장치&#x27; 태그가 붙은 글 16편.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="#안전장치 태그 글 모음">
-<meta property="og:description" content="&#x27;안전장치&#x27; 태그가 붙은 글 15편.">
+<meta property="og:description" content="&#x27;안전장치&#x27; 태그가 붙은 글 16편.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "#안전장치 태그 글 모음", "description": "'안전장치' 태그가 붙은 글 15편.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "#안전장치 태그 글 모음", "description": "'안전장치' 태그가 붙은 글 16편.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,8 +43,9 @@
 
 <article>
 <h1>#안전장치 태그 글 모음</h1>
-<p class="subtitle">&#x27;안전장치&#x27; 태그가 붙은 글 15편.</p>
+<p class="subtitle">&#x27;안전장치&#x27; 태그가 붙은 글 16편.</p>
 <ul>
+<li><a href="../../devlog/2026-11/2026-11-18_devlog/">미체결 주문 자동취소 첫 발동 - 증권사 취소 거절과 주문번호 타입 정규화</a><div class="sub">미체결 매도 주문을 장중에 자동으로 취소·재계획하는 경로가 실계좌에서 처음 작동했는데, 증권사 취소 API가 주문번호 타입 불일치로 거절했고 거절 사유 로그마저 비어 있었다. 원인을 추적해 주문번호를 정수로 정규화하고 거절 사유를 출력하도록 고친 과정과, 같은 날 아침 큰 하락 상태에서 반등일 매수가 전부 막힌 안전장치를 외부 AI 자문으로 점검한 결과를 정리했다.</div></li>
 <li><a href="../../devlog/2026-11/2026-11-16_devlog/">자동매매 실전 첫 거래일 - 안전장치는 대부분 발동하지 않았다</a><div class="sub">실거래 코드를 실제 장에서 처음 돌린 날, 주문은 깨끗이 체결됐고 증거금 재시도·주문 취소 같은 안전장치는 한 번도 발동하지 않았다. 발동 안 한 안전장치를 어떻게 신뢰할지, 그리고 수능날 특수 장시간처럼 코드가 모르는 달력 예외를 어떻게 막았는지 정리했다.</div></li>
 <li><a href="../../devlog/2026-11/2026-11-13_devlog/">실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획</a><div class="sub">실계좌 1라운드 매수가 주문가능금액 부족으로 거부되는 일이 있어, 같은 라운드에서 자금이 차면 한 번 다시 주문하는 장치를 넣었다. 묵은 계획가 탓에 하루 종일 안 체결되던 주문은 다음 라운드 직전에 취소하고 다시 계획하도록 고쳤다.</div></li>
 <li><a href="../../devlog/2026-10/2026-10-25_devlog/">계좌 간 자금 이동 기능 - 코드리뷰가 두 번 잡아낸 자금 불일치 위험</a><div class="sub">12월 중순으로 예정된 계좌 구조 변경에 대비해 자금 이동 기능을 만들었는데, 독립 리뷰에서 돈이 조용히 사라지거나 반대로 생겨날 수 있는 결함을 두 차례 찾아 고쳤습니다.</div></li>

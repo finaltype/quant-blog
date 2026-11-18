@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>#증권사API 태그 글 모음 | 퀀트봇 개발일지</title>
-<meta name="description" content="&#x27;증권사API&#x27; 태그가 붙은 글 3편.">
+<meta name="description" content="&#x27;증권사API&#x27; 태그가 붙은 글 4편.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/tags/%EC%A6%9D%EA%B6%8C%EC%82%ACapi/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="#증권사API 태그 글 모음">
-<meta property="og:description" content="&#x27;증권사API&#x27; 태그가 붙은 글 3편.">
+<meta property="og:description" content="&#x27;증권사API&#x27; 태그가 붙은 글 4편.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/tags/%EC%A6%9D%EA%B6%8C%EC%82%ACapi/">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "#증권사API 태그 글 모음", "description": "'증권사API' 태그가 붙은 글 3편.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/tags/%EC%A6%9D%EA%B6%8C%EC%82%ACapi/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "#증권사API 태그 글 모음", "description": "'증권사API' 태그가 붙은 글 4편.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/tags/%EC%A6%9D%EA%B6%8C%EC%82%ACapi/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,8 +43,9 @@
 
 <article>
 <h1>#증권사API 태그 글 모음</h1>
-<p class="subtitle">&#x27;증권사API&#x27; 태그가 붙은 글 3편.</p>
+<p class="subtitle">&#x27;증권사API&#x27; 태그가 붙은 글 4편.</p>
 <ul>
+<li><a href="../../devlog/2026-11/2026-11-18_devlog/">미체결 주문 자동취소 첫 발동 - 증권사 취소 거절과 주문번호 타입 정규화</a><div class="sub">미체결 매도 주문을 장중에 자동으로 취소·재계획하는 경로가 실계좌에서 처음 작동했는데, 증권사 취소 API가 주문번호 타입 불일치로 거절했고 거절 사유 로그마저 비어 있었다. 원인을 추적해 주문번호를 정수로 정규화하고 거절 사유를 출력하도록 고친 과정과, 같은 날 아침 큰 하락 상태에서 반등일 매수가 전부 막힌 안전장치를 외부 AI 자문으로 점검한 결과를 정리했다.</div></li>
 <li><a href="../../devlog/2026-09/2026-09-09_devlog/">새 증권사 계좌를 공유계좌로 재설계하고 첫 실거래를 냈다</a><div class="sub">개인 자금과 봇 자금이 섞여 있는 새 계좌를 위해 안전장치 전체를 다시 설계했고, 그 계좌로 첫 실주문이 나갔고, 계좌 간 자금 이관 방식도 은행이체 없는 자동전환으로 확정했습니다</div></li>
 <li><a href="../../devlog/2026-09/2026-09-08_devlog/">증권사 로그인 자격증명 로딩 순서 버그와 유출 위험을 잡은 하루</a><div class="sub">증권사 API 로그인이 매번 실패하던 원인을 찾다가, 고치지 않고 배포했으면 열렸을 뻔한 정보유출 구멍까지 함께 막았고, 별도로 종목 유니버스 편입 규칙에 완충을 넣었습니다</div></li>
 <li><a href="../../devlog/2026-09/2026-09-07_devlog/">VRAM 정리 패치가 저녁 프로덕션 장애로 되돌아온 하루</a><div class="sub">낮에 적용한 GPU 메모리 정리 패치가 저녁 프로덕션 3연속 실패로 돌아왔고, 별도로 증권사 API 페이지네이션 버그도 하나 잡았습니다</div></li>
