@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개장 1시간 지연일에 아침 매매 라운드가 오발화 - 개장시각 게이트로 막다 | 퀀트봇 개발일지</title>
+<meta name="description" content="시장이 1시간 늦게 열리는 날, 멈춰뒀던 스케줄 타이머를 다시 켜는 순간 지나간 발화 시각이 즉시 실행되면서 아침 라운드가 닫힌 시장에 주문을 냈다. 전건이 거절됐고, 그 라운드가 집행 슬롯을 선점한 탓에 뒤 라운드까지 막혔다. 원인을 추적해 &#x27;실제 개장 시각&#x27;을 달…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-19_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-19_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-19_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-19_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="개장 1시간 지연일에 아침 매매 라운드가 오발화 - 개장시각 게이트로 막다">
+<meta property="og:description" content="시장이 1시간 늦게 열리는 날, 멈춰뒀던 스케줄 타이머를 다시 켜는 순간 지나간 발화 시각이 즉시 실행되면서 아침 라운드가 닫힌 시장에 주문을 냈다. 전건이 거절됐고, 그 라운드가 집행 슬롯을 선점한 탓에 뒤 라운드까지 막혔다. 원인을 추적해 &#x27;실제 개장 시각&#x27;을 달…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-19_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "개장 1시간 지연일에 아침 매매 라운드가 오발화 - 개장시각 게이트로 막다", "description": "시장이 1시간 늦게 열리는 날, 멈춰뒀던 스케줄 타이머를 다시 켜는 순간 지나간 발화 시각이 즉시 실행되면서 아침 라운드가 닫힌 시장에 주문을 냈다. 전건이 거절됐고, 그 라운드가 집행 슬롯을 선점한 탓에 뒤 라운드까지 막혔다. 원인을 추적해 '실제 개장 시각'을 달…", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-19_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-19"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-19_devlog/">Read in English</a></p>
+<article>
+<h1>개장 1시간 지연일에 아침 매매 라운드가 오발화 - 개장시각 게이트로 막다</h1>
+<p class="post-date"><time datetime="2026-11-19">2026-11-19</time></p>
+<p class="subtitle">시장이 1시간 늦게 열리는 날, 멈춰뒀던 스케줄 타이머를 다시 켜는 순간 지나간 발화 시각이 즉시 실행되면서 아침 라운드가 닫힌 시장에 주문을 냈다. 전건이 거절됐고, 그 라운드가 집행 슬롯을 선점한 탓에 뒤 라운드까지 막혔다. 원인을 추적해 &#x27;실제 개장 시각&#x27;을 달력에서 읽어 개장 전 라운드를 보류하도록 고친 과정을 정리했다.</p><h2>시장이 1시간 늦게 열리는 날이 있다</h2>
+<p>한국 증시에는 1년에 한 번, 대학수학능력시험일에 개장이 1시간 늦춰지는 날이 있습니다.</p>
+<p>보통은 오전 9시에 열리지만, 이날은 오전 10시에 엽니다. 새해 첫 거래일도 비슷하게 10시 개장인 경우가 있습니다.</p>
+<p>제 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행·안전장치 계층</a>(새 창)은 아침·점심·오후 세 번의 라운드로 나눠 돌아갑니다. 그런데 아침 라운드의 스케줄이 "9시 개장"을 전제로 박혀 있었습니다.</p>
+<p>오늘이 바로 그 1시간 지연 개장일이었습니다.</p>
+<h2>멈춰뒀던 타이머를 다시 켜자 지나간 발화가 즉시 실행됐다</h2>
+<p>사고는 두 가지가 겹쳐서 났습니다.</p>
+<p>하나는 스케줄 타이머의 동작 특성입니다. 아침 라운드를 돌리는 타이머를 잠깐 멈췄다가 다시 켜는 상황이 있었는데, 이런 종류의 달력 기반 타이머는 "다시 켜는 순간, 이미 지나가버린 발화 시각을 즉시 한 번 실행"합니다.</p>
+<p>다른 하나는 앞서 말한 개장 시각 전제입니다. 시스템은 아직 9시 개장인 줄 알고 있었습니다.</p>
+<p>이 둘이 겹치면서, 오전 9시가 막 지난 시각에 아침 라운드가 <strong>아직 열리지도 않은 시장</strong>을 향해 주문을 냈습니다.</p>
+<h2>전건 거절, 그리고 슬롯 선점</h2>
+<p>결과는 깔끔하게 전부 거절이었습니다.</p>
+<p>시장이 안 열렸으니 증권사는 모든 주문을 "장이 안 열렸다"는 사유로 되돌려보냈습니다. 한 건도 체결되지 않았습니다.</p>
+<p>여기까지는 오히려 안전했습니다. 닫힌 시장에 잘못 나간 주문이 체결될 리 없으니까요.</p>
+<p>진짜 문제는 그 다음이었습니다. 아침 라운드는 "오늘 아침 집행은 내가 맡았다"는 표식(집행 슬롯)을 먼저 선점하고 시작합니다. 중복 실행을 막기 위한 장치입니다.</p>
+<p>그런데 이 라운드가 통째로 거절당해놓고도 슬롯은 선점한 채였습니다. 그래서 10시에 시장이 실제로 열렸을 때, 정상적으로 떠야 할 아침 라운드가 "이미 누가 맡았다"며 뜨지 못할 뻔했습니다.</p>
+<p>오늘은 그 선점된 슬롯을 손으로 풀어준 뒤, 10시 5분에 대체 라운드를 다시 돌려서 정상 실행을 확인했습니다. 사람이 끼어들어 메운 셈입니다.</p>
+<h2>고친 것 — 실제 개장 시각을 달력에서 읽는다</h2>
+<p>저녁에 근본 원인을 손봤습니다.</p>
+<p>핵심은 "9시 개장"이라는 전제를 코드에서 지우는 것이었습니다. 대신 그날의 <strong>실제 개장 시각을 달력에서 읽어오도록</strong> 바꿨습니다.</p>
+<p>지연 개장일은 1년에 한 번뿐이라 자동으로 완벽히 알아내기 애매합니다. 그래서 수능일처럼 미리 아는 날은 수동 표에 등록해두고, 그 밖에는 거래소 달력을, 둘 다 실패하면 기본값 9시를 쓰도록 3단으로 쌓았습니다.</p>
+<p>이렇게 실제 개장 시각을 알면, 아침 라운드가 개장 전에 발화하려 할 때 "아직 안 열렸다"며 스스로 보류하고, 실제 개장 직후의 대체 시각에 다시 돌게 됩니다.</p>
+<p>평소 거래일(9시 개장)의 동작은 전혀 바뀌지 않습니다. 오직 지연 개장일에만 이 보류가 작동합니다.</p>
+<h2>경보는 넣되, 자동 해제는 넣지 않았다</h2>
+<p>하나 더, 한 라운드의 주문이 <strong>전부</strong> "장이 안 열렸다"는 사유로 거절되면 그 사실을 저널에 남기고 경보를 띄우도록 했습니다.</p>
+<p>이번처럼 닫힌 시장에 통째로 주문이 나간 상황을 사람이 바로 알아챌 수 있게요.</p>
+<p>다만 선점된 슬롯을 자동으로 풀어주는 기능은 <strong>일부러 넣지 않았습니다.</strong></p>
+<p>슬롯을 자동 해제하면 편하긴 하지만, "실행이 꼬였을 땐 혼자 더 건드리지 말고 멈춰서 사람을 부른다"는 안전장치의 기본 원칙과 어긋납니다. 슬롯을 누가·언제 푸느냐는 사람이 판단할 영역으로 남겨뒀습니다.</p>
+<p>다음 지연 개장일(새해 첫 거래일)에 이 고침이 실제로 작동하는지 확인하게 됩니다.</p>
+<h2>곁가지 — 호가 수집의 정본 경로를 다른 수집기로 넘겼다</h2>
+<p>오늘은 데이터 수집 쪽에서도 하나를 바꿨습니다.</p>
+<p><a href="https://finaltype.github.io/quant-blog/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">데이터 아카이브</a>(새 창)의 호가 스트림에서, 그동안 보조로만 돌리던 수집기를 정본(기준) 경로로 승격했습니다.</p>
+<p>같은 데이터를 두 경로로 받아보며 품질을 비교해오다가, 승격 쪽이 더 안정적이라는 확인이 끝나서 내일(11-20)부터 그쪽을 기준으로 삼기로 했습니다.</p>
+<p>기존 경로는 비활성화하되, 문제가 생기면 설정 한 줄로 되돌릴 수 있게 롤백 경로를 남겨뒀습니다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%ED%80%80%ED%8A%B8/">#퀀트</a> <a href="../../../tags/%EC%A3%BC%EB%AC%B8%EC%8B%A4%ED%96%89/">#주문실행</a> <a href="../../../tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/">#안전장치</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-18_devlog/">미체결 주문 자동취소 첫 발동 - 증권사 취소 거절과 주문번호 타입 정규화</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-18_devlog/">미체결 주문 자동취소 첫 발동 - 증권사 취소 거절과 주문번호 타입 정규화</a></li><li><a href="../../../devlog/2026-10/2026-10-11_weekly/">주문 실행·안전장치 계층 확장과 사전등록 A/B 실험 틀 구축</a></li><li><a href="../../../devlog/2026-10/2026-10-08_devlog/">계좌 입출금 반영 로직을 앞당겨 구현하고 같은 날 배포했다</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
