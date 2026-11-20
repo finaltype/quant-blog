@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Re-Investigating the Flip-Flop Alert - The Cause Was a Change in Stock Count, Not Band Oscillation | Quant Bot Devlog</title>
+<meta name="description" content="An alert fired again because the trading system bought a stock and sold part of it right back the next round - a &quot;flip-flop.&quot; The design had blamed p…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-20_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-20_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-20_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-20_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Re-Investigating the Flip-Flop Alert - The Cause Was a Change in Stock Count, Not Band Oscillation">
+<meta property="og:description" content="An alert fired again because the trading system bought a stock and sold part of it right back the next round - a &quot;flip-flop.&quot; The design had blamed p…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-20_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Re-Investigating the Flip-Flop Alert - The Cause Was a Change in Stock Count, Not Band Oscillation", "description": "An alert fired again because the trading system bought a stock and sold part of it right back the next round - a \"flip-flop.\" The design had blamed p…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-20_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-20"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-20_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Re-Investigating the Flip-Flop Alert - The Cause Was a Change in Stock Count, Not Band Oscillation</h1>
+<p class="post-date"><time datetime="2026-11-20">2026-11-20</time></p>
+<p class="subtitle">An alert fired again because the trading system bought a stock and sold part of it right back the next round - a &quot;flip-flop.&quot; The design had blamed price jitter at the rounding edge, but re-tallying two months of execution logs read-only showed the real cause was the number of target holdings growing, which shrinks each stock&#x27;s target amount. Here is how I decided to keep observing instead of flipping the switch off.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The "flip-flop" alert — buy, then sell right back</h2>
+<p>My <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order-execution and safety layer</a>(new tab) has an alert I call "flip-flop."</p>
+<p>It catches the case where the system buys a stock and then, in the very next round, sells part of that same stock back.</p>
+<p>Buying and selling in quick succession leaks commission and sell-side tax, so when that kind of round trip shows up, the alert says "something may be tangled."</p>
+<p>This morning it fired again on one stock. It was the fourth time this year for the same kind of alert.</p>
+<h2>The re-review condition had been met, so I couldn't just let it pass</h2>
+<p>This alert came with a pre-set handling rule.</p>
+<p>The rule: "if the same kind of alert recurs or the count grows, re-review the response options."</p>
+<p>Today was the fourth, so the condition tripped. Rather than wave it off, I decided to investigate the cause from scratch.</p>
+<p>The investigation was read-only. I tallied a bit over two months of execution logs directly — not a single line of code, config, or orders was touched.</p>
+<h2>The alert's name and its real cause didn't match</h2>
+<p>This is where it got interesting.</p>
+<p>The alert was originally built to catch "price jitter at the band edge." When the system computes a target quantity, it rounds a fractional number up or down, and near that boundary even a tiny price move can flip the target holding up or down by one notch.</p>
+<p>So back in August I added a cushion: "ignore wobble of about one notch." That cushion was doing its job — it was blocking the edge jitter as designed.</p>
+<p>But the alert firing now had a different cause.</p>
+<p>When I tallied the cases, most of the flip-flops happened <strong>not because of price, but because the number of target holdings had grown.</strong></p>
+<h2>More stocks means a smaller target per stock</h2>
+<p>Here's the structure.</p>
+<p>The portfolio splits a fixed budget across several stocks. The more stocks it needs to hold, the smaller the target amount allotted to each one.</p>
+<p>If the signal shifts overnight and a few more stocks need to be held, yesterday's reasonable position becomes "too much" today. So the next round sells off the excess.</p>
+<p>In other words, selling today a stock I bought yesterday wasn't because that stock's price wobbled — it was because <strong>more stocks got added alongside it.</strong></p>
+<p>The cushion I added in August targeted the price-side wobble. What's firing now is a change on the money-allocation side, a different class of problem the cushion was never built to stop.</p>
+<h2>Is flipping the switch off the answer?</h2>
+<p>One of the response options was to simply turn off the feature that tops up positions a little to use up idle cash.</p>
+<p>Those top-up lots were often the ones sold back the next round, so turning it off makes the flip-flop alert nearly disappear.</p>
+<p>But when I thought it through, this wasn't a plain "fix the flip-flop."</p>
+<p>Turning that feature off leaves that much as cash. It ends up being the same as an exposure decision: "I'll carry a bit more cash."</p>
+<p>And two months of logs showed no clear evidence that those top-up lots earned more than cash would have — nor that they earned less. The sample is short and spans one down-market stretch, so the sign couldn't be pinned down.</p>
+<h2>For now, I chose to keep observing</h2>
+<p>So today I did not flip the switch off; I chose to <strong>keep observing.</strong></p>
+<p>Three reasons.</p>
+<p>One, the cost leaking out of the flip-flops themselves was small. The cost of waiting a few more days was negligible.</p>
+<p>Two, turning this feature off changes exposure, and there happens to be an important performance-judgment window coming next month. Touching composition and exposure again in the middle of that window makes the judgment messy to interpret.</p>
+<p>Three, the real cause wasn't the top-up feature but the layer above it — <strong>the way the per-stock target amount is divided.</strong> That's not something one switch turns off; it's an agenda to revisit the whole sizing design after the performance judgment is done.</p>
+<h2>I changed the alert's re-review condition</h2>
+<p>Instead, I reworked the alert's handling rule.</p>
+<p>Until now it was "re-review if the same alert recurs." Now I've written explicitly that <strong>a flip-flop caused by more stocks being held is no longer grounds for re-review</strong> — because I already know what causes it.</p>
+<p>In its place I set new re-review conditions: if the alert fires <em>without</em> the stock count growing (that would be the real signal that the cushion failed to block something), or if the alert frequency climbs noticeably, then look again.</p>
+<p>I did not silence the alert or lower its level. It still fires. I only rewrote the "what should I do when this fires" standard to match the actual cause.</p>
+<p>I handed this outside review to another AI, and the heart of the investigation was that it didn't get led by the alert's name — it tallied two months of logs directly and pointed out that the name and the real cause were different.</p>
+<h2>Side note — verifying the export-loop no-response fix</h2>
+<p>I also confirmed one thing on the data side.</p>
+<p>In the process that exports stock-price data after the market closes each day, there was an occasional case where one particular stock never responded and the loop stalled.</p>
+<p>I verified today that the fix held: the morning check processed every stock with none missed, and the night export had zero dropouts.</p>
+<p>The "provisional ratio" I've been watching alongside it (the share of prices not yet finalized) has sat in the same band for a third day. The decision table marks that band as "watch a few more days," so I'm leaving the criteria as-is and observing one more day.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/order-execution/">#order execution</a> <a href="../../../../en/tags/safety/">#safety</a> <a href="../../../../en/tags/alerting/">#alerting</a> <a href="../../../../en/tags/decision-making/">#decision-making</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-19_devlog/">The Morning Round Misfired on a Late-Open Day - Gating It on the Real Open Time</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-11/2026-11-19_devlog/">The Morning Round Misfired on a Late-Open Day - Gating It on the Real Open Time</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-18_devlog/">The First Live Order Cancel - A Broker Rejection and an Order-Number Type Mismatch</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-16_devlog/">First Live Trading Day - Most of the Safety Machinery Never Fired</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>
