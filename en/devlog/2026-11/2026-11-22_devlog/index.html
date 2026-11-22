@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screening Whether to Turn On Thinking Mode for the AI Decision Nodes - Rejected on Pre-Registered Criteria | Quant Bot Devlog</title>
+<meta name="description" content="I replayed whether giving the three AI roles that make the final call some &quot;time to think&quot; (reasoning tokens) would help. This is how I locked the pa…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-22_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-22_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-22_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-22_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Screening Whether to Turn On Thinking Mode for the AI Decision Nodes - Rejected on Pre-Registered Criteria">
+<meta property="og:description" content="I replayed whether giving the three AI roles that make the final call some &quot;time to think&quot; (reasoning tokens) would help. This is how I locked the pa…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-22_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Screening Whether to Turn On Thinking Mode for the AI Decision Nodes - Rejected on Pre-Registered Criteria", "description": "I replayed whether giving the three AI roles that make the final call some \"time to think\" (reasoning tokens) would help. This is how I locked the pa…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-22_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-22"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-22_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Screening Whether to Turn On Thinking Mode for the AI Decision Nodes - Rejected on Pre-Registered Criteria</h1>
+<p class="post-date"><time datetime="2026-11-22">2026-11-22</time></p>
+<p class="subtitle">I replayed whether giving the three AI roles that make the final call some &quot;time to think&quot; (reasoning tokens) would help. This is how I locked the pass/fail bar before looking at results, and rejected it on output quality rather than profit.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Does giving the deciding AI "time to think" make it better?</h2>
+<p>In my system, the final trading decision is made by <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">three AI roles reaching a consensus</a>(new tab).</p>
+<p>Today's LLMs support a mode where, before answering, they first spend a stretch of "reasoning tokens" laying out their thinking — so-called thinking mode.</p>
+<p>That raises an obvious question. If I turn thinking on for these three decision nodes, do they decide better?</p>
+<h2>I locked the pass/fail bar before looking at any results</h2>
+<p>With an experiment like this, if you start setting the bar <em>after</em> seeing the numbers, you can fit almost any conclusion you want.</p>
+<p>So this time I registered the pass/fail criteria in a doc up front, before running anything.</p>
+<p>There were two rules. One: do not judge it by profit or hit rate. Two: do not change the reasoning-token budget, the target nodes, or the test dates after seeing the results.</p>
+<p>The first thing to look at was not "performance" but "does this even run cleanly." Concretely: what fraction of the model's outputs parsed into the required format, and how many answers got cut off mid-thought because the reasoning ran long.</p>
+<p>Since this experiment changes the act of judging itself, letting profit catch your eye first makes it easy to rationalize — "it went up a bit this time, so let's wave the quality issue through." Fixing the order of inspection was meant to block exactly that.</p>
+<h2>Verdict: can't use it — it failed on quality, not on profit</h2>
+<p>I replayed the thinking variant (T) side by side with the current approach (A) across several days and a few hundred names.</p>
+<p>The verdict was: can't use it.</p>
+<p>The reason was the quality bar I'd set in advance. With thinking on, the share of outputs that parsed cleanly into the required format fell below the floor I'd drawn.</p>
+<p>On top of that, there were dozens of cases where the reasoning spent its whole budget and still wasn't done, so the answer got truncated. That means a whole decision gets thrown away — not a number you can shrug off.</p>
+<p>It washed out on operational stability before I ever got to performance.</p>
+<h2>Why I didn't look at profit</h2>
+<p>As a side note, turning thinking on did visibly change the decisions. It became far more of an "actor" — leaning toward making trades rather than sitting still — and the per-name wall-clock went up quite a bit, too.</p>
+<p>Seeing changes like that makes you want to know "so did it make more money?" But I didn't touch that.</p>
+<p>Once decision quality fails to clear the floor, starting to stare at profit figures makes you excuse the quality defect on the strength of a few lucky days of returns. Pinning down "do not re-interpret this by profit" in advance was precisely the guard against that temptation.</p>
+<p>So production stays as it is, with thinking off. I've written into the guards that the design I looked at this time — simply bolting thinking onto the current approach — won't be revisited.</p>
+<h2>I didn't close the door entirely</h2>
+<p>That said, I didn't lock it shut.</p>
+<p>What failed this time was "making it think right inside the decision call that enforces a format." Cramming the thinking and the format-fitting into one call is what produced the truncation and parse failures.</p>
+<p>So I left a condition that it can only be revisited with a different design — one that does the thinking in a separate free-text call and keeps the format-fitting call light, as it is now.</p>
+<p>Even that can only be looked at after another round of pre-registration and review, and I've pushed any actual production rollout well into the future.</p>
+<p>When you try something new, writing down ahead of time <em>what shape</em> you're even allowed to re-examine it in keeps you from stepping into the same trap next time.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/experiment-design/">#experiment design</a> <a href="../../../../en/tags/pre-registration/">#pre-registration</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-20_devlog/">Re-Investigating the Flip-Flop Alert - The Cause Was a Change in Stock Count, Not Band Oscillation</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-11/2026-11-17_devlog/">Price-Based Trading Rules All Failed the Backtest - Switching to an Order-Free Forward Recorder</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-15_devlog/">Reading Out the Label-Redesign Experiment - Zero Passes, Not &quot;No Effect&quot; but &quot;Can&#x27;t Measure&quot;</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-14_devlog/">A Roadmap for Improving Predictive Power, and the &quot;If You Can&#x27;t Tell, Keep Current&quot; Rule</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

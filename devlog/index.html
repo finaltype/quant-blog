@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>개발일지 | 퀀트봇 개발일지</title>
-<meta name="description" content="개발일지 전체 글 목록 (116편)">
+<meta name="description" content="개발일지 전체 글 목록 (117편)">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/">
 <link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/">
 <link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/">
 <link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="개발일지">
-<meta property="og:description" content="개발일지 전체 글 목록 (116편)">
+<meta property="og:description" content="개발일지 전체 글 목록 (117편)">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "개발일지", "description": "개발일지 전체 글 목록 (116편)", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "개발일지", "description": "개발일지 전체 글 목록 (117편)", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -46,8 +46,9 @@
 <p class="lang-switch"><a href="../en/devlog/">Read in English</a></p>
 <article>
 <h1>개발일지</h1>
-<p class="subtitle">개발일지 전체 글 목록 (116편)</p>
+<p class="subtitle">개발일지 전체 글 목록 (117편)</p>
 <ul>
+<li><a href="../devlog/2026-11/2026-11-22_devlog/">AI 판단 노드에 추론(thinking) 모드를 켜볼지 선별 - 사전 등록 기준으로 기각</a><div class="sub">최종 판단을 맡은 세 AI 역할에 &quot;생각할 시간&quot;(추론 토큰)을 주면 나아질지 재생(replay)으로 확인했다. 결과를 보기 전에 합격 기준을 먼저 못박아 두고, 수익이 아니라 출력 품질에서 걸려 &quot;못 쓴다&quot;로 판정한 과정을 정리했다.</div></li>
 <li><a href="../devlog/2026-11/2026-11-20_devlog/">플립플롭 경보 재조사 - 사자마자 되파는 원인은 밴드 진동이 아니라 종목 수 변화</a><div class="sub">자동매매가 어떤 종목을 샀다가 바로 다음 라운드에 일부를 되파는 &quot;플립플롭&quot; 경보가 또 울렸다. 설계 당시엔 반올림 경계의 가격 흔들림을 의심했는데, 두 달치 집행 기록을 읽기전용으로 다시 집계해보니 진짜 원인은 보유 대상 종목 수가 바뀌면서 종목당 목표금액이 줄어든 것이었다. 스위치를 끄는 대신 관찰을 유지하기로 한 판단 과정을 정리했다.</div></li>
 <li><a href="../devlog/2026-11/2026-11-19_devlog/">개장 1시간 지연일에 아침 매매 라운드가 오발화 - 개장시각 게이트로 막다</a><div class="sub">시장이 1시간 늦게 열리는 날, 멈춰뒀던 스케줄 타이머를 다시 켜는 순간 지나간 발화 시각이 즉시 실행되면서 아침 라운드가 닫힌 시장에 주문을 냈다. 전건이 거절됐고, 그 라운드가 집행 슬롯을 선점한 탓에 뒤 라운드까지 막혔다. 원인을 추적해 &#x27;실제 개장 시각&#x27;을 달력에서 읽어 개장 전 라운드를 보류하도록 고친 과정을 정리했다.</div></li>
 <li><a href="../devlog/2026-11/2026-11-18_devlog/">미체결 주문 자동취소 첫 발동 - 증권사 취소 거절과 주문번호 타입 정규화</a><div class="sub">미체결 매도 주문을 장중에 자동으로 취소·재계획하는 경로가 실계좌에서 처음 작동했는데, 증권사 취소 API가 주문번호 타입 불일치로 거절했고 거절 사유 로그마저 비어 있었다. 원인을 추적해 주문번호를 정수로 정규화하고 거절 사유를 출력하도록 고친 과정과, 같은 날 아침 큰 하락 상태에서 반등일 매수가 전부 막힌 안전장치를 외부 AI 자문으로 점검한 결과를 정리했다.</div></li>
