@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>First Week of Live Trading - Safety Mechanisms Fire for the First Time, and Things We Chose Not to Ship | Quant Bot Devlog</title>
+<meta name="description" content="During the first week of real-money automated trading, the safety mechanisms got their first live test as they fired and misfired one by one, while o…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-22_weekly/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-22_weekly/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-22_weekly/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-22_weekly/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="First Week of Live Trading - Safety Mechanisms Fire for the First Time, and Things We Chose Not to Ship">
+<meta property="og:description" content="During the first week of real-money automated trading, the safety mechanisms got their first live test as they fired and misfired one by one, while o…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-22_weekly/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "First Week of Live Trading - Safety Mechanisms Fire for the First Time, and Things We Chose Not to Ship", "description": "During the first week of real-money automated trading, the safety mechanisms got their first live test as they fired and misfired one by one, while o…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-22_weekly/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-22"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-22_weekly/">한국어로 보기</a></p>
+<article>
+<h1>First Week of Live Trading - Safety Mechanisms Fire for the First Time, and Things We Chose Not to Ship</h1>
+<p class="post-date"><time datetime="2026-11-22">2026-11-22</time></p>
+<p class="subtitle">During the first week of real-money automated trading, the safety mechanisms got their first live test as they fired and misfired one by one, while on the other side a string of &quot;looks good, not shipping it&quot; decisions piled up</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>This was the first full week where the code that sends real orders to a live account ran a full loop on every trading day.</p>
+<p>The <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety layer</a>(new tab) had gone live on the account the week before.</p>
+<p>The week split into two threads. One was those safety mechanisms getting tested in production for the first time — firing, or stumbling. The other was a set of decisions to <em>not</em> ship things that looked good.</p>
+<p>The two threads actually came from the same root: don't trust something until you've run or measured it, and design it to fall over in the safe direction when it fails.</p>
+<h2>Monday — the paradox a clean first day left behind</h2>
+<p>The first trading day was unexpectedly quiet. No margin rejections, no unfilled orders to cancel — orders executed cleanly.</p>
+<p>That immediately left homework, though. If only "good days" keep coming, with no rejections and no fills left hanging, then paradoxically the safety mechanisms never get a real-world test.</p>
+<p>So I decided not to anchor my trust in "I watched it run live." Instead I put the trust in design: when a mechanism does fire, the worst case should be "do nothing and call a human."</p>
+<p>The same day, I pre-handled a calendar exception the code doesn't know about. The college-entrance-exam day this week opens the market an hour late, but the bot's calendar only knows "closed days," not "opens late." So I registered a scheduled job to block the morning round for that one day.</p>
+<h2>Wednesday and Thursday — the paradox became real</h2>
+<p>The "untested path" I worried about on Monday got called into production only a few days later.</p>
+<p>On Wednesday, the path that cancels an unfilled sell order and re-plans it in the next round fired on the live account for the first time. And it was rejected the moment it fired.</p>
+<p>There were two layers to the cause. The broker's cancel API rejected it over a mismatched order-number type, and — more painfully — the rejection reason wasn't logged at all.</p>
+<p>A path that has never rung tends to stumble on exactly these small things. I normalized the order number to an integer and made the rejection reason log verbatim.</p>
+<p>Still, the core design held. The rejected path didn't go off buying or selling on its own; it stopped right there and left room for a human to fill the gap.</p>
+<p>Thursday was that exam day I'd prepared for on Monday. But the instant I restarted the morning timer I'd paused, the already-past trigger time fired once immediately, sending orders into a market that wasn't open yet.</p>
+<p>The blanket rejection was actually safe, but the problem was that the round finished having claimed the execution slot. When the market actually opened at 10, the normal round nearly failed to start; I manually released the claimed slot and confirmed a replacement run.</p>
+<p>In the evening I fixed the root cause. I removed the "opens at 9" assumption from the code and made it read the actual opening time from the calendar, so a pre-open round holds itself back.</p>
+<p>Here, too, I deliberately left one thing out: auto-releasing the claimed slot. That would conflict with the principle that "when execution gets tangled, don't touch more on your own — call a human," so who releases the slot, and when, stays a human's call.</p>
+<h2>The other thread — things I chose not to ship</h2>
+<p>A completely different kind of work ran in parallel the same week: the "don't ship something just because it looks good" side.</p>
+<p>On Tuesday I spent all day testing, against historical data, whether pulling the price values in the reports (entry, stop, target) into the trading rules would help. I evaluated more than twenty rules, and every one failed to clear the bar I'd set in advance.</p>
+<p>The important part is that "didn't clear the bar" doesn't mean "lost money." There was no clear evidence of an edge, nor of harm — it was noise.</p>
+<p>So instead of putting it into live trading, I stood up a forward recorder that sends zero orders. Rather than re-reading the past, it nails down the rules in advance and accumulates only forward data, to be judged months later. That kind of quiet plumbing belongs to the <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">operations structure</a>(new tab) side.</p>
+<p>In the process it came out that I'd broken a pre-registration rule for a day. A sealed validation window had been peeked at before it ended, letting some of its values leak into a calculation. I handed it to a separate AI for independent review, and that AI caught it. I removed the leaked values and baked a date guard into the code.</p>
+<p>Sunday's thinking-mode experiment was the same shape. I used replay to check whether giving the <a href="https://finaltype.github.io/quant-blog/en/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">three AI roles</a>(new tab) that make the final call some "time to think" would help.</p>
+<p>Here, too, I fixed the pass criteria before looking at results. The rule was to read output quality first — format-parse rate and count of truncated answers — not profit.</p>
+<p>The verdict was "unusable." With thinking on, the rate at which output parsed cleanly into the required format dropped below my floor, and there were several cases where the thinking ran out of budget and the answer got cut off mid-way.</p>
+<p>Turning on thinking did noticeably shift decisions toward being more "action-prone." But if I'd gone looking at profit first out of curiosity, a lucky few days of returns could have talked me into overlooking the quality defect. Fixing the order in advance was exactly the device to shut down that temptation.</p>
+<h2>Friday — the alert's name and its real cause didn't match</h2>
+<p>On Friday a "flip-flop" alert — buying something and reselling part of it right away — rang for the fourth time this year.</p>
+<p>It hit the re-review condition, so I re-aggregated two months of execution records read-only. I didn't touch a single line of code, config, or orders.</p>
+<p>Something interesting turned up. This alert was originally built to catch price wobble at a rounding boundary, but the real cause wasn't price — it was that the number of held tickers grew, which shrank the target amount per ticker.</p>
+<p>The key was aggregating the records directly instead of being led by the alert's name. Since the cause was different, the price-side buffer I added in August could never have blocked it — it was a different kind of problem.</p>
+<p>Even so, I didn't turn off the related feature right away. Turning it off amounts to an exposure change — holding more cash — and the short sample couldn't pin down the sign of the trade-off. There's also an important performance-judgment window next month, and touching the composition in the middle of it would muddy the interpretation.</p>
+<p>So instead of flipping the switch, I kept observing and only rewrote the alert's re-review condition to match the real cause.</p>
+<h2>On the side — tidying up data collection</h2>
+<p>Two things got tidied on the data side.</p>
+<p>In the <a href="https://finaltype.github.io/quant-blog/en/architecture/02_data_archive/" target="_blank" rel="noopener noreferrer">data archive</a>(new tab)'s quote stream, I promoted a collector that had been running only as a backup to the canonical path. I'd been running both side by side to compare quality, and confirmed the promoted one was more stable.</p>
+<p>I also verified that the fix for a post-close price export getting stuck on one ticker actually took. Both the morning check and the night export confirmed zero dropped tickers.</p>
+<h2>What ran through the whole week</h2>
+<p>This was not a "week of new features" but a "week where things that already existed got tested in production for the first time."</p>
+<p>The safety mechanisms rang zero times on Monday, then fired for the first time — and misfired — on Wednesday and Thursday. The textbook trap that a never-rung path stumbles on small things when it first rings, I filled in one by one through actual live trading.</p>
+<p>On the other side, neither the price rules nor thinking mode got shipped just because they "looked good." Record an effect the past can't resolve as "can't measure it now," not "it's nothing"; fix the bar before seeing results; don't reinterpret through profit — that discipline repeated all week.</p>
+<p>In the end the two threads converge. Live trading doesn't only tell you about ordinary days. The lesson of the first live week was to spot the un-ordinary day, and the tempting-but-unverified idea, before the system does — and tip both toward the safe side.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/trading-bot/">#trading bot</a> <a href="../../../../en/tags/devlog/">#devlog</a> <a href="../../../../en/tags/live-trading/">#live trading</a> <a href="../../../../en/tags/measurement-discipline/">#measurement discipline</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-22_devlog/">Screening Whether to Turn On Thinking Mode for the AI Decision Nodes - Rejected on Pre-Registered Criteria</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-11/2026-11-17_devlog/">Price-Based Trading Rules All Failed the Backtest - Switching to an Order-Free Forward Recorder</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-15_devlog/">Reading Out the Label-Redesign Experiment - Zero Passes, Not &quot;No Effect&quot; but &quot;Can&#x27;t Measure&quot;</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-14_devlog/">A Roadmap for Improving Predictive Power, and the &quot;If You Can&#x27;t Tell, Keep Current&quot; Rule</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

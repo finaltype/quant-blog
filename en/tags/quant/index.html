@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Posts tagged #quant | Quant Bot Devlog</title>
-<meta name="description" content="126 posts tagged &#x27;quant&#x27;.">
+<meta name="description" content="127 posts tagged &#x27;quant&#x27;.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/tags/quant/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Posts tagged #quant">
-<meta property="og:description" content="126 posts tagged &#x27;quant&#x27;.">
+<meta property="og:description" content="127 posts tagged &#x27;quant&#x27;.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/tags/quant/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #quant", "description": "126 posts tagged 'quant'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/quant/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #quant", "description": "127 posts tagged 'quant'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/quant/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,7 +43,7 @@
 
 <article>
 <h1>Posts tagged #quant</h1>
-<p class="subtitle">126 posts tagged &#x27;quant&#x27;.</p>
+<p class="subtitle">127 posts tagged &#x27;quant&#x27;.</p>
 <ul>
 <li><a href="../../../en/postmortems/2026-09-08_qwen-moe-heterogeneous-gpu-serving/">Qwen3.8-Flash-Next Review - Running It on an RTX 5090 + R9700 Pair</a><div class="sub">Three quantization swaps and sixteen rounds of advice later, the story of a local model swap that shipped to production</div></li>
 <li><a href="../../../en/postmortems/2026-08-29_swallowed-exception-silent-failure/">The except Clause That Failed Silently - A New Module That Did Nothing for 8 Days</a><div class="sub">A single except line meant to quietly skip cache corruption also swallowed the case where the dependency library wasn&#x27;t even installed</div></li>
@@ -59,6 +59,7 @@
 <li><a href="../../../en/e1_weekly/2026/2026-09-09_weekly/">Live Account Auto-Trading Weekly Report</a><div class="sub">This week&#x27;s live-account snapshot, told through position weights and the NAV index</div></li>
 <li><a href="../../../en/e1_weekly/2026/2026-09-04_weekly/">Live Account Auto-Trading Weekly Report</a><div class="sub">This week&#x27;s live-account snapshot, told through position weights and the NAV index</div></li>
 <li><a href="../../../en/e1_weekly/2026/2026-08-28_weekly/">Live Account Auto-Trading Weekly Report</a><div class="sub">This week&#x27;s live-account snapshot, told through position weights and the NAV index</div></li>
+<li><a href="../../../en/devlog/2026-11/2026-11-22_weekly/">First Week of Live Trading - Safety Mechanisms Fire for the First Time, and Things We Chose Not to Ship</a><div class="sub">During the first week of real-money automated trading, the safety mechanisms got their first live test as they fired and misfired one by one, while on the other side a string of &quot;looks good, not shipping it&quot; decisions piled up</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-22_devlog/">Screening Whether to Turn On Thinking Mode for the AI Decision Nodes - Rejected on Pre-Registered Criteria</a><div class="sub">I replayed whether giving the three AI roles that make the final call some &quot;time to think&quot; (reasoning tokens) would help. This is how I locked the pass/fail bar before looking at results, and rejected it on output quality rather than profit.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-20_devlog/">Re-Investigating the Flip-Flop Alert - The Cause Was a Change in Stock Count, Not Band Oscillation</a><div class="sub">An alert fired again because the trading system bought a stock and sold part of it right back the next round - a &quot;flip-flop.&quot; The design had blamed price jitter at the rounding edge, but re-tallying two months of execution logs read-only showed the real cause was the number of target holdings growing, which shrinks each stock&#x27;s target amount. Here is how I decided to keep observing instead of flipping the switch off.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-19_devlog/">The Morning Round Misfired on a Late-Open Day - Gating It on the Real Open Time</a><div class="sub">On a day the market opens an hour late, restarting a stopped schedule timer instantly fired its already-elapsed trigger, so the morning round sent orders into a closed market. Every order was rejected, and because that round had claimed the execution slot, the later rounds were blocked too. This is how I tracked it down and made the system read the actual open time from the calendar so a pre-open round holds itself back.</div></li>
