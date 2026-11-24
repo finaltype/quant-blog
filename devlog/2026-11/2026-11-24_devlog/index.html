@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미체결 주문 자동 취소와 거래량 없는 종목의 묵은 가격 처리 - 실계좌 첫 작동 | 퀀트봇 개발일지</title>
+<meta name="description" content="접수만 되고 안 채워진 주문을 약 2분 뒤 자동 취소하고, 거래가 없어 호가가 낡은 종목엔 묵은 가격으로 주문을 내보내지 않도록 집행 계층을 손봤다. 오늘 낮 실거래에서 처음 작동했고, 리포트가 접수를 체결로 착각하던 버그도 함께 고쳤다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-24_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-24_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-24_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-24_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="미체결 주문 자동 취소와 거래량 없는 종목의 묵은 가격 처리 - 실계좌 첫 작동">
+<meta property="og:description" content="접수만 되고 안 채워진 주문을 약 2분 뒤 자동 취소하고, 거래가 없어 호가가 낡은 종목엔 묵은 가격으로 주문을 내보내지 않도록 집행 계층을 손봤다. 오늘 낮 실거래에서 처음 작동했고, 리포트가 접수를 체결로 착각하던 버그도 함께 고쳤다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-24_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "미체결 주문 자동 취소와 거래량 없는 종목의 묵은 가격 처리 - 실계좌 첫 작동", "description": "접수만 되고 안 채워진 주문을 약 2분 뒤 자동 취소하고, 거래가 없어 호가가 낡은 종목엔 묵은 가격으로 주문을 내보내지 않도록 집행 계층을 손봤다. 오늘 낮 실거래에서 처음 작동했고, 리포트가 접수를 체결로 착각하던 버그도 함께 고쳤다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-24_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-24"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-24_devlog/">Read in English</a></p>
+<article>
+<h1>미체결 주문 자동 취소와 거래량 없는 종목의 묵은 가격 처리 - 실계좌 첫 작동</h1>
+<p class="post-date"><time datetime="2026-11-24">2026-11-24</time></p>
+<p class="subtitle">접수만 되고 안 채워진 주문을 약 2분 뒤 자동 취소하고, 거래가 없어 호가가 낡은 종목엔 묵은 가격으로 주문을 내보내지 않도록 집행 계층을 손봤다. 오늘 낮 실거래에서 처음 작동했고, 리포트가 접수를 체결로 착각하던 버그도 함께 고쳤다.</p><h2>접수됐는데 안 채워지는 주문</h2>
+<p>오늘의 중심은 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행·안전장치 계층</a>(새 창)이었다.</p>
+<p>실거래를 시작하고 보니, 주문이 브로커에 접수는 됐는데 끝까지 체결되지 않고 걸려 있는 경우가 생각보다 자주 나왔다.</p>
+<p>문제는 이게 그냥 "안 샀네"로 끝나지 않는다는 점이다. 접수된 주문에 묶인 현금은 다음 순번 종목을 사는 데 못 쓰기 때문에, 미체결이 길어질수록 계획했던 매수가 통째로 밀린다.</p>
+<h2>두 가지를 손봤다</h2>
+<p>첫째, 접수 후 일정 시간(약 2분)이 지나도 안 채워지면 그 주문을 자동으로 취소하고 한 번 다시 시도하게 했다.</p>
+<p>다만 재주문 로직은 곧바로 실거래에 붙이지 않고, 먼저 "기록 모드"로 돌렸다. 취소까지는 실제로 하되, 다시 낼 주문은 실제로 내보내지 않고 로그로만 남겨서, 판단이 맞는지 며칠 지켜본 뒤 실집행으로 승격하는 순서다.</p>
+<p>둘째, 거래량이 아예 없어 호가가 낡은 종목 문제다. 거래가 멈춘 종목은 직전 체결가가 한참 전 값일 수 있는데, 이 "묵은 가격"으로 주문을 내보내면 엉뚱한 가격에 걸리거나 아예 안 맞는다.</p>
+<p>그래서 주문 직전에 새 호가가 들어오는지 확인하고, 유효한 호가가 없으면 그 종목은 아예 주문을 내보내지 않도록 막았다.</p>
+<h2>실거래에서 처음 작동한 날</h2>
+<p>오늘 낮, 접수만 되고 안 채워진 한 종목이 설계한 대로 자동 취소됐다. 이 흐름이 모의가 아니라 실계좌에서 처음 작동한 순간이다.</p>
+<p>안전장치는 이렇게 하나씩, 실제로 그 상황이 와야 처음 돈다. 미리 상상해서 만들어둔 장치가 실전에서 예상대로 작동하는 걸 확인하는 게 요즘 실거래 초기의 주된 일이다.</p>
+<h2>리포트가 접수를 체결로 착각하고 있었다</h2>
+<p>같은 미체결 문제가 리포트 쪽에서도 버그로 드러났다.</p>
+<p>하루 요약 리포트가 "오늘 산 종목" 목록에, 접수는 됐지만 미체결로 취소된 종목까지 섞어서 보여주고 있었다. 접수와 체결을 같은 것으로 처리한 탓이다.</p>
+<p>실제로 사지 않은 종목이 "샀다"고 뜨면 그날 성과를 잘못 읽게 된다. 취소된 접수는 산 종목에서 빼고, 필요하면 별도로 표시하도록 고쳤다.</p>
+<h2>필터에 걸린 매수와 묶인 현금</h2>
+<p>매매 필터에 걸려 보류된 매수를 어떻게 처리할지도 정리했다.</p>
+<p>필터로 보류된 매수에 예약됐던 현금을 곧바로 다음 순번 종목으로 넘길지 고민했는데, 넘기지 않고 현행대로 두기로 했다. 보류분까지 급하게 재배치하면 그날의 매수 계획이 원래 의도와 달라지기 때문이다.</p>
+<p>실제로 오늘 보류됐던 매수 몇 건은 장 마감 전 예약이 전부 풀리면서 아무것도 사지 않고 끝났다. 의도한 현금은 남겨도 된다는 지금 방침과도 맞는 결과였다.</p>
+<h2>하루 종일 후보를 재봤지만, 대부분 안 살아남았다</h2>
+<p>집행 쪽과 별개로, 오늘은 종목을 고르는 <a href="https://finaltype.github.io/quant-blog/architecture/08_ai_ensemble/" target="_blank" rel="noopener noreferrer">판단 모델</a>(새 창)에 새로 넣을 만한 후보를 하루 종일 측정했다.</p>
+<p>개인투자자 수급·심리에 관한 문헌을 훑어 후보를 추렸고, 그중 "개인 매수가 말라붙으면 바닥"이라는 통념은 과거 구간에 사전 등록한 기준으로 검증했더니 통계적으로 기각됐다. 몇 가지 신호 후보도 정밀 시뮬로 재봤지만 채택 기준을 넘지 못했다.</p>
+<p>가중치나 보유 기간 같은 설정값도 여러 안을 다시 계산했는데, 결론은 현행 유지였다. 바꿔서 더 번다는 증거가 약하거나, 이득의 상당 부분이 실제 엣지가 아니라 거래 비용 절감에서 나온 착시였기 때문이다.</p>
+<p>측정을 결과보다 먼저 사전 등록해두면, 이렇게 "안 바꾸는" 결정을 자신 있게 내릴 수 있다. 하루 종일 재보고 대부분 기존 설정을 그대로 두기로 한 날이었다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/">#안전장치</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-23_devlog/">thinking 모드 수익 시뮬 요청 - 표본이 작아 수익으로는 판정이 안 된다</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-13_devlog/">실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획</a></li><li><a href="../../../devlog/2026-11/2026-11-22_weekly/">실거래 첫 주 - 안전장치가 하나씩 처음 작동하고, 안 쓰기로 한 것들</a></li><li><a href="../../../devlog/2026-11/2026-11-16_devlog/">자동매매 실전 첫 거래일 - 안전장치는 대부분 발동하지 않았다</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>

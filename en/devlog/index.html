@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Devlog | Quant Bot Devlog</title>
-<meta name="description" content="All Devlog posts (119)">
+<meta name="description" content="All Devlog posts (120)">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/">
 <link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/">
 <link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/">
 <link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Devlog">
-<meta property="og:description" content="All Devlog posts (119)">
+<meta property="og:description" content="All Devlog posts (120)">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Devlog", "description": "All Devlog posts (119)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Devlog", "description": "All Devlog posts (120)", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -46,8 +46,9 @@
 <p class="lang-switch"><a href="../../devlog/">한국어로 보기</a></p>
 <article>
 <h1>Devlog</h1>
-<p class="subtitle">All Devlog posts (119)</p>
+<p class="subtitle">All Devlog posts (120)</p>
 <ul>
+<li><a href="../../en/devlog/2026-11/2026-11-24_devlog/">Auto-Canceling Unfilled Orders and Handling Stale Prices for No-Volume Names - First Live Trigger</a><div class="sub">I reworked the execution layer so that orders accepted but never filled get auto-canceled after about two minutes, and so names with no trading (and thus stale quotes) don&#x27;t get orders sent at an old price. It fired for the first time in live trading today, and I also fixed a report bug that mistook &quot;accepted&quot; for &quot;filled.&quot;</div></li>
 <li><a href="../../en/devlog/2026-11/2026-11-23_devlog/">A Request to Profit-Simulate the Thinking Mode - The Sample Is Too Small to Decide on Returns</a><div class="sub">After the reasoning (thinking) mode failed on output quality yesterday, the next question was &quot;with those changed grades, would I have made more money?&quot; I could have re-run the simulation, but at this scale returns drown in noise, so I decided not to.</div></li>
 <li><a href="../../en/devlog/2026-11/2026-11-22_weekly/">First Week of Live Trading - Safety Mechanisms Fire for the First Time, and Things We Chose Not to Ship</a><div class="sub">During the first week of real-money automated trading, the safety mechanisms got their first live test as they fired and misfired one by one, while on the other side a string of &quot;looks good, not shipping it&quot; decisions piled up</div></li>
 <li><a href="../../en/devlog/2026-11/2026-11-22_devlog/">Screening Whether to Turn On Thinking Mode for the AI Decision Nodes - Rejected on Pre-Registered Criteria</a><div class="sub">I replayed whether giving the three AI roles that make the final call some &quot;time to think&quot; (reasoning tokens) would help. This is how I locked the pass/fail bar before looking at results, and rejected it on output quality rather than profit.</div></li>
