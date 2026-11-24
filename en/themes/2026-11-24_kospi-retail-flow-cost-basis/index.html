@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KOSPI Retail Investor Flow Analysis - Estimated Cost Basis of 2026 Inflows and Vanishing Buyers on a Rally Day | Quant Bot Devlog</title>
+<meta name="description" content="Using KRX investor-type trading value since June 2025, the average entry level of retail net inflows is estimated at about 6,820 on the KOSPI. The la…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KOSPI Retail Investor Flow Analysis - Estimated Cost Basis of 2026 Inflows and Vanishing Buyers on a Rally Day">
+<meta property="og:description" content="Using KRX investor-type trading value since June 2025, the average entry level of retail net inflows is estimated at about 6,820 on the KOSPI. The la…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "KOSPI Retail Investor Flow Analysis - Estimated Cost Basis of 2026 Inflows and Vanishing Buyers on a Rally Day", "description": "Using KRX investor-type trading value since June 2025, the average entry level of retail net inflows is estimated at about 6,820 on the KOSPI. The la…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/themes/2026-11-24_kospi-retail-flow-cost-basis/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-24"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../themes/2026-11-24_kospi-retail-flow-cost-basis/">한국어로 보기</a></p>
+<article>
+<h1>KOSPI Retail Investor Flow Analysis - Estimated Cost Basis of 2026 Inflows and Vanishing Buyers on a Rally Day</h1>
+<p class="post-date"><time datetime="2026-11-24">2026-11-24</time></p>
+<p class="subtitle">Using KRX investor-type trading value since June 2025, the average entry level of retail net inflows is estimated at about 6,820 on the KOSPI. The large net selling on a +7% rebound day looked more like buyers disappearing than panic selling.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<p>I traced the money flow of retail investors on the KOSPI since June 2025 using KRX trading value by investor type. The average entry level of retail money that came in during 2026 is estimated at about 6,820 on the index, an unrealized loss of roughly −26% as of November 24.</p>
+<p>This post walks through how that was calculated, and how far the data can explain why retail investors sold heavily on a day the index jumped 7%.</p>
+<blockquote>
+<p>Figures for November 24 are intraday provisional values taken before the close and may differ slightly from final data.</p>
+</blockquote>
+<h2>Why - net selling of 1.8 trillion won on a +7% day</h2>
+<p>On November 24 the KOSPI rose about 7% intraday. It came right after the index had fallen to 4,709 the day before, −48% from the June peak (9,115).</p>
+<p>Yet retail investors net sold about 1.8 trillion won that day. The question was: did retail investors who had lost hope dump shares at a loss as soon as a rebound came?</p>
+<p>I had an AI analysis session run the numbers, and asked a separate AI model the same question independently, then compared the two. Their key figures matched closely.</p>
+<h2>Data and method</h2>
+<ul>
+<li><strong>Trading value:</strong> KRX trading by investor type (KOSPI, buy/sell/net) via pykrx, 2025-06-02 to 2026-11-24, 362 trading days.</li>
+<li><strong>Index:</strong> daily KOSPI close. Switching to the average of high/low/close moved results by less than 1%.</li>
+<li><strong>Cost basis conversion:</strong> on retail net-buying days, treat it as buying a "KOSPI basket" at that day's index level; on net-selling days, remove units at the running average cost. This is equivalent to converting via the price of an ETF that tracks the index.</li>
+</ul>
+<h2>1. Retail money flow since June 2025</h2>
+<p>The starting point is June 2025, when the KOSPI began moving meaningfully after years in the 2,000-3,000 range.</p>
+<table>
+<thead>
+<tr>
+<th>Quarter</th>
+<th style="text-align: right;">Retail net buying</th>
+<th style="text-align: right;">Foreign net buying</th>
+<th style="text-align: right;">KOSPI at quarter end</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025 Q2 (June)</td>
+<td style="text-align: right;">−0.6T</td>
+<td style="text-align: right;">+2.7T</td>
+<td style="text-align: right;">3,072</td>
+</tr>
+<tr>
+<td>2025 Q3</td>
+<td style="text-align: right;">−18.4T</td>
+<td style="text-align: right;">+12.1T</td>
+<td style="text-align: right;">3,425</td>
+</tr>
+<tr>
+<td>2025 Q4</td>
+<td style="text-align: right;">−6.6T</td>
+<td style="text-align: right;">−5.0T</td>
+<td style="text-align: right;">4,214</td>
+</tr>
+<tr>
+<td>2026 Q1</td>
+<td style="text-align: right;">+37.2T</td>
+<td style="text-align: right;">−56.7T</td>
+<td style="text-align: right;">5,053</td>
+</tr>
+<tr>
+<td>2026 Q2</td>
+<td style="text-align: right;">+62.0T</td>
+<td style="text-align: right;">−91.7T</td>
+<td style="text-align: right;">8,476</td>
+</tr>
+<tr>
+<td>2026 Q3</td>
+<td style="text-align: right;">−5.6T</td>
+<td style="text-align: right;">−41.6T</td>
+<td style="text-align: right;">6,838</td>
+</tr>
+<tr>
+<td>2026 Q4 (to 11/24)</td>
+<td style="text-align: right;">+4.7T</td>
+<td style="text-align: right;">−32.8T</td>
+<td style="text-align: right;">~5,035</td>
+</tr>
+</tbody>
+</table>
+<p>(T = trillion won)</p>
+<p>While the index was breaking out in the second half of 2025, retail investors sold. Their cumulative net buying bottomed on January 23, 2026, at about −31.8T.</p>
+<p>After that, as the index climbed from 5,000 to 9,000, retail investors net bought about 104.5T. Foreign investors did exactly the opposite.</p>
+<h2>2. Estimated cost basis of 2026 inflows</h2>
+<p>The average entry level of retail net inflows comes out at <strong>about 6,820</strong> on the index. Against the intraday level on November 24 (~5,035), that is an unrealized loss of about −26%, or about −31% at the previous day's close.</p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th style="text-align: right;">Estimated cost basis (index)</th>
+<th style="text-align: right;">Index</th>
+<th style="text-align: right;">Unrealized P&amp;L</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-06-18</td>
+<td style="text-align: right;">~7,115</td>
+<td style="text-align: right;">~9,000</td>
+<td style="text-align: right;">~+27%</td>
+</tr>
+<tr>
+<td>End of Aug 2026</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">6,820</td>
+<td style="text-align: right;">~−5%</td>
+</tr>
+<tr>
+<td>End of Sep 2026</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">6,838</td>
+<td style="text-align: right;">~−4%</td>
+</tr>
+<tr>
+<td>2026-11-23</td>
+<td style="text-align: right;">~6,820</td>
+<td style="text-align: right;">4,709</td>
+<td style="text-align: right;">~−31%</td>
+</tr>
+<tr>
+<td>2026-11-24 (intraday)</td>
+<td style="text-align: right;">~6,820</td>
+<td style="text-align: right;">~5,035</td>
+<td style="text-align: right;">~−26%</td>
+</tr>
+</tbody>
+</table>
+<p>Interestingly, the result is the same whether you start in June 2025, October 2025, or January 2026. Retail investors only net sold in late 2025, so no new holdings had built up.</p>
+<p>What is under water now is <strong>money that came in during the first half of 2026, between 5,000 and 9,000</strong>.</p>
+<h3>The wrong starting point creates an illusion</h3>
+<p>My first calculation started on June 19 and gave a cost basis of about 6,016 and a loss of about −16%. Starting just before the peak dropped the roughly 79T that came in at high levels between January and June.</p>
+<p>The same method can shift the loss by more than 10 percentage points depending on the start date alone. Cumulative calculations like this always need a start-date sensitivity check.</p>
+<h3>At the stock level, losses are larger</h3>
+<p>Index conversion assumes retail investors hold the index. So I also computed, per period, the average buy price of the stocks retail investors actually traded and marked them to the current price.</p>
+<p>Losses came out 3-7 percentage points larger than the index conversion. The stocks retail investors net bought fell more than the index.</p>
+<p>Conversely, many of the stocks retail investors net sold were trading above their average buy price. Selling winners and adding to losers is a textbook disposition effect.</p>
+<h3>What this calculation does not tell you</h3>
+<p>This is not "the average cost basis of all retail investors." Holdings from before June 2025 are not included, and if they were bought around 2,700, they are still well in profit.</p>
+<p>Depending on assumptions about retail ownership share and intraday round trips, the overall retail cost basis could be anywhere from about 3,700 to 6,500. What can be said is only that <strong>money that came in during 2026 is under water</strong>.</p>
+<h2>3. What the rally-day net selling really was - vanishing buyers, not panic</h2>
+<p>Net buying is buys minus sells. The same −1.8T can come from more selling or from less buying.</p>
+<p>Comparing retail buying and selling on November 24 against the prior 20-day average (intraday):</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">Nov 24</th>
+<th style="text-align: right;">Prior 20-day avg</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Retail buying</td>
+<td style="text-align: right;">~2.8T</td>
+<td style="text-align: right;">~5.4T</td>
+<td style="text-align: right;">~52%</td>
+</tr>
+<tr>
+<td>Retail selling</td>
+<td style="text-align: right;">~4.7T</td>
+<td style="text-align: right;">~5.4T</td>
+<td style="text-align: right;">~86%</td>
+</tr>
+</tbody>
+</table>
+<p>Selling was actually below normal. In a panic, that number would rise. Instead, <strong>buying fell to about half of normal</strong>.</p>
+<p>On the sharp down days just before, retail buying was at normal levels. Retail investors bought into the drop but did not chase the 7% rally.</p>
+<h3>A familiar pattern, but lopsided this time</h3>
+<p>Grouping 362 trading days by the index's daily move, retail investors normally buy less and sell more on up days.</p>
+<table>
+<thead>
+<tr>
+<th>Index that day</th>
+<th style="text-align: right;">Retail buying (vs 20-day avg)</th>
+<th style="text-align: right;">Retail selling (vs 20-day avg)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Up more than 4%</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">1.16</td>
+</tr>
+<tr>
+<td>Up 1-4%</td>
+<td style="text-align: right;">0.98</td>
+<td style="text-align: right;">1.10</td>
+</tr>
+<tr>
+<td>Flat</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.98</td>
+</tr>
+<tr>
+<td>Down 1-4%</td>
+<td style="text-align: right;">1.04</td>
+<td style="text-align: right;">0.85</td>
+</tr>
+<tr>
+<td>Down more than 4%</td>
+<td style="text-align: right;">1.12</td>
+<td style="text-align: right;">0.92</td>
+</tr>
+</tbody>
+</table>
+<p>The correlation between daily index returns and retail net buying is about −0.76. Retail flow moves against the index almost every day.</p>
+<p>On typical big up days, though, lower buying and higher selling showed up together. On November 24 selling did not rise; buying alone dropped by nearly half.</p>
+<p>In absolute terms it ranked 20th out of 107 days. But measured against today's much thinner trading value, the selling intensity was the third strongest of 24 days with a gain above 4%.</p>
+<h3>Which shares were sold?</h3>
+<p>During the sharp drop over the previous five trading days, retail investors net bought about 2T. Those shares were slightly in profit at November 24 prices, and the amount is similar to that day's net selling.</p>
+<p>So "short-term profit taking on last week's dip purchases" is the most plausible explanation. Panic stop-loss selling as the main driver looks unlikely (the advisory model put it at 15-20%).</p>
+<p>That does not mean there were no loss-making sales. About 96% of retail buying value since June 19 was executed above the November 24 level. Aggregate data cannot tell which shares were sold.</p>
+<h3>"Losing hope" shows up as less buying, not more selling</h3>
+<p>Monthly data makes this clearer. Average daily retail buying fell from about 18.7T in June to about 5.2T in November. The retail share of market buying fell from the mid-40% range early in the year to about 29% in November.</p>
+<p>Yet retail net buying was still positive in October (+3.4T) and November (+1.3T). Retail investors are leaving the market <strong>by not putting in new money</strong>, rather than by dumping shares.</p>
+<h2>4. Other findings along the way</h2>
+<h3>"Other corporations," not retail, absorbed foreign selling</h3>
+<p>Since June 19, foreign investors net sold about 103T. The main buyer was not retail (about 25T) but "other corporations" (about 63T).</p>
+<p>Since August, nearly all of their net buying went into two stocks, SK hynix and Samsung Electronics. They bought almost the same amount every day, with near-zero correlation to index moves.</p>
+<p>That is a buyer following a schedule, not price. It is most likely on-market share buybacks for cancellation (filing titles and timing match, but the filing amounts were not checked).</p>
+<h3>Retail investors also bought heavily through ETFs</h3>
+<p>Over the same period, retail investors net bought about 29T of ETFs and ETNs, more than their net stock buying. Since inverse and overseas products are mixed in, this cannot be read as a pure bet on Korean stocks rising.</p>
+<h3>Is retail net buying a contrarian signal? Not in this period</h3>
+<p>The correlation of the retail net buying ratio with subsequent 1-, 5-, and 20-day returns was −0.04 to −0.09. The sign matches the folk wisdom that "when retail sells, the market rises," but none were statistically significant.</p>
+<h2>5. The tendency - rebounds within a downtrend</h2>
+<p>Since the June peak, there were 9 days before November 24 when the index rose more than 4%. In 8 of them, the market gave back the gain or more within five days; the average five-day return after a big rally was about −7%.</p>
+<p>With each rebound, the monthly high stepped down: 9,115 → 8,303 → 6,978 → 7,081 → 7,004 → 5,859. Lower retail buying on rally days repeated every time.</p>
+<p>So by tendency, this looks like another rebound inside a downtrend. But there are only 9 samples, all from the same downtrend, and a true bottom rally looks the same on day one.</p>
+<p>Whether the trend has changed will be told by the highs and lows that follow, not a single day. The reference lines are whether the recent low (4,709) breaks again, or whether the last rebound high (~5,375) is cleared.</p>
+<h2>Summary</h2>
+<ul>
+<li>About 100T of retail money that came in during the first half of 2026, between 5,000 and 9,000, has an estimated index cost basis of about 6,820 and an unrealized loss of about −26%.</li>
+<li>The heavy net selling on the +7% day looks more like <strong>buyers disappearing</strong> than panic.</li>
+<li>These estimates are bound by the limits of public aggregate data; the overall retail cost basis and which shares were sold cannot be determined.</li>
+<li>This post is market commentary, not investment advice.</li>
+</ul>
+</article>
+<p class="tags"><a href="../../../en/tags/market-analysis/">#market analysis</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../en/themes/2026-07-31_secondary-battery-outlook/">Battery Sector Check — ESS Shortage, Earnings Rebound, and a Stock Price Gap</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../en/themes/2026-07-31_secondary-battery-outlook/">Battery Sector Check — ESS Shortage, Earnings Rebound, and a Stock Price Gap</a></li><li><a href="../../../en/themes/2026-07-10_power-equipment-divergence/">Power Equipment Stocks — Same AI Supercycle, Opposite Moves in Korea and the US</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

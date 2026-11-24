@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>코스피 개인투자자 수급 분석 - 2026년 유입 자금의 추정 매입단가와 반등일 매수 실종 | 퀀트봇 개발일지</title>
+<meta name="description" content="2025년 6월 이후 KRX 투자자별 매매대금으로 개인의 순유입 자금 평단을 지수 기준 약 6,820으로 추정했다. 7% 반등일의 대규모 순매도는 투매보다 매수가 사라진 결과에 가까웠다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="코스피 개인투자자 수급 분석 - 2026년 유입 자금의 추정 매입단가와 반등일 매수 실종">
+<meta property="og:description" content="2025년 6월 이후 KRX 투자자별 매매대금으로 개인의 순유입 자금 평단을 지수 기준 약 6,820으로 추정했다. 7% 반등일의 대규모 순매도는 투매보다 매수가 사라진 결과에 가까웠다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/themes/2026-11-24_kospi-retail-flow-cost-basis/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "코스피 개인투자자 수급 분석 - 2026년 유입 자금의 추정 매입단가와 반등일 매수 실종", "description": "2025년 6월 이후 KRX 투자자별 매매대금으로 개인의 순유입 자금 평단을 지수 기준 약 6,820으로 추정했다. 7% 반등일의 대규모 순매도는 투매보다 매수가 사라진 결과에 가까웠다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/themes/2026-11-24_kospi-retail-flow-cost-basis/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-24"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/themes/2026-11-24_kospi-retail-flow-cost-basis/">Read in English</a></p>
+<article>
+<h1>코스피 개인투자자 수급 분석 - 2026년 유입 자금의 추정 매입단가와 반등일 매수 실종</h1>
+<p class="post-date"><time datetime="2026-11-24">2026-11-24</time></p>
+<p class="subtitle">2025년 6월 이후 KRX 투자자별 매매대금으로 개인의 순유입 자금 평단을 지수 기준 약 6,820으로 추정했다. 7% 반등일의 대규모 순매도는 투매보다 매수가 사라진 결과에 가까웠다.</p><p>KRX 투자자별 매매대금으로 2025년 6월 이후 코스피 개인투자자의 돈 흐름을 따라가 봤다. 2026년에 새로 들어온 개인 자금의 평균 매입 지수는 약 6,820으로 추정됐고, 11월 24일 기준 평가손실은 약 −26%다.</p>
+<p>이 글은 그 계산 과정과, 지수가 7% 오른 날 개인이 크게 순매도한 이유를 데이터로 어디까지 말할 수 있는지 정리한 것이다.</p>
+<blockquote>
+<p>11월 24일 수치는 장 마감 전 잠정치다. 확정치와는 조금 다를 수 있다.</p>
+</blockquote>
+<h2>계기 - 7% 반등일의 −1.8조 순매도</h2>
+<p>11월 24일 코스피는 장중 약 +7% 올랐다. 전날 4,709로 6월 고점(9,115) 대비 −48%까지 빠진 직후의 반등이었다.</p>
+<p>그런데 이날 개인은 약 1.8조 원을 순매도했다. "희망을 잃었던 개미들이 반등이 오자 손해를 보고라도 던진 것 아닌가" 하는 의문에서 분석을 시작했다.</p>
+<p>분석은 AI 분석 세션에 맡기고, 같은 질문을 별도의 AI 모델에게 독립적으로 자문받아 결과를 서로 대조했다. 두 쪽의 핵심 숫자는 거의 일치했다.</p>
+<h2>데이터와 방법</h2>
+<ul>
+<li><strong>매매대금:</strong> KRX 투자자별 거래실적(코스피, 매수·매도·순매수)을 pykrx로 받았다. 2025-06-02~2026-11-24, 362거래일이다.</li>
+<li><strong>지수:</strong> 코스피 일별 종가를 썼다. 고가·저가·종가 평균으로 바꿔도 결과 차이는 1% 안쪽이었다.</li>
+<li><strong>매입단가 환산:</strong> 개인이 순매수한 날은 그날 지수로 "코스피 바스켓"을 산 것으로 보고, 순매도한 날은 평균단가 기준으로 물량을 덜어냈다. 지수를 그대로 추종하는 ETF 가격으로 환산하는 것과 같다.</li>
+</ul>
+<h2>1. 2025년 6월 이후 개인의 돈 흐름</h2>
+<p>출발점은 2025년 6월로 잡았다. 코스피가 오랫동안 2,000~3,000 박스권에 머물다 의미 있게 움직이기 시작한 시점이다.</p>
+<table>
+<thead>
+<tr>
+<th>분기</th>
+<th style="text-align: right;">개인 순매수</th>
+<th style="text-align: right;">외국인 순매수</th>
+<th style="text-align: right;">분기말 코스피</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025 Q2 (6월)</td>
+<td style="text-align: right;">−0.6조</td>
+<td style="text-align: right;">+2.7조</td>
+<td style="text-align: right;">3,072</td>
+</tr>
+<tr>
+<td>2025 Q3</td>
+<td style="text-align: right;">−18.4조</td>
+<td style="text-align: right;">+12.1조</td>
+<td style="text-align: right;">3,425</td>
+</tr>
+<tr>
+<td>2025 Q4</td>
+<td style="text-align: right;">−6.6조</td>
+<td style="text-align: right;">−5.0조</td>
+<td style="text-align: right;">4,214</td>
+</tr>
+<tr>
+<td>2026 Q1</td>
+<td style="text-align: right;">+37.2조</td>
+<td style="text-align: right;">−56.7조</td>
+<td style="text-align: right;">5,053</td>
+</tr>
+<tr>
+<td>2026 Q2</td>
+<td style="text-align: right;">+62.0조</td>
+<td style="text-align: right;">−91.7조</td>
+<td style="text-align: right;">8,476</td>
+</tr>
+<tr>
+<td>2026 Q3</td>
+<td style="text-align: right;">−5.6조</td>
+<td style="text-align: right;">−41.6조</td>
+<td style="text-align: right;">6,838</td>
+</tr>
+<tr>
+<td>2026 Q4 (~11/24)</td>
+<td style="text-align: right;">+4.7조</td>
+<td style="text-align: right;">−32.8조</td>
+<td style="text-align: right;">약 5,035</td>
+</tr>
+</tbody>
+</table>
+<p>박스권을 벗어나던 2025년 하반기에 개인은 주식을 팔았다. 누적 순매수가 가장 낮았던 날은 2026년 1월 23일로, 그때까지 약 31.8조를 순매도했다.</p>
+<p>그 뒤 지수가 5,000에서 9,000으로 오르는 동안 개인은 약 104.5조를 순매수했다. 외국인은 정확히 반대로 움직였다.</p>
+<h2>2. 2026년 유입 자금의 추정 매입단가</h2>
+<p>이 방식으로 계산한 개인 순유입 자금의 평균 매입 지수는 <strong>약 6,820</strong>이다. 11월 24일 장중 지수(약 5,035) 기준 평가손실은 약 −26%, 전날 종가 기준으로는 약 −31%다.</p>
+<table>
+<thead>
+<tr>
+<th>시점</th>
+<th style="text-align: right;">추정 평단 (지수)</th>
+<th style="text-align: right;">그때 지수</th>
+<th style="text-align: right;">평가손익</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-06-18</td>
+<td style="text-align: right;">약 7,115</td>
+<td style="text-align: right;">9,000대</td>
+<td style="text-align: right;">약 +27%</td>
+</tr>
+<tr>
+<td>2026-08 말</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">6,820</td>
+<td style="text-align: right;">약 −5%</td>
+</tr>
+<tr>
+<td>2026-09 말</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">6,838</td>
+<td style="text-align: right;">약 −4%</td>
+</tr>
+<tr>
+<td>2026-11-23</td>
+<td style="text-align: right;">약 6,820</td>
+<td style="text-align: right;">4,709</td>
+<td style="text-align: right;">약 −31%</td>
+</tr>
+<tr>
+<td>2026-11-24 (장중)</td>
+<td style="text-align: right;">약 6,820</td>
+<td style="text-align: right;">약 5,035</td>
+<td style="text-align: right;">약 −26%</td>
+</tr>
+</tbody>
+</table>
+<p>흥미로운 점은 시작점을 2025년 6월, 10월, 2026년 1월 중 어디로 잡아도 결과가 같다는 것이다. 2025년 하반기에는 순매도만 있어서, 새로 쌓인 물량이 없기 때문이다.</p>
+<p>결국 지금 손실 상태인 건 <strong>2026년 상반기 5,000~9,000 구간에서 들어온 돈</strong>이다.</p>
+<h3>시작점을 잘못 잡으면 생기는 착시</h3>
+<p>처음에는 6월 19일부터 계산했는데, 평단이 약 6,016, 손실이 약 −16%로 나왔다. 고점 직전에서 출발하는 바람에 1~6월에 비싸게 들어온 약 79조가 통째로 빠진 결과였다.</p>
+<p>같은 방법이라도 시작점 하나로 손실 크기가 10%p 넘게 달라질 수 있다. 이런 누적 계산은 시작점 민감도를 꼭 함께 봐야 한다.</p>
+<h3>종목 단위로 보면 손실이 더 크다</h3>
+<p>지수 환산은 개인이 지수를 그대로 들고 있다고 가정한다. 그래서 구간별로 개인이 실제로 거래한 종목의 매수 평균가를 구해 현재가로 평가해 봤다.</p>
+<p>결과는 지수 환산보다 손실이 3~7%p 더 컸다. 개인이 순매수한 종목이 지수보다 더 많이 빠졌다는 뜻이다.</p>
+<p>반대로 개인이 순매도한 종목에는 매수 평균가보다 오른 종목이 많았다. 오른 종목은 팔고 내린 종목은 더 사는, 전형적인 처분효과가 보였다.</p>
+<h3>이 계산이 말하지 않는 것</h3>
+<p>이 추정은 "개인 전체의 평균 매입단가"가 아니다. 2025년 6월 이전부터 들고 있던 물량은 계산에 들어가지 않는다. 그 물량은 지수 2,700 안팎에서 샀다면 지금도 큰 이익이다.</p>
+<p>보유 비중과 하루 안 왕복매매를 어떻게 가정하느냐에 따라, 개인 전체의 평균 기준가는 지수 3,700~6,500 사이 어디든 나올 수 있다. 말할 수 있는 건 <strong>"2026년에 들어온 돈이 손실 상태"</strong>까지다.</p>
+<h2>3. 7% 반등일 순매도의 정체 - 투매가 아니라 매수 실종</h2>
+<p>순매수는 매수에서 매도를 뺀 값이다. 같은 −1.8조라도 매도가 늘어서일 수도 있고, 매수가 줄어서일 수도 있다.</p>
+<p>11월 24일 개인의 매수·매도를 직전 20일 평균과 비교하면 이렇다(장중 기준).</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">11월 24일</th>
+<th style="text-align: right;">직전 20일 평균</th>
+<th style="text-align: right;">비율</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>개인 매수</td>
+<td style="text-align: right;">약 2.8조</td>
+<td style="text-align: right;">약 5.4조</td>
+<td style="text-align: right;">약 52%</td>
+</tr>
+<tr>
+<td>개인 매도</td>
+<td style="text-align: right;">약 4.7조</td>
+<td style="text-align: right;">약 5.4조</td>
+<td style="text-align: right;">약 86%</td>
+</tr>
+</tbody>
+</table>
+<p>매도는 오히려 평소보다 적었다. 투매였다면 이 숫자가 커져야 한다. 대신 <strong>매수가 평소의 절반으로 줄었다.</strong></p>
+<p>전날까지 급락하던 날에는 개인 매수가 평소 수준이었다. 떨어질 때는 샀지만, 7% 오른 날에는 따라 사지 않은 것이다.</p>
+<h3>원래 있는 패턴, 그런데 이번엔 한쪽으로 치우쳤다</h3>
+<p>362거래일을 지수 등락 구간별로 묶어 평균을 내 보면, 개인은 원래 오르는 날 덜 사고 더 판다.</p>
+<table>
+<thead>
+<tr>
+<th>그날 지수</th>
+<th style="text-align: right;">개인 매수 (20일 평균 대비)</th>
+<th style="text-align: right;">개인 매도 (20일 평균 대비)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4% 넘게 상승</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">1.16</td>
+</tr>
+<tr>
+<td>1~4% 상승</td>
+<td style="text-align: right;">0.98</td>
+<td style="text-align: right;">1.10</td>
+</tr>
+<tr>
+<td>보합</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.98</td>
+</tr>
+<tr>
+<td>1~4% 하락</td>
+<td style="text-align: right;">1.04</td>
+<td style="text-align: right;">0.85</td>
+</tr>
+<tr>
+<td>4% 넘게 하락</td>
+<td style="text-align: right;">1.12</td>
+<td style="text-align: right;">0.92</td>
+</tr>
+</tbody>
+</table>
+<p>일간 등락률과 개인 순매수의 상관계수는 약 −0.76이다. 거의 매일 지수와 반대로 움직인다.</p>
+<p>다만 평소의 큰 상승일에는 매수 감소와 매도 증가가 함께 나타났다. 11월 24일은 매도가 늘지 않고 매수만 절반 가까이 사라졌다.</p>
+<p>금액으로는 107일 중 20번째 규모였다. 하지만 거래가 줄어든 요즘 기준으로 매매대금 대비 순매도 강도를 보면, 4% 넘게 오른 24일 중 세 번째로 강했다.</p>
+<h3>팔린 물량은 무엇이었나</h3>
+<p>직전 5거래일 급락 구간에 개인은 약 2조를 순매수했다. 그 물량은 11월 24일 가격 기준으로 소폭 이익 상태였고, 크기도 이날 순매도와 비슷하다.</p>
+<p>그래서 "지난주 저가 매수분의 단기 차익실현"이 가장 그럴듯한 설명이다. 손절 투매가 주원인일 가능성은 낮게 봤다(자문 모델 추정 15~20%).</p>
+<p>그렇다고 손실 매도가 없었다는 뜻은 아니다. 6월 19일 이후 개인 매수대금의 약 96%는 11월 24일 가격보다 비싸게 체결됐다. 어느 물량이 팔렸는지는 집계 데이터로는 구별할 수 없다.</p>
+<h3>"희망 상실"은 매도가 아니라 매수 감소로 보인다</h3>
+<p>월 단위로 보면 더 분명하다. 개인 일평균 매수대금은 6월 약 18.7조에서 11월 약 5.2조로 줄었다. 시장 매수 중 개인 비중도 연초 40%대 중반에서 11월 29% 수준으로 내려왔다.</p>
+<p>그런데 개인 순매수는 10월(+3.4조), 11월(+1.3조) 모두 아직 플러스다. 개인은 시장을 떠날 때 던지기보다 <strong>새 돈을 넣지 않는 방식</strong>으로 떠나고 있다.</p>
+<h2>4. 덤으로 확인한 것들</h2>
+<h3>외국인 매도를 받아낸 건 개인보다 '기타법인'이었다</h3>
+<p>6월 19일 이후 외국인은 약 103조를 순매도했다. 이를 받아낸 주체는 개인(약 25조)보다 기타법인(약 63조)이 훨씬 컸다.</p>
+<p>기타법인의 8월 이후 순매수는 거의 전부 SK하이닉스와 삼성전자 두 종목이었다. 매일 거의 같은 금액을 샀고, 지수 등락과의 상관은 0에 가까웠다.</p>
+<p>가격을 보고 사는 주체가 아니라 일정에 따라 사는 주체라는 뜻이다. 소각 목적의 자사주 장내 매입으로 추정된다(공시 제목과 시점은 맞지만 본문 금액까지는 대조하지 못했다).</p>
+<h3>개인은 ETF로도 많이 샀다</h3>
+<p>같은 기간 개인은 ETF·ETN을 약 29조 순매수했다. 주식 순매수보다 큰 금액이다. 다만 인버스·해외형이 섞여 있어 국내 상승 베팅으로 단정할 수는 없다.</p>
+<h3>개인 순매수는 역지표인가 - 이 기간 데이터로는 아니다</h3>
+<p>개인 순매수 비율과 이후 1일·5일·20일 수익률의 상관은 −0.04~−0.09였다. 부호는 "개인이 팔면 오른다"는 통념과 같지만, 어느 것도 통계적으로 유의하지 않았다.</p>
+<h2>5. 경향으로 보면 - 하락장 속 반등의 반복</h2>
+<p>6월 고점 이후 지수가 4% 넘게 오른 날은 11월 24일 전까지 9번 있었다. 그중 8번은 5일 안에 반등분 이상을 다시 내줬고, 큰 반등 다음 5일 평균 수익률은 약 −7%였다.</p>
+<p>반등할 때마다 월별 최고치는 9,115 → 8,303 → 6,978 → 7,081 → 7,004 → 5,859로 낮아졌다. 반등일에 개인 매수가 줄어드는 것도 매번 반복됐다.</p>
+<p>그래서 경향만 보면 이번에도 하락장 속 반등일 가능성이 높아 보인다. 다만 표본이 9개뿐이고, 모두 같은 하락 추세 안의 사례다. 바닥의 진짜 반등도 첫날에는 똑같이 생겼다.</p>
+<p>추세가 바뀌었는지는 하루가 아니라 이후의 고점과 저점이 알려준다. 직전 저점(4,709)을 다시 깨는지, 직전 반등 고점(약 5,375)을 넘는지가 기준선이다.</p>
+<h2>정리</h2>
+<ul>
+<li>2026년 상반기 지수 5,000~9,000 구간에 들어온 개인 자금 약 100조는 지수 기준 평단 약 6,820, 평가손실 약 −26%로 추정된다.</li>
+<li>7% 반등일의 대규모 순매도는 투매보다 <strong>매수가 사라진 결과</strong>에 가깝다.</li>
+<li>이 추정은 공개된 집계 데이터의 한계 안에 있다. 개인 전체의 평단, 어떤 물량이 팔렸는지는 알 수 없다.</li>
+<li>이 글은 시장 해석이며 투자 권유가 아니다.</li>
+</ul>
+</article>
+<p class="tags"><a href="../../tags/%EC%8B%9C%EC%9E%A5%EB%B6%84%EC%84%9D/">#시장분석</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../themes/2026-07-31_secondary-battery-outlook/">2차전지 섹터 점검 - ESS 숏티지·실적 반등과 주가의 괴리</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../themes/2026-07-31_secondary-battery-outlook/">2차전지 섹터 점검 - ESS 숏티지·실적 반등과 주가의 괴리</a></li><li><a href="../../themes/2026-07-10_power-equipment-divergence/">전력기기주 한·미 주가 괴리 - 같은 AI 전력 슈퍼사이클, 정반대 흐름의 이유</a></li></ul>
+</aside>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>
