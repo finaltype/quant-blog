@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>연구 사전등록 - 합격 기준을 먼저 못박고 결과가 나와도 안 고치기 | 퀀트봇 개발일지</title>
+<meta name="description" content="새 피처 후보를 검증하는 연구 두 건의 가설·합격선·코드/데이터 버전을 실행 전에 해시로 동결했다. 같은 규율로 돌린 사건연구 한 건은 미리 정한 합격선을 못 넘겨 그대로 종결했다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-25_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-25_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-25_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-25_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="연구 사전등록 - 합격 기준을 먼저 못박고 결과가 나와도 안 고치기">
+<meta property="og:description" content="새 피처 후보를 검증하는 연구 두 건의 가설·합격선·코드/데이터 버전을 실행 전에 해시로 동결했다. 같은 규율로 돌린 사건연구 한 건은 미리 정한 합격선을 못 넘겨 그대로 종결했다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-25_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "연구 사전등록 - 합격 기준을 먼저 못박고 결과가 나와도 안 고치기", "description": "새 피처 후보를 검증하는 연구 두 건의 가설·합격선·코드/데이터 버전을 실행 전에 해시로 동결했다. 같은 규율로 돌린 사건연구 한 건은 미리 정한 합격선을 못 넘겨 그대로 종결했다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-25_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-25"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-25_devlog/">Read in English</a></p>
+<article>
+<h1>연구 사전등록 - 합격 기준을 먼저 못박고 결과가 나와도 안 고치기</h1>
+<p class="post-date"><time datetime="2026-11-25">2026-11-25</time></p>
+<p class="subtitle">새 피처 후보를 검증하는 연구 두 건의 가설·합격선·코드/데이터 버전을 실행 전에 해시로 동결했다. 같은 규율로 돌린 사건연구 한 건은 미리 정한 합격선을 못 넘겨 그대로 종결했다.</p><h2>결과를 보고 기준을 고치고 싶은 유혹</h2>
+<p>백테스트를 돌리다 보면 가장 빠지기 쉬운 함정이 하나 있다.</p>
+<p>결과를 먼저 본 다음에 "합격이네/불합격이네"의 기준을 슬쩍 움직이는 것이다.</p>
+<p>문턱을 조금만 낮추면 아슬아슬하게 떨어진 아이디어가 붙고, 기간을 살짝 바꾸면 성과가 좋아진다. 이렇게 사후에 기준을 매만지면 우연히 좋아 보이는 결과를 "발견"했다고 착각하기 쉽다.</p>
+<p>그래서 오늘은 연구 두 건(코드명 B·C)을 돌리기 전에 <strong>사전등록</strong>으로 못박는 작업을 했다.</p>
+<h2>사전등록이란 무엇을 동결하는가</h2>
+<p>사전등록은 임상시험 쪽에서 가져온 방식이다. 실험을 하기 전에 "무엇을 검증할지, 어떤 선을 넘으면 합격으로 볼지"를 먼저 글로 적어서 고정한다.</p>
+<p>내가 동결한 항목은 이렇다.</p>
+<ul>
+<li>검증할 가설과 합격/불합격 선 — 숫자까지 미리 확정하고, 결과를 본 뒤엔 안 고친다.</li>
+<li>실행에 쓸 코드의 정확한 버전 — 커밋 해시로 박아둔다.</li>
+<li>입력 데이터의 정확한 버전 — 피처 파일과 원자료 목록을 해시로 남긴다.</li>
+</ul>
+<p>이렇게 해두면 나중에 "그때 그 코드, 그 데이터로 돌리면 똑같은 결과가 나온다"를 재현할 수 있다.</p>
+<p>그리고 결과가 마음에 안 들어도 기준을 되돌려 손댈 수 없게 된다. 손대면 해시가 안 맞으니까.</p>
+<h2>여러 개를 동시에 시험하면 문턱을 높인다</h2>
+<p>사전등록에서 하나 더 챙긴 게 다중비교 문제다.</p>
+<p>아이디어를 여러 개 동시에 시험하면, 그중 하나쯤은 순전히 운으로 합격선을 넘길 확률이 올라간다. 복권을 한 장이 아니라 열 장 사면 당첨 확률이 올라가는 것과 같다.</p>
+<p>그래서 이번엔 "지금 몇 개의 가설을 함께 보고 있는지"를 세어서, 그 개수에 맞게 합격 문턱 자체를 더 빡빡하게 올려 적었다.</p>
+<p>실제 보유한 데이터를 쓰기 때문에 공짜로 여러 번 시도할 수 없다는 걸 전제로 깔아둔 것이다.</p>
+<h2>같은 규율로 돌린 사건연구는 그냥 떨어뜨렸다</h2>
+<p>규율의 효과는 바로 그날 나왔다.</p>
+<p>특정 공시 이벤트가 그 뒤 주가에 영향을 주는지 보는 사건연구(코드명 C3)를 같은 방식으로 사전등록해 돌렸다.</p>
+<p>결과는 합격선 미달이었다. 이벤트 이후 초과수익은 통계적으로 의미 있다고 보기 어려운 수준이었다.</p>
+<p>예전 같으면 "창을 조금 바꿔볼까, 표본을 다르게 잡아볼까" 하며 붙잡고 늘어졌을 것이다. 하지만 합격선을 미리 못박아 뒀으니, 미달이면 그냥 종결이다.</p>
+<p>안 되는 걸 안 된다고 빨리 인정하고 닫는 것. 이게 사전등록으로 얻는 가장 큰 실익이다.</p>
+<h2>재현되는지 끝까지 따라가 보기</h2>
+<p>마지막으로 동결한 연구가 정말 재현되는지 확인하는 체인을 돌렸다.</p>
+<p>한 연구를 완료 상태까지 보낸 뒤, 검증 스크립트를 단독으로 다시 돌려서 같은 결과가 나오는지 보고, 그다음 연구의 전체 종목 피처 생성 래퍼를 기동하는 순서다.</p>
+<p>"동결했다"고 선언만 하고 넘어가면 나중에 그 선언이 맞았는지 알 수 없다. 그래서 선언 직후에 바로 재현 경로를 한 번 밟아보는 걸 습관으로 넣었다.</p>
+<h2>하루의 나머지 절반 — 집행 필터 버그</h2>
+<p>연구와 별개로, <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행·안전장치 계층</a>(새 창)에서도 버그 하나를 잡았다.</p>
+<p>매매 필터가 어떤 매도를 보류시키면, 그 매도로 생길 예정이던 현금 여유를 근거로 뒤따르던 매수가 통과되곤 했다.</p>
+<p>문제는 정작 그 매도가 보류됐는데도, 그 매도가 "열어준" 여유로 통과한 매수는 그대로 남아 있었다는 점이다. 들어올 돈을 가정하고 쓴 꼴이다.</p>
+<p>그래서 매도가 보류되면 그 매도 덕에 통과했던 매수를 먼저 거둬들이도록 순서를 고쳤다.</p>
+<p>필터·현금 여유·주문이 서로 얽히는 지점은 이렇게 한쪽을 막으면 다른 쪽에서 티가 난다. 실거래를 시작하고 나서야 하나씩 드러나는 중이다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%EC%82%AC%EC%A0%84%EB%93%B1%EB%A1%9D/">#사전등록</a> <a href="../../../tags/%EC%9E%AC%ED%98%84%EC%84%B1/">#재현성</a> <a href="../../../tags/%EB%B0%B1%ED%85%8C%EC%8A%A4%ED%8A%B8/">#백테스트</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-24_devlog/">미체결 주문 자동 취소와 거래량 없는 종목의 묵은 가격 처리 - 실계좌 첫 작동</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-17_devlog/">가격 기반 매매 규칙 백테스트 전부 미달 - 실거래 대신 주문 없는 전방 기록으로</a></li><li><a href="../../../devlog/2026-11/2026-11-15_devlog/">학습 목표 재설계 실험 판독 - 합격 0, 효과 없음이 아니라 측정 불가</a></li><li><a href="../../../devlog/2026-11/2026-11-23_devlog/">thinking 모드 수익 시뮬 요청 - 표본이 작아 수익으로는 판정이 안 된다</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>

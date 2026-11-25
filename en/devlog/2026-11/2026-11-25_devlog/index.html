@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preregistering research - locking the pass bar before the result comes in | Quant Bot Devlog</title>
+<meta name="description" content="I froze the hypotheses, pass lines, and exact code/data versions of two feature-candidate studies before running them, using hashes. An event study r…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-25_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-25_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-25_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-25_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Preregistering research - locking the pass bar before the result comes in">
+<meta property="og:description" content="I froze the hypotheses, pass lines, and exact code/data versions of two feature-candidate studies before running them, using hashes. An event study r…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-25_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Preregistering research - locking the pass bar before the result comes in", "description": "I froze the hypotheses, pass lines, and exact code/data versions of two feature-candidate studies before running them, using hashes. An event study r…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-25_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-25"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-25_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Preregistering research - locking the pass bar before the result comes in</h1>
+<p class="post-date"><time datetime="2026-11-25">2026-11-25</time></p>
+<p class="subtitle">I froze the hypotheses, pass lines, and exact code/data versions of two feature-candidate studies before running them, using hashes. An event study run under the same discipline failed its pre-set bar, so I just closed it.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>The temptation to move the goalposts after seeing the result</h2>
+<p>There's one trap that's easy to fall into when you run backtests.</p>
+<p>You look at the result first, and then quietly nudge the "pass or fail" line.</p>
+<p>Lower the threshold a touch and an idea that just missed now clears it. Shift the window a little and the numbers improve. Massage the criteria after the fact and it's easy to fool yourself into thinking you've "discovered" something that just looks good by luck.</p>
+<p>So today I spent the day locking two studies (codenamed B and C) in place with <strong>preregistration</strong> before running them.</p>
+<h2>What preregistration actually freezes</h2>
+<p>Preregistration is borrowed from clinical trials. Before you run the experiment, you write down and fix "what you'll test, and which line counts as a pass."</p>
+<p>Here's what I froze:</p>
+<ul>
+<li>The hypothesis and the pass/fail line — nailed down to the exact number, not to be touched after seeing the result.</li>
+<li>The exact version of the code to run — pinned by commit hash.</li>
+<li>The exact version of the input data — the feature files and the raw-source list recorded as hashes.</li>
+</ul>
+<p>With this in place, I can later reproduce the result: "run it with that code and that data, and you get the same answer."</p>
+<p>And even if I dislike the result, I can't roll the criteria back and tinker with them. If I did, the hashes wouldn't match.</p>
+<h2>When you test many things at once, raise the bar</h2>
+<p>One more thing I handled in the preregistration is the multiple-comparisons problem.</p>
+<p>If you test several ideas at once, the odds that at least one of them clears the bar by pure luck go up. It's like buying ten lottery tickets instead of one.</p>
+<p>So this time I counted "how many hypotheses am I looking at together" and wrote the pass threshold itself tighter in proportion to that count.</p>
+<p>The premise underneath is that I'm using the actual data I hold, so I can't take unlimited free swings.</p>
+<h2>An event study run under the same discipline was simply dropped</h2>
+<p>The payoff of the discipline showed up that same day.</p>
+<p>I preregistered and ran an event study (codenamed C3) looking at whether a certain disclosure event affects the stock price afterward.</p>
+<p>The result came in below the pass line. The excess return after the event was at a level you couldn't really call statistically meaningful.</p>
+<p>In the past I'd have clung to it — "maybe tweak the window, maybe slice the sample differently." But the pass line was nailed down in advance, so below the line means closed, full stop.</p>
+<p>Quickly admitting that something doesn't work, and shutting it, is the single biggest practical gain from preregistration.</p>
+<h2>Walking the reproduction path to the end</h2>
+<p>Finally, I ran a chain to confirm the frozen studies actually reproduce.</p>
+<p>I pushed one study through to its completed state, then ran the verification script standalone again to see whether I got the same result, and then kicked off the full-universe feature-generation wrapper for the next study.</p>
+<p>If you just declare "frozen" and move on, you can't tell later whether the declaration held. So I've made it a habit to immediately walk the reproduction path once, right after the declaration.</p>
+<h2>The other half of the day — an execution-filter bug</h2>
+<p>Separate from the research, I also caught a bug in the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety layer</a>(new tab).</p>
+<p>When the trade filter holds back a sell, the cash headroom that sell was going to free up would sometimes be used to let a following buy through.</p>
+<p>The problem: even when that sell was actually held back, the buy that had cleared on the headroom it "opened" was left in place. In effect, I was spending money that was only assumed to be coming in.</p>
+<p>So I fixed the order of operations: when a sell is held back, the buy that cleared thanks to it gets pulled first.</p>
+<p>The spot where the filter, cash headroom, and orders tangle together is like this — block one side and it shows up on the other. These keep surfacing one by one only now that live trading has started.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/reproducibility/">#reproducibility</a> <a href="../../../../en/tags/backtest/">#backtest</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-24_devlog/">Auto-Canceling Unfilled Orders and Handling Stale Prices for No-Volume Names - First Live Trigger</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-11/2026-11-23_devlog/">A Request to Profit-Simulate the Thinking Mode - The Sample Is Too Small to Decide on Returns</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-17_devlog/">Price-Based Trading Rules All Failed the Backtest - Switching to an Order-Free Forward Recorder</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-15_devlog/">Reading Out the Label-Redesign Experiment - Zero Passes, Not &quot;No Effect&quot; but &quot;Can&#x27;t Measure&quot;</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>
