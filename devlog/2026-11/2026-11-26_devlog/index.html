@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>코드리뷰로 찾은 집행 계층 결함들 - 거짓 경보와 주문 취소 순서 | 퀀트봇 개발일지</title>
+<meta name="description" content="실거래 시작 후 2주치 변경분을 통째로 외부 코드리뷰에 맡겨 중요 결함 8건·개선 제안 26건을 받고 하루 만에 반영했다. 실패한 주문을 합산해 정합 경보를 잘못 울리던 버그와, 미체결 취소와 매수 슬롯 배정의 순서 문제를 고쳤다.">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-26_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-26_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-26_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-26_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="코드리뷰로 찾은 집행 계층 결함들 - 거짓 경보와 주문 취소 순서">
+<meta property="og:description" content="실거래 시작 후 2주치 변경분을 통째로 외부 코드리뷰에 맡겨 중요 결함 8건·개선 제안 26건을 받고 하루 만에 반영했다. 실패한 주문을 합산해 정합 경보를 잘못 울리던 버그와, 미체결 취소와 매수 슬롯 배정의 순서 문제를 고쳤다.">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-26_devlog/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "코드리뷰로 찾은 집행 계층 결함들 - 거짓 경보와 주문 취소 순서", "description": "실거래 시작 후 2주치 변경분을 통째로 외부 코드리뷰에 맡겨 중요 결함 8건·개선 제안 26건을 받고 하루 만에 반영했다. 실패한 주문을 합산해 정합 경보를 잘못 울리던 버그와, 미체결 취소와 매수 슬롯 배정의 순서 문제를 고쳤다.", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-26_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-26"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../en/devlog/2026-11/2026-11-26_devlog/">Read in English</a></p>
+<article>
+<h1>코드리뷰로 찾은 집행 계층 결함들 - 거짓 경보와 주문 취소 순서</h1>
+<p class="post-date"><time datetime="2026-11-26">2026-11-26</time></p>
+<p class="subtitle">실거래 시작 후 2주치 변경분을 통째로 외부 코드리뷰에 맡겨 중요 결함 8건·개선 제안 26건을 받고 하루 만에 반영했다. 실패한 주문을 합산해 정합 경보를 잘못 울리던 버그와, 미체결 취소와 매수 슬롯 배정의 순서 문제를 고쳤다.</p><h2>2주치 변경분을 통째로 코드리뷰에 맡겼다</h2>
+<p>실거래를 시작한 뒤로 2주 넘게 급하게 손본 코드가 꽤 쌓였다.</p>
+<p>실전에서 처음 드러나는 상황을 그때그때 막다 보니, 각각은 맞는 수정이어도 전체를 다시 훑어본 적은 없었다.</p>
+<p>그래서 최근 2주 동안 바뀐 부분을 한 번에 외부 코드리뷰(다른 AI 도구)에 맡겼다. 결과는 치명적 결함 0건, 중요 결함 8건, 개선 제안 26건이었다.</p>
+<p>치명적 결함이 없다는 건 다행이었다. 다만 중요 결함 8건이 거의 다 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">주문 실행·안전장치 계층</a>(새 창)에 몰려 있었다.</p>
+<p>실거래에 가장 가까운 층이라 급하게 고친 곳이 많았으니, 어찌 보면 당연한 분포였다.</p>
+<h2>거짓 경보를 울리던 정합 가드</h2>
+<p>가장 먼저 고친 건 하루 집행 요약의 정합 가드였다.</p>
+<p>이 가드는 그날 나간 주문 금액을 합산해서 계좌 원장과 맞는지 대조한다. 숫자가 어긋나면 "뭔가 샜다"고 경보를 울리는 장치다.</p>
+<p>문제는 접수가 실패했거나 아예 접수조차 안 된 주문까지 합계에 넣고 있었다는 점이다. 실제로는 나가지 않은 돈을 나간 것처럼 세니, 합이 당연히 안 맞고 가드가 거짓 경보를 울렸다.</p>
+<p>실패·미접수 주문은 합계에서 빼도록 고쳤다.</p>
+<p>안전장치가 자꾸 헛울리면, 나중엔 진짜 경보까지 무시하게 된다. 그게 샌 돈을 놓치는 것보다 더 위험하다.</p>
+<h2>미체결 취소와 매수 슬롯 배정의 순서</h2>
+<p>어제 붙인 미체결 자동취소에도 지적이 하나 들어왔다.</p>
+<p>아침에 전날 미체결 주문을 취소하는 동작이, 그날의 매수 슬롯을 확보하는 동작보다 먼저 일어날 수 있었다.</p>
+<p>둘이 같은 자원을 두고 겹치면, 취소와 신규 배정이 꼬일 여지가 있다. 그래서 취소를 슬롯 확보에 성공한 뒤로 미뤘다.</p>
+<p>미체결을 다시 내보내기 전 기다리는 최소 시간도 조금 더 길게 잡았다. 너무 빨리 재주문하면 원래 주문이 체결되는 중일 수 있어서다.</p>
+<h2>수능일 조기폐장 - 모델링 대신 수동 절차</h2>
+<p>집행과 별개로, 달력 쪽에서 한 가지 운영 결정을 내렸다.</p>
+<p>한국 증시는 대학수학능력시험 날 하루만 개장·폐장 시각이 평소와 다르다. 이 예외를 캘린더 로직에 "모델"로 집어넣어 자동 처리할지 고민했다.</p>
+<p>결론은 하지 않는 쪽이었다. 1년에 하루뿐인 예외를 코드로 일반화하면, 그 코드가 평소에 조용히 잠복하다 엉뚱하게 터질 소지가 더 크다.</p>
+<p>그래서 그날만 쓰는 수동 절차로 문서화하고, 그 시기가 다가오면 미리 경보를 띄우게 했다. 과거에 특별 개장 시각 표를 사람이 미처 등록 안 해 타이머가 엉뚱한 시각에 발화한 적이 있어서, 그 누락 자체도 사전에 알리도록 했다.</p>
+<p>모든 예외를 코드로 녹이는 게 늘 정답은 아니다. 가끔은 "그날 사람이 한 번 손대기"가 더 안전하다.</p>
+<h2>오너 지정 매수 - 봇 판단과 분리한 별도 레인</h2>
+<p>마지막으로, 오너가 특정 종목 하나를 매일 조금씩 사 모으고 싶다는 지시를 처리했다.</p>
+<p>이건 봇의 자동 종목 선택과는 무관한, 순전히 오너 개인의 결정이다. 이걸 자동 선택 로직 안에 끼워 넣으면 봇의 판단이 오염된다.</p>
+<p>그래서 봇의 자동 매수와 분리된 "지정 매수" 경로를 따로 만들었다. 이전에 동결해 둔 설정 변경 금지 규칙에도, 이 건만 명시적 예외로 승인 이력과 함께 등재했다.</p>
+<p>한 가지 더 챙긴 건 <a href="https://finaltype.github.io/quant-blog/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">성과 측정</a>(새 창)이었다.</p>
+<p>이렇게 오너가 지정한 보유분은 봇이 고른 게 아니다. 그래서 전략 성과를 집계하는 표본에서 아예 빼도록 했다.</p>
+<p>봇이 안 고른 종목의 등락이 봇 성과에 섞이면, 나중에 "이 시스템이 얼마나 버는가"를 잘못 읽게 된다. 측정의 경계를 분명히 그어두는 일이다.</p>
+</article>
+<p class="tags"><a href="../../../tags/%EC%BD%94%EB%93%9C%EB%A6%AC%EB%B7%B0/">#코드리뷰</a> <a href="../../../tags/%EC%A3%BC%EB%AC%B8%EC%A7%91%ED%96%89/">#주문집행</a> <a href="../../../tags/%EC%95%88%EC%A0%84%EC%9E%A5%EC%B9%98/">#안전장치</a> <a href="../../../tags/%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4/">#자동매매</a> <a href="../../../tags/%EC%9A%B4%EC%98%81/">#운영</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../../devlog/2026-11/2026-11-25_devlog/">연구 사전등록 - 합격 기준을 먼저 못박고 결과가 나와도 안 고치기</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../../devlog/2026-11/2026-11-13_devlog/">실계좌 증거금 부족 매수 재시도와 미체결 주문 취소·재계획</a></li><li><a href="../../../devlog/2026-11/2026-11-24_devlog/">미체결 주문 자동 취소와 거래량 없는 종목의 묵은 가격 처리 - 실계좌 첫 작동</a></li><li><a href="../../../devlog/2026-11/2026-11-16_devlog/">자동매매 실전 첫 거래일 - 안전장치는 대부분 발동하지 않았다</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>

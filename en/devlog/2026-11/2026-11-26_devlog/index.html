@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Execution-layer defects found by code review - false alarms and order-cancel ordering | Quant Bot Devlog</title>
+<meta name="description" content="Two weeks after going live, I handed the whole batch of recent changes to an external code review, got 8 important defects and 26 improvement suggest…">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-26_devlog/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-26_devlog/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-26_devlog/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/devlog/2026-11/2026-11-26_devlog/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Execution-layer defects found by code review - false alarms and order-cancel ordering">
+<meta property="og:description" content="Two weeks after going live, I handed the whole batch of recent changes to an external code review, got 8 important defects and 26 improvement suggest…">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-26_devlog/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Execution-layer defects found by code review - false alarms and order-cancel ordering", "description": "Two weeks after going live, I handed the whole batch of recent changes to an external code review, got 8 important defects and 26 improvement suggest…", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/devlog/2026-11/2026-11-26_devlog/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-26"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../../../devlog/2026-11/2026-11-26_devlog/">한국어로 보기</a></p>
+<article>
+<h1>Execution-layer defects found by code review - false alarms and order-cancel ordering</h1>
+<p class="post-date"><time datetime="2026-11-26">2026-11-26</time></p>
+<p class="subtitle">Two weeks after going live, I handed the whole batch of recent changes to an external code review, got 8 important defects and 26 improvement suggestions, and folded them all in within a day. I fixed a bug where failed orders were summed into a reconciliation alarm, and a race between canceling unfilled orders and claiming buy slots.</p><p><em>This is the English version of a post originally written in Korean for my <a href="https://finaltype.github.io/quant-blog/en/architecture/01_project_architecture/" target="_blank" rel="noopener noreferrer">algorithmic trading system devlog</a>(new tab).</em></p>
+<h2>Handing two weeks of changes to a code review at once</h2>
+<p>Since going live, quite a lot of hastily patched code had piled up over two-plus weeks.</p>
+<p>Patching each situation as it first surfaced in real trading, I'd made fixes that were each correct on their own — but I'd never gone back and re-read the whole thing.</p>
+<p>So I handed everything that had changed in the last two weeks to an external code review (a different AI tool) in one pass. The result: 0 critical defects, 8 important ones, and 26 improvement suggestions.</p>
+<p>No critical defects was a relief. But the 8 important ones were almost all clustered in the <a href="https://finaltype.github.io/quant-blog/en/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">order execution and safety layer</a>(new tab).</p>
+<p>That's the layer closest to real trading, where I'd rushed the most fixes — so in hindsight the distribution made sense.</p>
+<h2>A reconciliation guard that cried wolf</h2>
+<p>The first thing I fixed was the reconciliation guard in the daily execution summary.</p>
+<p>This guard sums up the order amounts that went out that day and checks them against the account ledger. If the numbers don't line up, it raises an alarm that "something leaked."</p>
+<p>The problem was that it was also counting orders that had failed to be accepted, or were never submitted at all. It was counting money that never actually went out as if it had — so of course the sum didn't match, and the guard fired a false alarm.</p>
+<p>I fixed it to exclude failed and un-submitted orders from the total.</p>
+<p>When a safety device keeps crying wolf, you eventually start ignoring the real alarms too. That's more dangerous than missing the leaked money.</p>
+<h2>Ordering of cancellation and buy-slot claiming</h2>
+<p>The auto-cancellation of unfilled orders I added yesterday drew one note too.</p>
+<p>In the morning, the step that cancels the previous day's unfilled orders could run before the step that claims that day's buy slots.</p>
+<p>If the two overlap on the same resource, cancellation and fresh allocation can get tangled. So I moved the cancellation to run after the slot claim succeeds.</p>
+<p>I also set the minimum wait before re-submitting an unfilled order a bit longer. Re-ordering too soon risks doing so while the original order is still filling.</p>
+<h2>Early market close on exam day - manual procedure over modeling</h2>
+<p>Separately from execution, I made one operational call on the calendar side.</p>
+<p>The Korean stock market shifts its open and close times on exactly one day a year: the national college entrance exam day. I debated whether to bake this exception into the calendar logic as a "model" and handle it automatically.</p>
+<p>I decided against it. Generalizing a once-a-year exception into code just means that code sits dormant most of the time and risks going off at the wrong moment.</p>
+<p>So I documented it as a manual procedure used only on that day, with an alert that fires as the date approaches. There was a past incident where someone forgot to register the special opening-time table and a timer fired at the wrong hour — so I also made that very omission raise an advance warning.</p>
+<p>Melting every exception into code isn't always the right answer. Sometimes "a human touches it once that day" is safer.</p>
+<h2>Owner-pinned buying - a separate lane apart from the bot's judgment</h2>
+<p>Finally, I handled a directive from the owner to accumulate one specific stock in small daily amounts.</p>
+<p>This has nothing to do with the bot's automated stock selection — it's purely the owner's personal decision. Wedging it into the selection logic would contaminate the bot's judgment.</p>
+<p>So I built a separate "pinned buy" lane, apart from the bot's automated buying. I also registered this one case as an explicit exception, with an approval record, to the config-change freeze I'd put in place earlier.</p>
+<p>One more thing I made sure of was <a href="https://finaltype.github.io/quant-blog/en/architecture/09_ops_reliability/" target="_blank" rel="noopener noreferrer">performance measurement</a>(new tab).</p>
+<p>A holding the owner pinned like this isn't something the bot picked. So I made it get excluded entirely from the sample used to tally strategy performance.</p>
+<p>If the price moves of a stock the bot didn't choose get mixed into the bot's performance, you'll later misread "how much does this system actually earn." Drawing a clear boundary around measurement is the point.</p>
+</article>
+<p class="tags"><a href="../../../../en/tags/quant/">#quant</a> <a href="../../../../en/tags/code-review/">#code review</a> <a href="../../../../en/tags/order-execution/">#order execution</a> <a href="../../../../en/tags/safety/">#safety</a> <a href="../../../../en/tags/operations/">#operations</a></p><aside class="related">
+<ul><li>Previous: <a href="../../../../en/devlog/2026-11/2026-11-25_devlog/">Preregistering research - locking the pass bar before the result comes in</a></li></ul>
+<h2>Related posts</h2><ul><li><a href="../../../../en/devlog/2026-11/2026-11-20_devlog/">Re-Investigating the Flip-Flop Alert - The Cause Was a Change in Stock Count, Not Band Oscillation</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-19_devlog/">The Morning Round Misfired on a Late-Open Day - Gating It on the Real Open Time</a></li><li><a href="../../../../en/devlog/2026-11/2026-11-18_devlog/">The First Live Order Cancel - A Broker Rejection and an Order-Number Type Mismatch</a></li></ul>
+</aside>
+<footer class="site"><a href="../../../../en/legal/privacy-policy/">Privacy Policy</a></footer>
+</body>
+</html>

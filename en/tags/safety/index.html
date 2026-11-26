@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Posts tagged #safety | Quant Bot Devlog</title>
-<meta name="description" content="6 posts tagged &#x27;safety&#x27;.">
+<meta name="description" content="7 posts tagged &#x27;safety&#x27;.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/tags/safety/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Posts tagged #safety">
-<meta property="og:description" content="6 posts tagged &#x27;safety&#x27;.">
+<meta property="og:description" content="7 posts tagged &#x27;safety&#x27;.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/tags/safety/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #safety", "description": "6 posts tagged 'safety'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/safety/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #safety", "description": "7 posts tagged 'safety'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/safety/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,8 +43,9 @@
 
 <article>
 <h1>Posts tagged #safety</h1>
-<p class="subtitle">6 posts tagged &#x27;safety&#x27;.</p>
+<p class="subtitle">7 posts tagged &#x27;safety&#x27;.</p>
 <ul>
+<li><a href="../../../en/devlog/2026-11/2026-11-26_devlog/">Execution-layer defects found by code review - false alarms and order-cancel ordering</a><div class="sub">Two weeks after going live, I handed the whole batch of recent changes to an external code review, got 8 important defects and 26 improvement suggestions, and folded them all in within a day. I fixed a bug where failed orders were summed into a reconciliation alarm, and a race between canceling unfilled orders and claiming buy slots.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-20_devlog/">Re-Investigating the Flip-Flop Alert - The Cause Was a Change in Stock Count, Not Band Oscillation</a><div class="sub">An alert fired again because the trading system bought a stock and sold part of it right back the next round - a &quot;flip-flop.&quot; The design had blamed price jitter at the rounding edge, but re-tallying two months of execution logs read-only showed the real cause was the number of target holdings growing, which shrinks each stock&#x27;s target amount. Here is how I decided to keep observing instead of flipping the switch off.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-19_devlog/">The Morning Round Misfired on a Late-Open Day - Gating It on the Real Open Time</a><div class="sub">On a day the market opens an hour late, restarting a stopped schedule timer instantly fired its already-elapsed trigger, so the morning round sent orders into a closed market. Every order was rejected, and because that round had claimed the execution slot, the later rounds were blocked too. This is how I tracked it down and made the system read the actual open time from the calendar so a pre-open round holds itself back.</div></li>
 <li><a href="../../../en/devlog/2026-11/2026-11-18_devlog/">The First Live Order Cancel - A Broker Rejection and an Order-Number Type Mismatch</a><div class="sub">The path that cancels an unfilled sell order mid-session and re-plans fired on a real account for the first time, and the broker&#x27;s cancel API rejected it over an order-number type mismatch — with the rejection reason missing from the log. This is how I tracked that down, normalized the order number to an integer, and made the rejection reason print — plus how an external AI advisory checked the safety brake that blocked every buy on a rebound morning.</div></li>
