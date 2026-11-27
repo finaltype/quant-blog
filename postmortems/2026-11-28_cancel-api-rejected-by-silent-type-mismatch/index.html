@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주문 취소 API가 첫 실사용에서 거절된 이유 - 숫자 타입 불일치와 삼켜진 에러 | 퀀트봇 개발일지</title>
+<meta name="description" content="외부 API가 정수로 요구한 주문번호를 문자열로 넘겨 취소가 거절됐는데, 에러 경로가 진짜 사유를 버리고 &quot;응답 없음&quot;만 찍어 원인이 두 번 가려졌습니다">
+<link rel="canonical" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-28_cancel-api-rejected-by-silent-type-mismatch/">
+<link rel="alternate" hreflang="ko" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-28_cancel-api-rejected-by-silent-type-mismatch/">
+<link rel="alternate" hreflang="en" href="https://finaltype.github.io/quant-blog/en/postmortems/2026-11-28_cancel-api-rejected-by-silent-type-mismatch/">
+<link rel="alternate" hreflang="x-default" href="https://finaltype.github.io/quant-blog/postmortems/2026-11-28_cancel-api-rejected-by-silent-type-mismatch/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="주문 취소 API가 첫 실사용에서 거절된 이유 - 숫자 타입 불일치와 삼켜진 에러">
+<meta property="og:description" content="외부 API가 정수로 요구한 주문번호를 문자열로 넘겨 취소가 거절됐는데, 에러 경로가 진짜 사유를 버리고 &quot;응답 없음&quot;만 찍어 원인이 두 번 가려졌습니다">
+<meta property="og:url" content="https://finaltype.github.io/quant-blog/postmortems/2026-11-28_cancel-api-rejected-by-silent-type-mismatch/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "주문 취소 API가 첫 실사용에서 거절된 이유 - 숫자 타입 불일치와 삼켜진 에러", "description": "외부 API가 정수로 요구한 주문번호를 문자열로 넘겨 취소가 거절됐는데, 에러 경로가 진짜 사유를 버리고 \"응답 없음\"만 찍어 원인이 두 번 가려졌습니다", "inLanguage": "ko", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/postmortems/2026-11-28_cancel-api-rejected-by-silent-type-mismatch/", "author": {"@type": "Person", "name": "finaltype"}, "datePublished": "2026-11-28"}</script>
+<style>
+  :root { color-scheme: light dark; }
+  .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; line-height: 1.9; }
+  a { color: #3366cc; }
+  header.site { margin-bottom: 2rem; font-size: .95rem; }
+  header.site a { text-decoration: none; font-weight: 600; }
+  .subtitle { opacity: .75; font-style: italic; }
+  .lang-switch { font-size: .85rem; margin-bottom: 1.5rem; }
+  .lang-switch a { margin-right: .75rem; }
+  h1 { font-size: 1.6rem; line-height: 1.4; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; }
+  pre { overflow-x: auto; padding: .75rem; background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .4rem .6rem; }
+  img { max-width: 100%; height: auto; border-radius: 6px; }
+  aside.related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .95rem; line-height: 1.7; }
+  .sub { opacity: .7; font-size: .9rem; line-height: 1.6; }
+  p.tags { margin-top: 2rem; font-size: .9rem; }
+  p.tags a { margin-right: .6rem; }
+  aside.related h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+  footer.site { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.25); font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<header class="site"><a href="../../">Quant Trading Bot Devlog</a></header>
+<p class="lang-switch"><a href="../../en/postmortems/2026-11-28_cancel-api-rejected-by-silent-type-mismatch/">Read in English</a></p>
+<article>
+<h1>주문 취소 API가 첫 실사용에서 거절된 이유 - 숫자 타입 불일치와 삼켜진 에러</h1>
+<p class="post-date"><time datetime="2026-11-28">2026-11-28</time></p>
+<p class="subtitle">외부 API가 정수로 요구한 주문번호를 문자열로 넘겨 취소가 거절됐는데, 에러 경로가 진짜 사유를 버리고 &quot;응답 없음&quot;만 찍어 원인이 두 번 가려졌습니다</p><p>제 자동매매 시스템에는 발주한 주문이 일정 시간 안에 체결되지 않으면 그 주문을 취소하고 다시 계획하는 경로가 있습니다.</p>
+<p>이건 종목을 고르는 판단 로직이 아니라 주문 실행·안전장치 계층에 속합니다. 전체 설계는 <a href="https://finaltype.github.io/quant-blog/architecture/05_execution_architecture/" target="_blank" rel="noopener noreferrer">실전 계좌 적용편</a>(새 창)에 따로 정리해 뒀습니다.</p>
+<p>이 "미체결 자동 취소" 경로가 실계좌에서 처음으로 진짜 발동한 날, 그 취소가 거절됐습니다.</p>
+<h2>무슨 일이 있었나</h2>
+<p>어느 날 한 주문이 일정 시간이 지나도록 체결되지 않았습니다. 설계대로라면 시스템이 그 주문을 취소하고 재계획으로 넘겨야 했습니다.</p>
+<p>그런데 취소가 먹히지 않았습니다. 미체결 주문은 그대로 계좌에 남아 있었습니다.</p>
+<p>로그를 봤더니 취소 시도에 대해 "응답 없음"이라고만 찍혀 있었습니다. 마치 브로커 쪽이 아무 답도 안 준 것처럼 보였습니다.</p>
+<p>사실상, 정작 필요할 때 처음으로 돌아본 안전장치가 조용히 실패한 상황이었습니다.</p>
+<h2>처음엔 뭐라고 생각했나</h2>
+<p>처음엔 네트워크나 브로커 쪽의 일시적 문제라고 생각했습니다. "응답 없음"이라는 로그를 그대로 믿은 겁니다.</p>
+<p>타임아웃이 났거나, 그 순간 브로커 API가 잠깐 불안정했겠거니 싶었습니다. 그런 거라면 재시도로 풀릴 문제였습니다.</p>
+<p>하지만 같은 취소를 다시 넣어도 똑같이 "응답 없음"이었습니다. 일시적 장애라면 재현이 이렇게 100%일 수가 없었습니다.</p>
+<p>여기서 로그 문구 자체를 의심하기 시작했습니다. "응답 없음"이 정말 응답이 없었다는 뜻인지, 아니면 응답을 받긴 했는데 그렇게 보고하고 있을 뿐인지.</p>
+<h2>진짜 원인 — 두 개의 층</h2>
+<p>원인은 두 층으로 나뉘어 있었습니다.</p>
+<p><strong>첫 번째 층: 주문번호를 잘못된 타입으로 넘겼다.</strong></p>
+<p>취소 요청에는 원래 주문의 주문번호를 함께 보내야 합니다. 그런데 브로커 API는 이 주문번호 필드를 정수로 받길 기대했습니다.</p>
+<p>제 코드는 이 값을 문자열로 변환해서 보내고 있었습니다. 숫자처럼 생긴 문자열이라 사람 눈엔 똑같아 보이지만, API 입장에서는 타입이 틀린 요청이었습니다.</p>
+<p>그래서 브로커는 이 요청을 아예 HTTP 400으로, 벤더 고유 에러 코드를 달아 거절하고 있었습니다. 취소는 시도조차 되지 않은 거였습니다.</p>
+<p><strong>두 번째 층 — 이게 진짜 교훈인데: 에러 경로가 진짜 사유를 버렸다.</strong></p>
+<p>브로커는 400 응답 본문에 거절 사유를 분명히 담아서 돌려줬습니다. 즉, "왜 거절했는지"는 이미 손에 들어와 있었습니다.</p>
+<p>그런데 취소를 감싸고 있던 에러 처리 코드가 이 4xx 사유를 그냥 버리고, "응답 없음"이라는 일반적인 문구만 남겼습니다. 받은 에러 본문을 읽지 않고 통째로 삼킨 겁니다.</p>
+<p>그래서 실제로는 "타입이 틀려서 400으로 거절됨"이라는 구체적 진단이 "응답 없음"이라는 막연한 문장으로 바뀌어 있었습니다. 원인이 두 번 가려진 셈입니다 — 한 번은 타입 버그로, 한 번은 에러를 삼킨 로그로.</p>
+<p><strong>왜 여태 안 걸렸나: 이 경로가 실계좌에서 처음 돌았다.</strong></p>
+<p>자동 취소 경로는 코드로는 오래전부터 있었지만, 실계좌에서 진짜로 발동한 적이 한 번도 없었습니다. 미체결이 그 조건까지 간 상황 자체가 드물었던 겁니다.</p>
+<p>단위 테스트는 브로커를 가짜로 대체(mock)해서 돌았습니다. 가짜 브로커는 문자열이든 정수든 가리지 않고 다 받아줬습니다.</p>
+<p>그래서 "주문번호는 정수여야 한다"는 실제 API의 계약은 테스트에서 한 번도 검증된 적이 없었습니다. 진짜 브로커를 처음 만나는 그 순간까지, 버그는 조용히 살아 있었습니다.</p>
+<h2>어떻게 고쳤나</h2>
+<p>고치는 건 두 층 각각에 대응했습니다.</p>
+<p>먼저, 주문번호를 브로커로 보내기 직전 경계에서 정수로 정규화했습니다. 내부에서 그 값을 어떻게 들고 다니든, API에 닿는 지점에서는 반드시 기대한 타입으로 맞춰 보내게 한 겁니다.</p>
+<p>다음으로, 에러 경로가 받은 4xx 사유를 버리지 않고 그대로 로그와 경보에 노출하게 바꿨습니다. 이제 같은 종류의 거절이 또 나면, "응답 없음"이 아니라 브로커가 돌려준 실제 사유가 찍힙니다.</p>
+<p>마지막으로, 주문번호 필드가 정수 타입으로 나가는지 고정하는 회귀 테스트를 추가했습니다. 가짜 브로커가 관대해서 놓쳤던 계약을, 테스트가 명시적으로 붙잡게 한 겁니다.</p>
+<p>고친 뒤 실계좌에서 전량 취소가 정상적으로 성공하는 걸 확인하고 나서야 이 경로를 믿을 수 있게 됐습니다.</p>
+<h2>일반화하면</h2>
+<p><strong>외부 API의 타입 계약은 내 타입 체커가 지켜주지 않습니다.</strong> 숫자처럼 생긴 문자열은 내 코드 안에서는 아무 문제 없이 흘러다닙니다. 그러다 외부 경계를 넘는 순간, 상대 API가 "나는 정수를 원했다"며 거절합니다.</p>
+<p>이런 건 경계에서 명시적으로 정규화하는 게 안전합니다. "내부에서 어떤 타입으로 들고 다녔는가"와 "API로 나갈 때 어떤 타입이어야 하는가"는 다른 질문입니다.</p>
+<p><strong>에러 처리 코드가 정작 필요한 정보를 삼키지 않는지 보세요.</strong> 가장 나쁜 로그는 틀린 로그가 아니라, 맞긴 한데 쓸모없는 로그였습니다. "응답 없음"은 거짓말은 아니었지만, 이미 손에 쥔 400 사유를 가린 채 저를 엉뚱한 방향(네트워크 의심)으로 보냈습니다.</p>
+<p>외부 호출을 감쌀 때는 실패를 뭉개서 일반 문구로 바꾸지 말고, 받은 상태 코드와 응답 본문을 그대로 남기세요. 디버깅은 그 한 줄에서 갈립니다.</p>
+<p><strong>거의 안 도는 경로는 "첫 실사용"이 곧 첫 테스트입니다.</strong> 복구·취소·폴백 같은 경로는 평소엔 안 돌다가, 하필 진짜 급할 때 처음 돌아갑니다. 그리고 그때 처음으로 외부 계약과 실제로 부딪힙니다.</p>
+<p>mock은 편리하지만 상대의 엄격함까지 흉내 내지는 않습니다. 가짜 의존성이 관대할수록, 진짜 계약은 프로덕션에서 처음 검증됩니다.</p>
+<p>그래서 저는 "이 경로가 실환경에서 진짜 돌아본 적이 있나"를 테스트 통과 여부와 별개의 질문으로 따로 세게 됐습니다. 테스트가 초록불이어도, 외부 경계를 처음 넘는 순간은 그 자체로 아직 검증되지 않은 사건입니다.
+</content>
+</invoke></p>
+</article>
+<p class="tags"><a href="../../tags/%EC%86%8C%ED%94%84%ED%8A%B8%EC%9B%A8%EC%96%B4%ED%92%88%EC%A7%88/">#소프트웨어품질</a> <a href="../../tags/%EB%94%94%EB%B2%84%EA%B9%85/">#디버깅</a> <a href="../../tags/postmortem/">#postmortem</a></p><aside class="related">
+<ul><li>이전 글: <a href="../../postmortems/2026-11-21_scheduled-run-failed-but-consumed-its-slot/">예약 작업이 전부 실패했는데도 일회용 슬롯을 소진한 버그 - 아무 일도 안 한 실행이 자원을 먹었다</a></li></ul>
+<h2>관련 글</h2><ul><li><a href="../../postmortems/2026-11-21_scheduled-run-failed-but-consumed-its-slot/">예약 작업이 전부 실패했는데도 일회용 슬롯을 소진한 버그 - 아무 일도 안 한 실행이 자원을 먹었다</a></li><li><a href="../../postmortems/2026-11-14_tests-sent-real-notifications/">테스트가 실제 푸시 알림을 발송한 사고 - 부수효과 모킹을 개별 테스트에 맡긴 탓</a></li><li><a href="../../postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">야간 배치 작업 26시간 멈춤 - 타임아웃 없는 외부 API 호출 하나가 원인</a></li></ul>
+</aside>
+<footer class="site"><a href="../../legal/privacy-policy/">개인정보처리방침</a></footer>
+</body>
+</html>

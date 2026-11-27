@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Posts tagged #debugging | Quant Bot Devlog</title>
-<meta name="description" content="15 posts tagged &#x27;debugging&#x27;.">
+<meta name="description" content="16 posts tagged &#x27;debugging&#x27;.">
 <link rel="canonical" href="https://finaltype.github.io/quant-blog/en/tags/debugging/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Posts tagged #debugging">
-<meta property="og:description" content="15 posts tagged &#x27;debugging&#x27;.">
+<meta property="og:description" content="16 posts tagged &#x27;debugging&#x27;.">
 <meta property="og:url" content="https://finaltype.github.io/quant-blog/en/tags/debugging/">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #debugging", "description": "15 posts tagged 'debugging'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/debugging/", "author": {"@type": "Person", "name": "finaltype"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Posts tagged #debugging", "description": "16 posts tagged 'debugging'.", "inLanguage": "en", "mainEntityOfPage": "https://finaltype.github.io/quant-blog/en/tags/debugging/", "author": {"@type": "Person", "name": "finaltype"}}</script>
 <style>
   :root { color-scheme: light dark; }
   .post-date { opacity: .7; font-size: .85rem; margin: 0 0 .5rem; }
@@ -43,8 +43,9 @@
 
 <article>
 <h1>Posts tagged #debugging</h1>
-<p class="subtitle">15 posts tagged &#x27;debugging&#x27;.</p>
+<p class="subtitle">16 posts tagged &#x27;debugging&#x27;.</p>
 <ul>
+<li><a href="../../../en/postmortems/2026-11-28_cancel-api-rejected-by-silent-type-mismatch/">An Order-Cancel API Rejected Our First Real Call - A Silent Type Mismatch and a Swallowed Error</a><div class="sub">We sent an order number as a string where the external API wanted an integer, the cancel was rejected, and the error path threw away the real reason and logged only &quot;no response&quot; - so the cause was hidden twice</div></li>
 <li><a href="../../../en/postmortems/2026-11-21_scheduled-run-failed-but-consumed-its-slot/">A Scheduled Job Failed Every Action but Still Consumed Its One-Time Slot - A Run That Did Nothing Ate the Resource</a><div class="sub">A calendar library returned the wrong value for a once-a-year special day, and on top of that a &quot;running = slot consumed&quot; assumption poisoned the backup path</div></li>
 <li><a href="../../../en/postmortems/2026-11-14_tests-sent-real-notifications/">A Test Run Sent Real Push Notifications - Because Mocking Side Effects Was Left to Each Test</a><div class="sub">The habit of letting each test intercept notification-sending leaked into a real send through one newly added alert path — a postmortem on why blocking side effects has to be the test harness&#x27;s global default</div></li>
 <li><a href="../../../en/postmortems/2026-11-07_unbounded-network-call-hung-nightly-batch-job/">A Nightly Batch Job Hung for 26 Hours - One Unbounded Network Call</a><div class="sub">My first fix targeted the exact line that hung, but missed a sibling fallback call in the same function — a postmortem on why the recurrence-prevention fix was only half right</div></li>
